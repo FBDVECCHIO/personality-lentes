@@ -17,6 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const SESSION_STORE = 'partner_session_store';
     const SESSION_USER = 'partner_session_user';
 
+    // Lista global de lojas para consulta rápida
+    let loadedStoresList = [];
+
     // -------------------------------------------------------------
     // 1. Menu Mobile e Dropdown
     // -------------------------------------------------------------
@@ -135,6 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
             stores = getLocalStores();
         }
 
+        loadedStoresList = stores;
         renderStoresOnPage(stores);
     }
 
@@ -272,12 +276,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const voucherCode = generateRandomVoucher();
 
+        // Detalhes extras da loja para registro
+        const chosenStoreObj = loadedStoresList.find(s => s.nome === storeVal);
+        const storeAddress = chosenStoreObj ? chosenStoreObj.endereco : '';
+        const storePhone = chosenStoreObj ? chosenStoreObj.telefone : '';
+
         const leadData = {
             name: nameVal,
             email: emailVal,
             whatsapp: whatsappVal,
             raw_whatsapp: rawWhatsapp,
             loja: storeVal,
+            loja_endereco: storeAddress,
+            loja_telefone: storePhone,
             voucher: voucherCode,
             message: messageVal,
             timestamp: new Date().toISOString()
@@ -305,6 +316,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         email: leadData.email,
                         whatsapp: leadData.whatsapp,
                         loja: leadData.loja,
+                        loja_endereco: leadData.loja_endereco,
+                        loja_telefone: leadData.loja_telefone,
                         voucher: leadData.voucher,
                         message: leadData.message
                     })
@@ -315,8 +328,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error(errText || 'Falha ao registrar no Supabase.');
                 }
 
-                showFormSuccess(voucherCode);
-                // Atualiza a tabela de leads do parceiro caso ele esteja logado
+                showFormSuccess(voucherCode, storeVal, storeAddress, storePhone, rawWhatsapp);
+                
                 const activeStore = sessionStorage.getItem(SESSION_STORE);
                 if (activeStore === storeVal) {
                     loadPartnerLeads(activeStore);
@@ -325,14 +338,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('Erro no Supabase:', error);
                 alert(`Erro: ${error.message}. Salvo localmente.`);
                 saveToLocalStorageFallback(leadData);
-                showFormSuccess(voucherCode);
+                showFormSuccess(voucherCode, storeVal, storeAddress, storePhone, rawWhatsapp);
             } finally {
                 resetSubmitButton();
             }
         } else {
             setTimeout(() => {
                 saveToLocalStorageFallback(leadData);
-                showFormSuccess(voucherCode);
+                showFormSuccess(voucherCode, storeVal, storeAddress, storePhone, rawWhatsapp);
                 resetSubmitButton();
             }, 1000);
         }
@@ -344,10 +357,26 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(storedLeads));
     };
 
-    const showFormSuccess = (voucher) => {
+    const showFormSuccess = (voucher, storeName, storeAddress, storePhone, rawWhatsapp) => {
         contactForm.style.display = 'none';
         successAlert.style.display = 'flex';
         generatedVoucherH3.textContent = voucher;
+
+        document.getElementById('successStoreName').textContent = storeName;
+        document.getElementById('successStoreAddress').textContent = storeAddress || 'Endereço não cadastrado';
+        document.getElementById('successStorePhone').textContent = storePhone ? `Telefone: ${storePhone}` : 'Telefone não cadastrado';
+
+        const messageText = `Olá! Acabei de gerar meu voucher de *50% de desconto* nas lentes *PERSONALITY*! 🎉
+
+🎟️ *Código do Voucher:* ${voucher}
+
+🏪 *Ótica de Resgate:* ${storeName}
+📍 *Endereço:* ${storeAddress || 'Não cadastrado'}
+📞 *Contato:* ${storePhone || 'Não cadastrado'}
+
+Apresente esse cupom na loja para garantir o seu benefício!`;
+
+        document.getElementById('btnSendWaSummary').href = `https://api.whatsapp.com/send?phone=55${rawWhatsapp}&text=${encodeURIComponent(messageText)}`;
     };
 
     const resetSubmitButton = () => {

@@ -397,7 +397,17 @@
                             <span style="font-size: 11px; font-weight: 700; color: var(--gold-light); letter-spacing: 2px;">CÓDIGO DO VOUCHER</span>
                             <h3 id="generatedVoucher" style="font-family: var(--font-heading); font-size: 24px; font-weight: 800; color: #fff; margin-top: 6px; letter-spacing: 1px;">PERS-50-XXXX</h3>
                         </div>
-                        <button class="btn btn-outline-gold btn-sm" id="btnCopyVoucher">Copiar Código</button>
+                        <div id="successStoreDetails" style="margin-top: 10px; font-size: 13px; text-align: center; color: var(--text-muted); border-top: 1px solid var(--border-gray); padding-top: 12px; width: 100%;">
+                            <p>📍 <strong>Local de Resgate:</strong> <span id="successStoreName" style="color: #fff; font-weight: 600;">Nome da Loja</span></p>
+                            <p style="margin-top: 4px; font-size: 12px;" id="successStoreAddress">Endereço da Loja</p>
+                            <p style="margin-top: 4px; font-size: 12px;" id="successStorePhone">Telefone da Loja</p>
+                        </div>
+                        <div style="display: flex; gap: 10px; width: 100%; flex-wrap: wrap; margin-top: 10px;">
+                            <button class="btn btn-outline-gold btn-sm" id="btnCopyVoucher" style="flex: 1; min-width: 140px;">Copiar Código</button>
+                            <a href="#" target="_blank" class="btn btn-sm" id="btnSendWaSummary" style="flex: 1.2; min-width: 200px; background: #25d366; color: #fff; border: none; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                                💬 Receber no WhatsApp
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
