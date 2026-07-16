@@ -1,0 +1,1201 @@
+/* style.css */
+
+/* -------------------------------------------------------------
+   1. Variáveis & Reset
+------------------------------------------------------------- */
+:root {
+    --bg-dark: #070708;           /* Preto Obsidiana */
+    --bg-card: #121215;           /* Cinza Metálico Escuro */
+    --gold-primary: #c5a85c;      /* Ouro Clássico */
+    --gold-light: #e8d08d;        /* Ouro Champagne */
+    --gold-dark: #8c7130;         /* Ouro Envelhecido */
+    --gold-gradient: linear-gradient(135deg, #8c7130 0%, #e8d08d 50%, #8c7130 100%);
+    --gold-glow: rgba(197, 168, 92, 0.15);
+    
+    --text-white: #ffffff;
+    --text-muted: #9ca3af;
+    --text-gold: #cfad52;
+    
+    --border-gold: rgba(197, 168, 92, 0.12);
+    --border-gray: rgba(255, 255, 255, 0.06);
+    
+    --font-heading: 'Montserrat', sans-serif;
+    --font-sans: 'Montserrat', sans-serif;
+    
+    --transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    --radius-sm: 8px;
+    --radius-md: 16px;
+    --radius-lg: 24px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    scroll-behavior: smooth;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-white);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    overflow-x: hidden;
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+body.no-scroll {
+    overflow: hidden;
+}
+
+/* -------------------------------------------------------------
+   2. Elementos de Fundo Luminosos (Glows)
+------------------------------------------------------------- */
+.bg-glow {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(197, 168, 92, 0.07) 0%, rgba(0, 0, 0, 0) 70%);
+    pointer-events: none;
+    z-index: -1;
+    filter: blur(80px);
+}
+
+.bg-glow-1 {
+    top: -150px;
+    right: -100px;
+}
+
+.bg-glow-2 {
+    bottom: 20%;
+    left: -200px;
+    background: radial-gradient(circle, rgba(197, 168, 92, 0.04) 0%, rgba(0, 0, 0, 0) 70%);
+}
+
+/* -------------------------------------------------------------
+   3. Estrutura e Layout Geral
+------------------------------------------------------------- */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    width: 100%;
+}
+
+.section-padding {
+    padding: 100px 0;
+}
+
+@media (max-width: 768px) {
+    .section-padding {
+        padding: 60px 0;
+    }
+}
+
+.section-header {
+    margin-bottom: 60px;
+}
+
+.section-title {
+    font-family: var(--font-heading);
+    font-size: 38px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    text-transform: uppercase;
+}
+
+.gold-divider {
+    width: 60px;
+    height: 3px;
+    background: var(--gold-gradient);
+    margin: 16px auto;
+    border-radius: 20px;
+}
+
+.section-subtitle {
+    color: var(--text-muted);
+    font-size: 16px;
+    max-width: 600px;
+    margin: 0 auto;
+    font-weight: 300;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.gold-text {
+    background: var(--gold-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* -------------------------------------------------------------
+   4. Cabeçalho / Dropdowns
+------------------------------------------------------------- */
+.main-header {
+    background: rgba(7, 7, 8, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border-gray);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    padding: 20px 0;
+    transition: var(--transition);
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.logo-icon {
+    font-size: 24px;
+}
+
+.logo-text {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 24px;
+    letter-spacing: 1px;
+    color: var(--text-white);
+}
+
+.logo-text span.gold-dot {
+    color: var(--gold-primary);
+    -webkit-text-fill-color: var(--gold-primary);
+}
+
+/* Menu de Navegação Desktop */
+.desktop-nav {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+}
+
+.nav-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    transition: var(--transition);
+    position: relative;
+    padding: 6px 0;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: var(--text-white);
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--gold-gradient);
+    transition: var(--transition);
+}
+
+.nav-link:hover::after, .nav-link.active::after {
+    width: 100%;
+}
+
+/* Dropdown de Produtos */
+.nav-item-dropdown {
+    position: relative;
+}
+
+.dropdown-toggle {
+    cursor: pointer;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(15px);
+    background: var(--bg-card);
+    border: 1px solid var(--border-gold);
+    border-radius: var(--radius-sm);
+    padding: 8px 0;
+    min-width: 240px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition);
+    margin-top: 10px;
+}
+
+.nav-item-dropdown:hover .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+.dropdown-item {
+    display: block;
+    padding: 12px 20px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.dropdown-item:hover {
+    background: rgba(197, 168, 92, 0.05);
+    color: var(--gold-light);
+    padding-left: 24px;
+}
+
+/* Botão do Menu Mobile */
+.mobile-menu-toggle {
+    display: none;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    flex-direction: column;
+    gap: 6px;
+    width: 30px;
+    height: 24px;
+    justify-content: center;
+    z-index: 110;
+}
+
+.mobile-menu-toggle span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background-color: var(--text-white);
+    transition: var(--transition);
+}
+
+/* Responsividade do Menu */
+@media (max-width: 968px) {
+    .desktop-nav {
+        display: none;
+    }
+    
+    .mobile-menu-toggle {
+        display: flex;
+    }
+}
+
+/* Overlay do Menu Mobile */
+.mobile-nav-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(7, 7, 8, 0.98);
+    z-index: 105;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition);
+}
+
+.mobile-nav-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.mobile-nav {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    text-align: center;
+}
+
+.mobile-link {
+    color: var(--text-muted);
+    font-size: 20px;
+    font-weight: 700;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    transition: var(--transition);
+}
+
+.mobile-link:hover, .mobile-link.active {
+    color: var(--gold-light);
+    transform: scale(1.05);
+}
+
+.mobile-dropdown-header {
+    color: var(--gold-primary);
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    margin-top: 10px;
+}
+
+.submenu-link {
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    color: #6b7280 !important;
+}
+
+.submenu-link:hover {
+    color: var(--text-white) !important;
+}
+
+/* Estilo do botão Hamburguer Ativo */
+.mobile-menu-toggle.active span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 6px);
+}
+.mobile-menu-toggle.active span:nth-child(2) {
+    opacity: 0;
+}
+.mobile-menu-toggle.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(5px, -6px);
+}
+
+/* -------------------------------------------------------------
+   5. Hero Section (Apresentação Principal)
+------------------------------------------------------------- */
+.hero-section {
+    position: relative;
+    padding: 80px 0 120px 0;
+}
+
+.hero-container {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 60px;
+    align-items: center;
+}
+
+@media (max-width: 968px) {
+    .hero-container {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 40px;
+    }
+}
+
+.gold-badge {
+    background: rgba(197, 168, 92, 0.08);
+    border: 1px solid var(--border-gold);
+    color: var(--gold-light);
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 50px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    margin-bottom: 24px;
+}
+
+.hero-title {
+    font-family: var(--font-heading);
+    font-size: 52px;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1.5px;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 600px) {
+    .hero-title {
+        font-size: 38px;
+    }
+}
+
+.hero-subtitle {
+    color: var(--text-muted);
+    font-size: 18px;
+    font-weight: 300;
+    line-height: 1.6;
+    margin-bottom: 40px;
+    max-width: 580px;
+}
+
+@media (max-width: 968px) {
+    .hero-subtitle {
+        margin: 0 auto 40px auto;
+    }
+}
+
+.hero-cta-group {
+    display: flex;
+    gap: 16px;
+}
+
+@media (max-width: 968px) {
+    .hero-cta-group {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-cta-group {
+        flex-direction: column;
+    }
+}
+
+/* Estilo do Simulador de Lente (Visual Direito) */
+.hero-visual {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.lens-container {
+    width: 320px;
+    height: 320px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.lens-glass {
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.005) 100%);
+    border: 2px solid rgba(197, 168, 92, 0.3);
+    position: relative;
+    box-shadow: 
+        0 0 40px rgba(197, 168, 92, 0.05),
+        inset 0 0 30px rgba(255, 255, 255, 0.02);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.lens-reflection {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        45deg, 
+        rgba(255, 255, 255, 0) 45%, 
+        rgba(255, 255, 255, 0.05) 50%, 
+        rgba(255, 255, 255, 0) 55%
+    );
+    pointer-events: none;
+    transform: rotate(20deg);
+}
+
+.lens-engraving {
+    font-family: var(--font-heading);
+    color: rgba(197, 168, 92, 0.2);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    border: 1px solid rgba(197, 168, 92, 0.1);
+    padding: 4px 10px;
+    border-radius: 4px;
+    position: absolute;
+    top: 30%;
+    pointer-events: none;
+}
+
+.lens-grid {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    border: 1px dashed rgba(197, 168, 92, 0.06);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.lens-grid::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -10%;
+    width: 120%;
+    height: 1px;
+    background: rgba(197, 168, 92, 0.06);
+}
+
+.lens-grid::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: -10%;
+    width: 1px;
+    height: 120%;
+    background: rgba(197, 168, 92, 0.06);
+}
+
+/* -------------------------------------------------------------
+   6. Seção A Marca
+------------------------------------------------------------- */
+.marca-section {
+    border-top: 1px solid var(--border-gray);
+    background: linear-gradient(180deg, var(--bg-dark) 0%, rgba(18, 18, 21, 0.5) 100%);
+}
+
+.about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: center;
+}
+
+@media (max-width: 968px) {
+    .about-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.about-text-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-gray);
+    padding: 40px;
+    border-radius: var(--radius-md);
+}
+
+.about-text-card h3 {
+    font-family: var(--font-heading);
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: var(--gold-light);
+}
+
+.about-text-card p {
+    color: var(--text-muted);
+    font-size: 15px;
+    margin-bottom: 16px;
+}
+
+.about-text-card p:last-child {
+    margin-bottom: 0;
+}
+
+.features-list {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.feature-item {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.feature-icon {
+    font-size: 24px;
+    background: rgba(197, 168, 92, 0.08);
+    border: 1px solid var(--border-gold);
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    min-width: 56px;
+}
+
+.feature-item h4 {
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text-white);
+}
+
+.feature-item p {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+/* -------------------------------------------------------------
+   7. Seção Produtos (Tabs e Cards)
+------------------------------------------------------------- */
+.produtos-section {
+    border-top: 1px solid var(--border-gray);
+    position: relative;
+}
+
+/* Controladores de Abas */
+.tabs-container {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 50px;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-gray);
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 14px;
+    padding: 12px 24px;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.tab-btn:hover {
+    color: var(--text-white);
+    border-color: rgba(197, 168, 92, 0.3);
+}
+
+.tab-btn.active {
+    background: var(--gold-gradient);
+    color: var(--bg-dark);
+    border-color: transparent;
+    box-shadow: 0 10px 20px rgba(197, 168, 92, 0.2);
+}
+
+/* Painel de Conteúdo */
+.tab-pane {
+    display: none;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 32px;
+}
+
+/* Card de Lente Individual */
+.product-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-gray);
+    border-radius: var(--radius-md);
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+}
+
+.product-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: var(--border-gray);
+    transition: var(--transition);
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--border-gold);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+.product-card:hover::before {
+    background: var(--gold-gradient);
+}
+
+/* Efeito radial de brilho ao redor do card no hover */
+.card-glow {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(197, 168, 92, 0.05) 0%, rgba(0,0,0,0) 70%);
+    top: -100px;
+    right: -100px;
+    pointer-events: none;
+    transition: var(--transition);
+}
+
+.product-card:hover .card-glow {
+    transform: scale(1.3);
+}
+
+.product-header {
+    margin-bottom: 20px;
+}
+
+.product-category {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gold-primary);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.product-card h3 {
+    font-family: var(--font-heading);
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.product-desc {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 24px;
+    line-height: 1.6;
+    flex: 1;
+}
+
+.product-features {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.product-features li {
+    font-size: 13px;
+    color: var(--text-white);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Card Ocupacional Único */
+.solo-card {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+/* -------------------------------------------------------------
+   8. Seção Lojas Licenciadas
+------------------------------------------------------------- */
+.lojas-section {
+    border-top: 1px solid var(--border-gray);
+    background: linear-gradient(180deg, var(--bg-dark) 0%, rgba(18, 18, 21, 0.3) 100%);
+}
+
+.stores-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+}
+
+@media (max-width: 968px) {
+    .stores-layout {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+}
+
+.stores-info h3 {
+    font-family: var(--font-heading);
+    font-size: 26px;
+    margin-bottom: 20px;
+    color: var(--gold-light);
+}
+
+.stores-info p {
+    color: var(--text-muted);
+    font-size: 15px;
+    margin-bottom: 20px;
+}
+
+.stores-features {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.store-feat-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.feat-bullet {
+    color: var(--gold-primary);
+    font-weight: 800;
+}
+
+.store-feat-item span {
+    font-size: 14px;
+    color: var(--text-white);
+}
+
+/* Lista de Óticas */
+.stores-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.store-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-gray);
+    padding: 24px;
+    border-radius: var(--radius-md);
+    position: relative;
+}
+
+.store-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 24px;
+    bottom: 24px;
+    width: 3px;
+    background: var(--gold-gradient);
+}
+
+.store-card h4 {
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.store-card p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.store-badge {
+    background: rgba(197, 168, 92, 0.08);
+    border: 1px solid var(--border-gold);
+    color: var(--gold-light);
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+/* -------------------------------------------------------------
+   9. Seção Fale Conosco
+------------------------------------------------------------- */
+.contato-section {
+    border-top: 1px solid var(--border-gray);
+}
+
+.contact-grid {
+    display: grid;
+    grid-template-columns: 0.9fr 1.1fr;
+    gap: 48px;
+    align-items: flex-start;
+}
+
+@media (max-width: 968px) {
+    .contact-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.glass-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-gray);
+    border-radius: var(--radius-md);
+    padding: 40px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+@media (max-width: 600px) {
+    .glass-card {
+        padding: 24px;
+    }
+}
+
+.contact-card h3, .contact-form-container h3 {
+    font-family: var(--font-heading);
+    font-size: 24px;
+    margin-bottom: 16px;
+    color: var(--gold-light);
+}
+
+.contact-intro {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 30px;
+}
+
+.contact-details {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.contact-detail-item {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.contact-detail-icon {
+    font-size: 22px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border-gray);
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+
+.contact-detail-item h5 {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.contact-detail-item p {
+    font-size: 15px;
+    color: var(--text-white);
+    font-weight: 500;
+}
+
+/* Formulário de Contato */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-white);
+    letter-spacing: 0.5px;
+}
+
+.input-group input, .input-group textarea, .input-group select {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-gray);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: var(--text-white);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    outline: none;
+    transition: var(--transition);
+}
+
+.input-group select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg fill='%23cfad52' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 20px;
+    cursor: pointer;
+    padding-right: 40px;
+}
+
+.input-group select option {
+    background-color: var(--bg-card);
+    color: var(--text-white);
+}
+
+.input-group input:focus, .input-group textarea:focus, .input-group select:focus {
+    border-color: var(--gold-primary);
+    background: rgba(197, 168, 92, 0.03);
+    box-shadow: 0 0 0 3px rgba(197, 168, 92, 0.1);
+}
+
+.input-group input.invalid, .input-group textarea.invalid, .input-group select.invalid {
+    border-color: #ef4444;
+}
+
+/* Alerta de Sucesso */
+.success-alert {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    padding: 20px;
+    border-radius: 8px;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.success-alert-icon {
+    font-size: 24px;
+    background: rgba(16, 185, 129, 0.15);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #10b981;
+    min-width: 44px;
+}
+
+.success-alert h4 {
+    color: #10b981;
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.success-alert p {
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+/* -------------------------------------------------------------
+   10. Rodapé (Footer)
+------------------------------------------------------------- */
+.main-footer {
+    border-top: 1px solid var(--border-gray);
+    padding: 60px 0 40px 0;
+    background: #040405;
+    margin-top: auto;
+}
+
+.footer-container {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.footer-brand {
+    text-align: center;
+}
+
+.footer-brand p {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-top: 8px;
+}
+
+.footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--border-gray);
+    padding-top: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+@media (max-width: 600px) {
+    .footer-bottom {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+.footer-bottom p {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.admin-link {
+    color: var(--gold-primary);
+    font-size: 13px;
+    text-decoration: underline;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.admin-link:hover {
+    color: var(--gold-light);
+}
+
+/* -------------------------------------------------------------
+   11. Botões Comuns & Utilidades
+------------------------------------------------------------- */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 14px;
+    padding: 12px 28px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+    border: none;
+    text-decoration: none;
+    gap: 8px;
+}
+
+.btn-gold {
+    background: var(--gold-gradient);
+    color: var(--bg-dark);
+    box-shadow: 0 10px 20px rgba(197, 168, 92, 0.15);
+}
+
+.btn-gold:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(197, 168, 92, 0.25);
+    background: var(--gold-light);
+}
+
+.btn-outline-gold {
+    background: transparent;
+    border: 1.5px solid var(--gold-primary);
+    color: var(--gold-light);
+}
+
+.btn-outline-gold:hover {
+    background: rgba(197, 168, 92, 0.06);
+    transform: translateY(-2px);
+}
+
+.btn-full {
+    width: 100%;
+}
+
+/* Spinner */
+.spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(0, 0, 0, 0.15);
+    border-radius: 50%;
+    border-top-color: black;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

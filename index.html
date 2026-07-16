@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personality Lenses | Tecnologia e Alta Precisão Visual</title>
+    <!-- Google Fonts: Montserrat -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Efeitos de Fundo Luminosos (Gold Glows) -->
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <!-- Cabeçalho / Menu de Navegação -->
+    <header class="main-header">
+        <div class="container header-container">
+            <a href="#" class="logo">
+                <span class="logo-icon">🏆</span>
+                <span class="logo-text">PERSONALITY<span class="gold-dot">.</span></span>
+            </a>
+            
+            <!-- Menu Desktop -->
+            <nav class="desktop-nav">
+                <a href="#home" class="nav-link active">HOME</a>
+                <a href="#marca" class="nav-link">A MARCA</a>
+                
+                <!-- Submenu Produtos -->
+                <div class="nav-item-dropdown">
+                    <a href="#produtos" class="nav-link dropdown-toggle">PRODUTOS ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="#produtos-visaosimples" class="dropdown-item" data-tab="visaosimples">Visão Simples (Monofocais)</a>
+                        <a href="#produtos-progressivos" class="dropdown-item" data-tab="progressivos">Progressivos (Multifocais)</a>
+                        <a href="#produtos-ocupacionais" class="dropdown-item" data-tab="ocupacionais">Ocupacionais (Office)</a>
+                    </div>
+                </div>
+                
+                <a href="#lojas" class="nav-link">LOJAS LICENCIADAS</a>
+                <a href="#portal-loja" class="nav-link">PARCEIRO LICENCIADO</a>
+                <a href="#contato" class="nav-link">GARANTIR 50% OFF</a>
+            </nav>
+
+            <button class="mobile-menu-toggle" aria-label="Abrir Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Menu Mobile -->
+    <div class="mobile-nav-overlay">
+        <nav class="mobile-nav">
+            <a href="#home" class="mobile-link">HOME</a>
+            <a href="#marca" class="mobile-link">A MARCA</a>
+            <div class="mobile-dropdown-header">PRODUTOS:</div>
+            <a href="#produtos" class="mobile-link submenu-link" data-tab="visaosimples">└ Visão Simples</a>
+            <a href="#produtos" class="mobile-link submenu-link" data-tab="progressivos">└ Progressivos</a>
+            <a href="#produtos" class="mobile-link submenu-link" data-tab="ocupacionais">└ Ocupacionais</a>
+            <a href="#lojas" class="mobile-link">LOJAS LICENCIADAS</a>
+            <a href="#portal-loja" class="mobile-link">PARCEIRO LICENCIADO</a>
+            <a href="#contato" class="mobile-link">GARANTIR 50% OFF</a>
+        </nav>
+    </div>
+
+    <!-- Seção HOME (Hero) -->
+    <section id="home" class="hero-section">
+        <div class="container hero-container">
+            <div class="hero-content">
+                <div class="gold-badge">PROMOÇÃO DE LANÇAMENTO EXCLUSIVA ⚡</div>
+                <h1 class="hero-title">Garanta suas lentes <span class="gold-text">PERSONALITY com 50% OFF</span></h1>
+                <p class="hero-subtitle">Mapeadas por inteligência artificial e lapidadas em alta precisão. Cadastre-se agora, selecione a ótica licenciada de sua preferência e gere seu voucher de desconto imediatamente.</p>
+                <div class="hero-cta-group">
+                    <a href="#contato" class="btn btn-gold">Quero Meu Voucher de 50%</a>
+                    <a href="#produtos" class="btn btn-outline-gold">Conhecer Linha Completa</a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="lens-container">
+                    <div class="lens-glass">
+                        <div class="lens-reflection"></div>
+                        <div class="lens-engraving">PERSONALITY IA</div>
+                        <div class="lens-grid"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Seção A MARCA -->
+    <section id="marca" class="section-padding marca-section">
+        <div class="container">
+            <div class="section-header text-center">
+                <h2 class="section-title">A Marca <span class="gold-text">Personality</span></h2>
+                <div class="gold-divider"></div>
+                <p class="section-subtitle">Alta tecnologia óptica desenvolvida para superar os limites da visão convencional.</p>
+            </div>
+            
+            <div class="about-grid">
+                <div class="about-text-card">
+                    <h3>Visão Sem Limitações</h3>
+                    <p>A linha PERSONALITY nasceu com o propósito de oferecer lentes exclusivas e personalizadas de alta gama. Diferente das lentes padrão de mercado, cada par de lentes PERSONALITY é calculated ponto a ponto (Freeform digital) levando em consideração os parâmetros específicos da armação do usuário e sua anatomia facial.</p>
+                    <p>O resultado é a eliminação quase total das distorções laterais, facilitando uma adaptação imediata e natural para novos usuários ou pacientes com altos graus de astigmatismo e presbiopia.</p>
+                </div>
+                
+                <div class="features-list">
+                    <div class="feature-item">
+                        <span class="feature-icon">🔬</span>
+                        <div>
+                            <h4>Processamento Freeform IA</h4>
+                            <p>Superfície calculada digitalmente por inteligência artificial para otimização do campo de visão.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">🛡️</span>
+                        <div>
+                            <h4>Proteção Premium (AR)</h4>
+                            <p>Tratamentos antirreflexo de altíssima resistência como as linhas Clean, C. Blue e Bluecut.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">👁️</span>
+                        <div>
+                            <h4>Foco Sem Saltos</h4>
+                            <p>Transições suaves e ultra fluidas entre os campos de visão de perto, intermediário e longe.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Seção PRODUTOS -->
+    <section id="produtos" class="section-padding produtos-section">
+        <div class="container">
+            <div class="section-header text-center">
+                <h2 class="section-title">Nossas <span class="gold-text">Linhas de Lentes</span></h2>
+                <div class="gold-divider"></div>
+                <p class="section-subtitle">Conheça o portfólio completo de lentes de precisão estruturadas na nossa tabela oficial.</p>
+            </div>
+
+            <!-- Seletores de Abas (Tabs) -->
+            <div class="tabs-container">
+                <button class="tab-btn active" data-tab="visaosimples">Visão Simples</button>
+                <button class="tab-btn" data-tab="progressivos">Progressivos (Multifocais)</button>
+                <button class="tab-btn" data-tab="ocupacionais">Ocupacionais (Office)</button>
+            </div>
+
+            <!-- Conteúdo das Abas -->
+            <div class="tab-content-container">
+                
+                <!-- Aba: Visão Simples -->
+                <div class="tab-pane active" id="tab-visaosimples">
+                    <div class="products-grid">
+                        <div class="product-card">
+                            <div class="card-glow"></div>
+                            <div class="product-header">
+                                <span class="product-category">Visão Simples / Monofocal</span>
+                                <h3>Gold Comfort IA</h3>
+                            </div>
+                            <p class="product-desc">Lentes de visão simples de alta definição projetadas para aliviar a fadiga visual digital. Otimização de campo dinâmico com suportes especiais de adição (D0.40 e D0.60).</p>
+                            <ul class="product-features">
+                                <li>✨ Redução de fadiga diante de telas</li>
+                                <li>✨ Disponível em índices 1.50, 1.56, 1.59, 1.61, 1.67 e 1.74</li>
+                                <li>✨ Compatível com tratamentos Polarizado e Transitions GEN-S</li>
+                            </ul>
+                        </div>
+
+                        <div class="product-card">
+                            <div class="card-glow"></div>
+                            <div class="product-header">
+                                <span class="product-category">Visão Simples / Monofocal</span>
+                                <h3>Maxvision</h3>
+                            </div>
+                            <p class="product-desc">Lente asférica de alta precisão que proporciona nitidez perfeita até as bordas, diminuindo distorções estéticas e melhorando o aspecto físico das lentes.</p>
+                            <ul class="product-features">
+                                <li>✨ Nitidez e nitidez periférica aprimoradas</li>
+                                <li>✨ Espessura reduzida para altas dioptrias</li>
+                                <li>✨ Tratamento antirreflexo de alta durabilidade</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aba: Progressivos -->
+                <div class="tab-pane" id="tab-progressivos">
+                    <div class="products-grid">
+                        <div class="product-card">
+                            <div class="card-glow"></div>
+                            <div class="product-header">
+                                <span class="product-category">Progressiva / Multifocal IA</span>
+                                <h3>Gold Design IA</h3>
+                            </div>
+                            <p class="product-desc">A lente topo de linha da marca. Campo visual expandido e adaptabilidade instantânea gerada por algoritmo de IA com foco nos movimentos naturais dos olhos.</p>
+                            <ul class="product-features">
+                                <li>✨ Altura de corredor dinâmico (13 a 35 mm)</li>
+                                <li>✨ Otimização extrema para perto e longe</li>
+                                <li>✨ Disponível em Resinas Alto Índice, Transitions e Polarizadas</li>
+                            </ul>
+                        </div>
+
+                        <div class="product-card">
+                            <div class="card-glow"></div>
+                            <div class="product-header">
+                                <span class="product-category">Progressiva / Multifocal IA</span>
+                                <h3>Premium HD IA</h3>
+                            </div>
+                            <p class="product-desc">Lente progressiva digital que entrega alta definição visual em alta resolução. Perfeito equilíbrio entre o campo de longe e intermediário para o dia a dia.</p>
+                            <ul class="product-features">
+                                <li>✨ Imagem livre de distorções laterais</li>
+                                <li>✨ Ótimo custo-benefício para tecnologia Freeform</li>
+                                <li>✨ Disponível em policarbonato, 1.67 e 1.74</li>
+                            </ul>
+                        </div>
+
+                        <div class="product-card">
+                            <div class="card-glow"></div>
+                            <div class="product-header">
+                                <span class="product-category">Progressiva / Multifocal IA</span>
+                                <h3>Tecno Line IA</h3>
+                            </div>
+                            <p class="product-desc">Excelente opção de entrada no universo das lentes progressivas digitais personalizadas. Foco preciso em todas as direções com adaptação facilitada.</p>
+                            <ul class="product-features">
+                                <li>✨ Corredor de progressão suave</li>
+                                <li>✨ Tecnologia alemã de lapidação digital</li>
+                                <li>✨ Ampla gama de índices e tratamentos</li>
+                            </ul>
+                        </div>
+
+                        <div class="product-card">
+                            <div class="card-glow"></div>
+                            <div class="product-header">
+                                <span class="product-category">Progressiva / Multifocal Clássica</span>
+                                <h3>Gold Premium / Gold Line</h3>
+                            </div>
+                            <p class="product-desc">Lentes progressivas clássicas lapidadas digitalmente para dar conforto visual a pacientes presbitas tradicionais.</p>
+                            <ul class="product-features">
+                                <li>✨ Transições suaves de foco</li>
+                                <li>✨ Excelente distribuição de dioptrias</li>
+                                <li>✨ Disponibilidade em diversos materiais ópticos</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aba: Ocupacionais -->
+                <div class="tab-pane" id="tab-ocupacionais">
+                    <div class="products-grid">
+                        <div class="product-card solo-card">
+                            <div class="card-glow"></div>
+                            <div class="product-header">
+                                <span class="product-category">Ocupacional / Office IA</span>
+                                <h3>Gold Design Office IA</h3>
+                            </div>
+                            <p class="product-desc">A solução perfeita para ambientes de escritório e profissionais que trabalham com telas de computador e leitura constante. Otimiza de forma extrema os campos intermediário e de leitura (perto).</p>
+                            <ul class="product-features">
+                                <li>✨ Postura ergonômica melhorada em mesas de trabalho</li>
+                                <li>✨ Opções de regressão otimizada (0.80, 1.50 e 3.50 dioptrias de recuo)</li>
+                                <li>✨ Opções com Bluecut e C. Blue de bloqueio de luz azul</li>
+                                <li>✨ Disponibilidade ampla de índices (1.50 até 1.74)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Seção LOJAS LICENCIADAS -->
+    <section id="lojas" class="section-padding lojas-section">
+        <div class="container">
+            <div class="section-header text-center">
+                <h2 class="section-title">Lojas <span class="gold-text">Licenciadas</span></h2>
+                <div class="gold-divider"></div>
+                <p class="section-subtitle">Encontre a ótica credenciada mais próxima para encomendar suas lentes PERSONALITY.</p>
+            </div>
+
+            <div class="stores-layout">
+                <div class="stores-info">
+                    <h3>Onde comprar?</h3>
+                    <p>As lentes PERSONALITY são distribuídas exclusivamente através de óticas credenciadas selecionadas, cujos profissionais passaram por treinamentos avançados de aferição de parâmetros faciais.</p>
+                    <p>Visite um de nossos parceiros licenciados para realizar a tomada de medidas digitais (DNP, Altura, Ângulo Pantoscópico e Distância Vértice) e encomendar as suas lentes exclusivas.</p>
+                    
+                    <div class="stores-features">
+                        <div class="store-feat-item">
+                            <span class="feat-bullet">✓</span>
+                            <span>Aferição digital com equipamentos calibrados.</span>
+                        </div>
+                        <div class="store-feat-item">
+                            <span class="feat-bullet">✓</span>
+                            <span>Garantia de Adaptação oficial de 90 dias.</span>
+                        </div>
+                        <div class="store-feat-item">
+                            <span class="feat-bullet">✓</span>
+                            <span>Certificado de autenticidade física e flanela exclusiva inclusos.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de Lojas Dinâmica (Gerenciada no Painel) -->
+                <div class="stores-list-container" id="storesContainer">
+                    <!-- Inserido dinamicamente via script.js -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Seção FALE CONOSCO (Contato com Cupom) -->
+    <section id="contato" class="section-padding contato-section">
+        <div class="container">
+            <div class="section-header text-center">
+                <h2 class="section-title">Garanta seus <span class="gold-text">50% de Desconto</span></h2>
+                <div class="gold-divider"></div>
+                <p class="section-subtitle">Cadastre seus dados abaixo, selecione a ótica licenciada mais conveniente e gere seu voucher de 50% de desconto oficial.</p>
+            </div>
+
+            <div class="contact-grid">
+                <div class="contact-card glass-card">
+                    <h3>Como funciona a promoção?</h3>
+                    <p class="contact-intro">Siga o passo a passo para garantir suas lentes personalizadas pela metade do preço:</p>
+                    
+                    <div class="contact-details">
+                        <div class="contact-detail-item">
+                            <span class="contact-detail-icon">1️⃣</span>
+                            <div>
+                                <h5>Preencha o Formulário</h5>
+                                <p>Informe seus dados de contato e selecione a ótica mais conveniente.</p>
+                            </div>
+                        </div>
+                        <div class="contact-detail-item">
+                            <span class="contact-detail-icon">2️⃣</span>
+                            <div>
+                                <h5>Gere seu Voucher</h5>
+                                <p>Guarde o código de voucher gerado na tela.</p>
+                            </div>
+                        </div>
+                        <div class="contact-detail-item">
+                            <span class="contact-detail-icon">3️⃣</span>
+                            <div>
+                                <h5>Visite a Ótica Escolhida</h5>
+                                <p>Apresente o voucher na ótica indicada para realizar seus exames e garantir os 50% de desconto.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="contact-form-container glass-card">
+                    <form id="contactForm" novalidate>
+                        <div class="input-group">
+                            <label for="name">Seu Nome Completo</label>
+                            <input type="text" id="name" name="name" placeholder="Ex: Rodrigo Santos" required>
+                            <span class="error-message" id="nameError">Por favor, preencha seu nome.</span>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="email">E-mail</label>
+                            <input type="email" id="email" name="email" placeholder="Ex: rodrigo@email.com" required>
+                            <span class="error-message" id="emailError">Insira um e-mail válido.</span>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="whatsapp">WhatsApp (com DDD)</label>
+                            <input type="tel" id="whatsapp" name="whatsapp" placeholder="(00) 00000-0000" required>
+                            <span class="error-message" id="whatsappError">Insira um WhatsApp válido.</span>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="leadStore">Ótica Licenciada para Resgate</label>
+                            <select id="leadStore" name="leadStore" required>
+                                <option value="">Carregando lojas parceiras...</option>
+                            </select>
+                            <span class="error-message" id="leadStoreError">Por favor, selecione uma ótica licenciada.</span>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="message">Mensagem ou Observações (opcional)</label>
+                            <textarea id="message" name="message" rows="3" placeholder="Se desejar, envie alguma observação."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-gold btn-full" id="btnSubmit">
+                            <span class="btn-text">Garantir Meu Voucher (50% OFF)</span>
+                            <div class="spinner" id="btnSpinner" style="display: none;"></div>
+                        </button>
+                    </form>
+                    
+                    <div class="success-alert" id="successAlert" style="display: none; flex-direction: column; align-items: center; gap: 16px;">
+                        <span class="success-alert-icon">✓</span>
+                        <div class="text-center">
+                            <h4 style="font-size: 20px;">Voucher Gerado com Sucesso!</h4>
+                            <p style="margin-top: 4px;">Apresente o código abaixo na ótica escolhida para garantir os 50% de desconto.</p>
+                        </div>
+                        <div class="coupon-box" style="margin-top: 15px; width: 100%; border: 1.5px dashed var(--gold-primary); background: rgba(197, 168, 92, 0.08); padding: 16px; border-radius: 12px; text-align: center;">
+                            <span style="font-size: 11px; font-weight: 700; color: var(--gold-light); letter-spacing: 2px;">CÓDIGO DO VOUCHER</span>
+                            <h3 id="generatedVoucher" style="font-family: var(--font-heading); font-size: 24px; font-weight: 800; color: #fff; margin-top: 6px; letter-spacing: 1px;">PERS-50-XXXX</h3>
+                        </div>
+                        <button class="btn btn-outline-gold btn-sm" id="btnCopyVoucher">Copiar Código</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Seção: Portal do Parceiro Licenciado (EMBUTIDA NA BASE) -->
+    <section id="portal-loja" class="section-padding portal-section" style="border-top: 1px solid var(--border-gray); background: linear-gradient(180deg, var(--bg-dark) 0%, rgba(18, 18, 21, 0.4) 100%);">
+        <div class="container" style="max-width: 900px;">
+            <div class="section-header text-center">
+                <h2 class="section-title">Portal do <span class="gold-text">Parceiro Licenciado</span></h2>
+                <div class="gold-divider"></div>
+                <p class="section-subtitle">Área restrita para óticas credenciadas acessarem seus vouchers de desconto recebidos.</p>
+            </div>
+
+            <!-- Card de Login do Parceiro -->
+            <div class="glass-card" id="partnerLoginCard" style="max-width: 450px; margin: 0 auto; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.6);">
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <h3 style="font-family: var(--font-heading); font-size: 20px; color: var(--gold-light);">Acesso da Loja</h3>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Insira as credenciais de sua ótica.</p>
+                </div>
+                <form id="partnerLoginForm" novalidate>
+                    <div class="input-group">
+                        <label for="partnerUsername">Usuário</label>
+                        <input type="text" id="partnerUsername" placeholder="Usuário" required>
+                    </div>
+                    <div class="input-group" style="margin-bottom: 24px;">
+                        <label for="partnerPassword">Senha</label>
+                        <input type="password" id="partnerPassword" placeholder="Senha" required>
+                        <span class="error-message" id="partnerLoginError" style="margin-top: 10px;">Usuário ou senha incorretos.</span>
+                    </div>
+                    <button type="submit" class="btn btn-gold btn-full" id="btnPartnerLogin">
+                        <span class="btn-text">Entrar no Portal</span>
+                        <div class="spinner" id="partnerLoginSpinner" style="display: none;"></div>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Painel de Leads da Loja (Oculto Inicialmente) -->
+            <div class="glass-card" id="partnerLeadsPanel" style="display: none; padding: 40px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-gray); padding-bottom: 16px; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+                    <div>
+                        <h3 style="font-family: var(--font-heading); font-size: 20px; color: var(--gold-light);">Vouchers | <span id="sessionStoreName">Nome da Loja</span></h3>
+                        <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Lista de leads direcionados à sua loja.</p>
+                    </div>
+                    <button class="btn btn-outline-gold btn-sm" id="btnPartnerLogout" style="border-color: rgba(239, 68, 68, 0.3); color: #fca5a5; padding: 8px 16px;">Sair do Portal 🚪</button>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+                    <div class="stats-badge">Total de Vouchers: <span id="partnerLeadsCount" style="color: var(--gold-light); font-weight:700;">0</span></div>
+                    <button class="btn btn-success btn-sm" id="btnPartnerExportCSV">📥 Exportar Leads (CSV)</button>
+                </div>
+
+                <div class="table-container" style="overflow-x: auto;">
+                    <table class="leads-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>E-mail</th>
+                                <th>WhatsApp</th>
+                                <th>Voucher</th>
+                                <th>Obs</th>
+                                <th>Data</th>
+                            </tr>
+                        </thead>
+                        <tbody id="partnerLeadsTableBody">
+                            <!-- Preenchido via script.js -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Rodapé -->
+    <footer class="main-footer">
+        <div class="container footer-container">
+            <div class="footer-brand">
+                <span class="logo-text">PERSONALITY<span class="gold-dot">.</span></span>
+                <p>Tecnologia alemã de precisão para a sua saúde visual.</p>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Personality Lenses. Todos os direitos reservados.</p>
+                <div style="display: flex; gap: 16px;">
+                    <a href="#portal-loja" class="admin-link">Portal do Parceiro 🏪</a>
+                    <a href="admin.html" class="admin-link">Painel Master ⚙️</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

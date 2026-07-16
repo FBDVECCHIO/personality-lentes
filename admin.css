@@ -1,0 +1,426 @@
+/* admin.css */
+
+/* Layout de Duas Colunas do Dashboard */
+.admin-container {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 32px;
+    align-items: flex-start;
+    padding-top: 40px;
+    padding-bottom: 80px;
+}
+
+@media (max-width: 968px) {
+    .admin-container {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+}
+
+/* Sidebar */
+.admin-sidebar {
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.sidebar-header h3 {
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gold-light);
+}
+
+.sidebar-header p {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.side-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 600;
+    text-align: left;
+    padding: 12px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+    width: 100%;
+}
+
+.side-btn:hover {
+    color: var(--text-white);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.side-btn.active {
+    background: rgba(197, 168, 92, 0.05);
+    border-color: var(--border-gold);
+    color: var(--gold-light);
+}
+
+/* Controle de Exibição das Seções */
+.admin-section {
+    display: none;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.admin-section.active {
+    display: block;
+}
+
+.section-card {
+    padding: 40px;
+}
+
+@media (max-width: 600px) {
+    .section-card {
+        padding: 24px;
+    }
+}
+
+.card-header {
+    margin-bottom: 30px;
+    border-bottom: 1px solid var(--border-gray);
+    padding-bottom: 20px;
+}
+
+.card-header h2 {
+    font-family: var(--font-heading);
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.card-header p {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+/* Dica/Instruções de Inputs */
+.input-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-style: italic;
+}
+
+/* Indicador de Status */
+.status-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-gray);
+    padding: 14px 16px;
+    border-radius: 8px;
+    margin: 24px 0;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--text-muted);
+}
+
+.status-box.connected .status-dot {
+    background-color: var(--success);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+
+.status-box.error .status-dot {
+    background-color: var(--danger);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+}
+
+.status-box.loading .status-dot {
+    background-color: var(--secondary);
+    animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+    from { opacity: 0.4; }
+    to { opacity: 1; }
+}
+
+/* SQL Box */
+.sql-instructions {
+    background: #0d0d0f;
+    border: 1px solid var(--border-gray);
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 30px;
+}
+
+.sql-instructions h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gold-light);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.sql-instructions p {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+.sql-instructions pre {
+    overflow-x: auto;
+}
+
+.sql-instructions code {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+    color: #e2e8f0;
+    display: block;
+}
+
+/* Checklist de Domínio */
+.checklist-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.checklist-item {
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid var(--border-gray);
+    padding: 20px;
+    border-radius: 12px;
+    transition: var(--transition);
+}
+
+.checklist-item:hover {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.check-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.check-label input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.check-label .checkmark {
+    min-width: 22px;
+    height: 22px;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-gray);
+    border-radius: 6px;
+    position: relative;
+    transition: var(--transition);
+    margin-top: 3px;
+}
+
+.check-label:hover input ~ .checkmark {
+    border-color: var(--gold-primary);
+}
+
+.check-label input:checked ~ .checkmark {
+    background-color: var(--gold-primary);
+    border-color: var(--gold-primary);
+}
+
+.check-label .checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.check-label input:checked ~ .checkmark:after {
+    display: block;
+}
+
+.check-label .checkmark:after {
+    left: 8px;
+    top: 4px;
+    width: 4px;
+    height: 9px;
+    border: solid black;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.check-label strong {
+    font-size: 15px;
+    color: var(--text-white);
+    display: block;
+    margin-bottom: 4px;
+    font-family: var(--font-heading);
+}
+
+.check-label input:checked ~ div strong {
+    text-decoration: line-through;
+    color: var(--text-muted);
+}
+
+.check-label p {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.dns-specs {
+    background: #0d0d0f;
+    border: 1px solid var(--border-gray);
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 10px;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+.dns-specs code {
+    background: rgba(255, 255, 255, 0.08);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--gold-light);
+}
+
+/* Banco de Imagens */
+.assets-guide h4 {
+    font-family: var(--font-heading);
+    font-size: 16px;
+    color: var(--gold-light);
+    margin-bottom: 12px;
+}
+
+.assets-guide ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.assets-guide li {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.assets-guide li strong {
+    color: var(--text-white);
+}
+
+.assets-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 12px;
+}
+
+.assets-table th {
+    text-align: left;
+    padding: 12px;
+    background: rgba(255,255,255,0.02);
+    border-bottom: 1px solid var(--border-gray);
+}
+
+.assets-table td {
+    padding: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    color: var(--text-muted);
+}
+
+.assets-table code {
+    color: var(--gold-light);
+    background: rgba(255, 255, 255, 0.03);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* Leads Recebidos */
+.admin-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.stats-badge {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-gray);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.stats-badge span {
+    color: var(--gold-light);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--border-gray);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.01);
+}
+
+.leads-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.leads-table th {
+    background: rgba(255, 255, 255, 0.02);
+    padding: 14px 16px;
+    font-weight: 600;
+    color: var(--text-white);
+    border-bottom: 1px solid var(--border-gray);
+}
+
+.leads-table td {
+    padding: 14px 16px;
+    color: var(--text-muted);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.leads-table tbody tr:hover td {
+    background: rgba(255, 255, 255, 0.01);
+    color: var(--text-white);
+}
+
+.wa-link {
+    color: #10b981;
+    text-decoration: underline;
+    font-weight: 600;
+}
+
+.wa-link:hover {
+    color: #34d399;
+}

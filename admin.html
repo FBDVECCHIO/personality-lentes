@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Controle | Personality Lenses</title>
+    <!-- Google Fonts: Montserrat -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body class="admin-body">
+    <!-- Efeitos de Fundo (Gold Glow) -->
+    <div class="bg-glow bg-glow-1"></div>
+
+    <header class="main-header">
+        <div class="container header-container">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">🏆</span>
+                <span class="logo-text">PERSONALITY<span class="gold-dot">.</span></span>
+            </a>
+            <div class="header-badge">Painel de Configuração Geral ⚙️</div>
+        </div>
+    </header>
+
+    <main class="container admin-container">
+        <!-- Sidebar do Painel -->
+        <aside class="admin-sidebar glass-card">
+            <div class="sidebar-header">
+                <h3>Gerenciamento</h3>
+                <p>Configurações e Leads</p>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="side-btn active" data-section="supabase">🗄️ Banco Supabase</button>
+                <button class="side-btn" data-section="lojas">🏪 Lojas Licenciadas</button>
+                <button class="side-btn" data-section="acessos">🔑 Acessos das Lojas</button>
+                <button class="side-btn" data-section="dominio">🌐 Domínio e Vercel</button>
+                <button class="side-btn" data-section="imagens">📸 Banco de Imagens</button>
+                <button class="side-btn" data-section="leads">📥 Leads Recebidos</button>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="index.html" class="btn btn-outline-gold btn-full btn-sm">← Voltar para o Site</a>
+            </div>
+        </aside>
+
+        <!-- Área de Conteúdo Principal -->
+        <section class="admin-content-area">
+            
+            <!-- Seção: Banco de Dados Supabase -->
+            <div class="admin-section active" id="sec-supabase">
+                <div class="glass-card section-card">
+                    <div class="card-header">
+                        <h2>Configurações do Banco de Dados <span class="gold-text">(Supabase)</span></h2>
+                        <p>Configure a conexão direta com o Supabase para que a página grave os leads e carregue as lojas de forma permanente na nuvem.</p>
+                    </div>
+
+                    <form id="supabaseConfigForm">
+                        <div class="input-group">
+                            <label for="sbUrl">URL da API do Supabase (Project URL)</label>
+                            <input type="url" id="sbUrl" placeholder="Ex: https://xxxxxxxxx.supabase.co" required>
+                            <p class="input-hint">Encontrado em: *Project Settings > API > Project URL* no painel do Supabase.</p>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="sbKey">Anon Key (Public API Key)</label>
+                            <input type="password" id="sbKey" placeholder="Ex: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." required>
+                            <p class="input-hint">Encontrado em: *Project Settings > API > Project API keys (anon public)*.</p>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="sbTable">Nome da Tabela de Leads</label>
+                            <input type="text" id="sbTable" value="leads_personality" required>
+                            <p class="input-hint">Tabela no banco de dados que irá receber os campos: `name`, `email`, `whatsapp`, `message`, `loja`, `voucher`.</p>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="sbStoresTable">Nome da Tabela de Lojas</label>
+                            <input type="text" id="sbStoresTable" value="lojas_licenciadas" required>
+                            <p class="input-hint">Tabela no banco de dados que irá receber as óticas: `nome`, `endereco`, `telefone`.</p>
+                        </div>
+
+                        <div class="status-box" id="sbConnectionStatus">
+                            <span class="status-dot"></span>
+                            <span class="status-text">Não configurado / Sem conexão local</span>
+                        </div>
+
+                        <button type="submit" class="btn btn-gold">Salvar Configurações</button>
+                    </form>
+
+                    <div class="sql-instructions">
+                        <h4>🛠️ Script SQL para criação das tabelas no Supabase:</h4>
+                        <p>Copie e execute o código abaixo no menu **SQL Editor** do seu painel do Supabase para criar ou atualizar as tabelas do projeto:</p>
+                        <pre><code>-- 1. Tabela de Leads Promocionais com Loja e Voucher
+create table if not exists leads_personality (
+  id uuid default gen_random_uuid() primary key,
+  name text not null,
+  email text not null,
+  whatsapp text not null,
+  message text,
+  loja text,
+  voucher text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 2. Tabela de Lojas Licenciadas
+create table if not exists lojas_licenciadas (
+  id uuid default gen_random_uuid() primary key,
+  nome text not null,
+  endereco text,
+  telefone text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 3. Tabela de Acessos de Lojas Credenciadas
+create table if not exists acessos_lojas (
+  id uuid default gen_random_uuid() primary key,
+  loja_nome text not null unique,
+  usuario text not null unique,
+  senha text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 4. Liberar acesso às tabelas (caso RLS esteja ativo)
+alter table leads_personality disable row level security;
+alter table lojas_licenciadas disable row level security;
+alter table acessos_lojas disable row level security;
+</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção: Gerenciar Lojas Licenciadas -->
+            <div class="admin-section" id="sec-lojas">
+                <div class="glass-card section-card">
+                    <div class="card-header">
+                        <h2>Gerenciamento de <span class="gold-text">Lojas Licenciadas</span></h2>
+                        <p>Cadastre e gerencie as óticas parceiras que aparecerão na página principal e no formulário de resgate do voucher.</p>
+                    </div>
+
+                    <!-- Formulário de cadastro de óticas -->
+                    <form id="addStoreForm">
+                        <div class="input-group">
+                            <label for="storeName">Nome da Ótica</label>
+                            <input type="text" id="storeName" placeholder="Ex: Óptica Visual Gold" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="storeAddress">Endereço Completo</label>
+                            <input type="text" id="storeAddress" placeholder="Ex: Av. Paulista, 1200 - Jardins, São Paulo - SP" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="storePhone">Telefone / WhatsApp de Contato</label>
+                            <input type="text" id="storePhone" placeholder="Ex: (11) 98888-7777" required>
+                        </div>
+                        <button type="submit" class="btn btn-gold">Cadastrar Ótica Parceira</button>
+                    </form>
+
+                    <div style="margin-top: 40px;">
+                        <h3 style="font-family: var(--font-heading); font-size: 18px; margin-bottom: 15px; color: var(--gold-light);">🏪 Óticas Cadastradas</h3>
+                        
+                        <div class="table-container">
+                            <table class="leads-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nome da Ótica</th>
+                                        <th>Endereço</th>
+                                        <th>Telefone</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="storesTableBody">
+                                    <!-- Preenchido dinamicamente via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção: Acessos das Lojas -->
+            <div class="admin-section" id="sec-acessos">
+                <div class="glass-card section-card">
+                    <div class="card-header">
+                        <h2>🔑 Acessos das <span class="gold-text">Óticas Licenciadas</span></h2>
+                        <p>Crie e gerencie as credenciais de login que as óticas usarão para acessar o Portal do Parceiro e ver os próprios leads.</p>
+                    </div>
+
+                    <!-- Formulário para criar acesso -->
+                    <form id="createAccessForm">
+                        <div class="input-group">
+                            <label for="accessStoreSelect">Selecione a Ótica Credenciada</label>
+                            <select id="accessStoreSelect" required>
+                                <option value="">Carregando óticas...</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="accessUser">Usuário de Acesso (Login)</label>
+                            <input type="text" id="accessUser" placeholder="Ex: primepaulista" required>
+                            <p class="input-hint">Use apenas letras e números minúsculos, sem espaços ou acentos.</p>
+                        </div>
+                        <div class="input-group" style="margin-bottom: 24px;">
+                            <label for="accessPassword">Senha de Acesso</label>
+                            <input type="text" id="accessPassword" placeholder="Ex: senha123" required>
+                        </div>
+                        <button type="submit" class="btn btn-gold">Criar Credencial de Acesso</button>
+                    </form>
+
+                    <div style="margin-top: 40px;">
+                        <h3 style="font-family: var(--font-heading); font-size: 18px; margin-bottom: 15px; color: var(--gold-light);">🔑 Credenciais Ativas</h3>
+                        <div class="table-container">
+                            <table class="leads-table">
+                                <thead>
+                                    <tr>
+                                        <th>Ótica Correspondente</th>
+                                        <th>Usuário (Login)</th>
+                                        <th>Senha</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="accessTableBody">
+                                    <!-- Preenchido via Javascript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção: Domínio e Vercel -->
+            <div class="admin-section" id="sec-dominio">
+                <div class="glass-card section-card">
+                    <div class="card-header">
+                        <h2>Configurações de Domínio <span class="gold-text">e Deploy na Vercel</span></h2>
+                        <p>Guia passo a passo para conectar a sua conta da Vercel ao domínio oficial da marca.</p>
+                    </div>
+
+                    <div class="checklist-container">
+                        <h3>📋 Lista de Etapas (Acompanhamento)</h3>
+                        <div class="checklist-item">
+                            <label class="check-label">
+                                <input type="checkbox" class="domain-check" id="chk-vercel">
+                                <span class="checkmark"></span>
+                                <div>
+                                    <strong>1. Criar Projeto na Vercel</strong>
+                                    <p>Envie o repositório deste projeto para o seu GitHub e importe na Vercel. O deploy inicial é automático e gerará um link temporário `.vercel.app`.</p>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="checklist-item">
+                            <label class="check-label">
+                                <input type="checkbox" class="domain-check" id="chk-registro">
+                                <span class="checkmark"></span>
+                                <div>
+                                    <strong>2. Registrar Domínio Oficial</strong>
+                                    <p>Garanta que o seu domínio (ex: `personalitylentes.com.br`) esteja registrado no Registro.br ou provedor equivalente.</p>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="checklist-item">
+                            <label class="check-label">
+                                <input type="checkbox" class="domain-check" id="chk-add-vercel">
+                                <span class="checkmark"></span>
+                                <div>
+                                    <strong>3. Adicionar Domínio na Vercel</strong>
+                                    <p>No painel da Vercel, acesse: *Settings > Domains*, digite o seu domínio e clique em **Add**.</p>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="checklist-item">
+                            <label class="check-label">
+                                <input type="checkbox" class="domain-check" id="chk-dns">
+                                <span class="checkmark"></span>
+                                <div>
+                                    <strong>4. Configurar Registros DNS no Provedor</strong>
+                                    <p>No painel do Registro.br (ou Cloudflare), configure os apontamentos indicados pela Vercel:</p>
+                                    <div class="dns-specs">
+                                        <p>🌐 <strong>Para subdomínio (ex: www):</strong> Criar registro <code>CNAME</code> apontando para <code>cname.vercel-dns.com</code></p>
+                                        <p>🌐 <strong>Para domínio principal (ex: sem www):</strong> Criar registro <code>A</code> apontando para o IP <code>76.76.21.21</code></p>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção: Banco de Imagens -->
+            <div class="admin-section" id="sec-imagens">
+                <div class="glass-card section-card">
+                    <div class="card-header">
+                        <h2>Banco de Imagens <span class="gold-text">e Recursos Visuais</span></h2>
+                        <p>Locais sugeridos para buscar imagens de alta qualidade e instruções de substituição de arquivos no projeto.</p>
+                    </div>
+
+                    <div class="assets-guide">
+                        <div class="guide-box">
+                            <h4>🎨 Onde buscar fotos profissionais gratuitas:</h4>
+                            <ul>
+                                <li>📸 <strong>Unsplash (unsplash.com):</strong> Busque termos como *"luxury optics"*, *"glasses style"*, *"german lab"* ou *"precision technology"*.</li>
+                                <li>📸 <strong>Freepik (freepik.com):</strong> Ideal para vetores, renderizações de lentes e fotos comerciais de óticas.</li>
+                                <li>📸 <strong>Pexels (pexels.com):</strong> Excelente acervo de vídeos e fotos de modelos usando óculos em ambientes premium.</li>
+                            </ul>
+                        </div>
+
+                        <div class="guide-box" style="margin-top: 24px;">
+                            <h4>📁 Como substituir as imagens no código:</h4>
+                            <p>Crie uma pasta chamada <code>images</code> na raiz do projeto e substitua as imagens estruturais:</p>
+                            <table class="assets-table">
+                                <thead>
+                                    <tr>
+                                        <th>Seção</th>
+                                        <th>Caminho Sugerido</th>
+                                        <th>Dimensões Recomendadas</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Lente Premium (Hero)</td>
+                                        <td><code>images/hero-lens.png</code></td>
+                                        <td>500x500px (Fundo transparente PNG)</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Foto Laboratório/Sobre Nós</td>
+                                        <td><code>images/about-lab.jpg</code></td>
+                                        <td>800x600px</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Banner Lojas Licenciadas</td>
+                                        <td><code>images/store-locator.jpg</code></td>
+                                        <td>1200x500px</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção: Leads Recebidos -->
+            <div class="admin-section" id="sec-leads">
+                <div class="glass-card section-card">
+                    <div class="card-header">
+                        <h2>Leads Recebidos <span class="gold-text">(Resgates de Voucher)</span></h2>
+                        <p>Visualize os dados dos clientes que cadastraram para ganhar 50% de desconto e os respectivos vouchers gerados.</p>
+                    </div>
+
+                    <div class="admin-actions">
+                        <div class="stats-badge">Total de Vouchers: <span id="leadsCount">0</span></div>
+                        <div class="action-buttons">
+                            <button class="btn btn-success btn-sm" id="btnExportLeads">📥 Exportar Planilha (CSV)</button>
+                            <button class="btn btn-danger btn-sm" id="btnClearLeads">🗑️ Limpar Banco</button>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="leads-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>E-mail</th>
+                                    <th>WhatsApp</th>
+                                    <th>Ótica Escolhida</th>
+                                    <th>Voucher</th>
+                                    <th>Obs</th>
+                                    <th>Data</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leadsTableBody">
+                                <!-- Preenchido via Javascript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <footer class="main-footer" style="margin-top: 60px;">
+        <div class="container text-center">
+            <p>&copy; 2026 Personality Lenses. Painel administrativo e de configuração geral.</p>
+        </div>
+    </footer>
+
+    <script src="admin.js"></script>
+</body>
+</html>
