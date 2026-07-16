@@ -35,16 +35,21 @@
     scroll-behavior: smooth;
 }
 
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+    position: relative;
+}
+
 body {
     background-color: var(--bg-dark);
     color: var(--text-white);
     font-family: var(--font-sans);
     line-height: 1.6;
-    overflow-x: hidden;
-    position: relative;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    width: 100%;
 }
 
 body.no-scroll {
@@ -1198,4 +1203,53 @@ body.no-scroll {
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* -------------------------------------------------------------
+   12. Botão Voltar ao Topo (Floating)
+------------------------------------------------------------- */
+.back-to-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(18, 18, 21, 0.85);
+    border: 1px solid var(--gold-primary);
+    color: var(--gold-light);
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: var(--transition);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 4px 12px rgba(197, 168, 92, 0.15);
+}
+
+.back-to-top.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.back-to-top:hover {
+    background: var(--gold-gradient);
+    color: var(--bg-dark);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(197, 168, 92, 0.35);
+}
+
+@media (max-width: 600px) {
+    .back-to-top {
+        bottom: 20px;
+        right: 20px;
+        width: 42px;
+        height: 42px;
+        font-size: 16px;
+    }
 }
