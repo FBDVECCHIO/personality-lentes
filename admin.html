@@ -153,7 +153,10 @@ alter table acessos_lojas disable row level security;
                             <label for="storePhone">Telefone / WhatsApp de Contato</label>
                             <input type="text" id="storePhone" placeholder="Ex: (11) 98888-7777" required>
                         </div>
-                        <button type="submit" class="btn btn-gold">Cadastrar Ótica Parceira</button>
+                        <div class="form-actions" style="display: flex; gap: 12px; align-items: center;">
+                            <button type="submit" class="btn btn-gold" id="btnSubmitStore">Cadastrar Ótica Parceira</button>
+                            <button type="button" class="btn btn-outline-gold" id="btnCancelEditStore" style="display: none; padding: 12px 24px; border-radius: 8px;">Cancelar</button>
+                        </div>
                     </form>
 
                     <div style="margin-top: 40px;">
@@ -203,7 +206,10 @@ alter table acessos_lojas disable row level security;
                             <label for="accessPassword">Senha de Acesso</label>
                             <input type="text" id="accessPassword" placeholder="Ex: senha123" required>
                         </div>
-                        <button type="submit" class="btn btn-gold">Criar Credencial de Acesso</button>
+                        <div class="form-actions" style="display: flex; gap: 12px; align-items: center;">
+                            <button type="submit" class="btn btn-gold" id="btnSubmitAccess">Criar Credencial de Acesso</button>
+                            <button type="button" class="btn btn-outline-gold" id="btnCancelEditAccess" style="display: none; padding: 12px 24px; border-radius: 8px;">Cancelar</button>
+                        </div>
                     </form>
 
                     <div style="margin-top: 40px;">

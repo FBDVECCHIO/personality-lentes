@@ -149,10 +149,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const storePhoneInput = document.getElementById('storePhone');
     const storesTableBody = document.getElementById('storesTableBody');
 
+    const btnSubmitStore = document.getElementById('btnSubmitStore');
+    const btnCancelEditStore = document.getElementById('btnCancelEditStore');
+
+    let editingStoreId = null;
+
     const defaultStores = [
         { id: "1", nome: "Ótica Prime & Cia", endereco: "Av. Paulista, 1000 - Bela Vista, São Paulo - SP", telefone: "(11) 3222-1234" },
         { id: "2", nome: "Atelier da Visão", endereco: "Al. Lorena, 452 - Jardins, São Paulo - SP", telefone: "(11) 3888-5678" }
     ];
+
+    btnCancelEditStore.addEventListener('click', () => {
+        addStoreForm.reset();
+        btnSubmitStore.textContent = 'Cadastrar Ótica Parceira';
+        btnCancelEditStore.style.display = 'none';
+        editingStoreId = null;
+    });
 
     async function getStoresList() {
         const url = localStorage.getItem('personality_sb_url');
@@ -208,12 +220,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${escapeHtml(store.endereco)}</td>
                 <td>${escapeHtml(store.telefone)}</td>
                 <td>
-                    <button class="btn btn-danger btn-sm delete-store-btn" data-id="${store.id}">Excluir</button>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-gold btn-sm edit-store-btn" data-id="${store.id}">Editar</button>
+                        <button class="btn btn-danger btn-sm delete-store-btn" data-id="${store.id}">Excluir</button>
+                    </div>
                 </td>
             `;
             storesTableBody.appendChild(tr);
         });
 
+        // Configura botões de edição
+        document.querySelectorAll('.edit-store-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                const store = stores.find(s => s.id.toString() === id.toString());
+                if (store) {
+                    storeNameInput.value = store.nome;
+                    storeAddressInput.value = store.endereco;
+                    storePhoneInput.value = store.telefone;
+
+                    btnSubmitStore.textContent = 'Salvar Alterações 💾';
+                    btnCancelEditStore.style.display = 'inline-block';
+                    editingStoreId = id;
+
+                    addStoreForm.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Configura botões de exclusão
         document.querySelectorAll('.delete-store-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const id = btn.getAttribute('data-id');
@@ -240,6 +275,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 if (!response.ok) throw new Error('Falha ao excluir no Supabase.');
+                
+                if (editingStoreId === id) {
+                    btnCancelEditStore.click();
+                }
+                
                 loadStores();
             } catch (error) {
                 alert(`Erro ao excluir: ${error.message}`);
@@ -248,6 +288,9 @@ document.addEventListener('DOMContentLoaded', () => {
             let stores = getLocalStores();
             stores = stores.filter(s => s.id !== id);
             localStorage.setItem('personality_local_stores', JSON.stringify(stores));
+            if (editingStoreId === id) {
+                btnCancelEditStore.click();
+            }
             loadStores();
         }
     }
@@ -259,45 +302,80 @@ document.addEventListener('DOMContentLoaded', () => {
         const endereco = storeAddressInput.value.trim();
         const telefone = storePhoneInput.value.trim();
 
-        const newStore = {
-            id: Date.now().toString(),
-            nome,
-            endereco,
-            telefone
-        };
-
         const url = localStorage.getItem('personality_sb_url');
         const key = localStorage.getItem('personality_sb_key');
         const storesTable = localStorage.getItem('personality_sb_stores_table') || 'lojas_licenciadas';
 
-        if (url && key) {
-            try {
-                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
-                const endpoint = `${cleanUrl}/rest/v1/${storesTable}`;
+        if (editingStoreId) {
+            // Modo Edição (PATCH)
+            if (url && key) {
+                try {
+                    const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                    const endpoint = `${cleanUrl}/rest/v1/${storesTable}?id=eq.${editingStoreId}`;
 
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: {
-                        'apikey': key,
-                        'Authorization': `Bearer ${key}`,
-                        'Content-Type': 'application/json',
-                        'Prefer': 'return=minimal'
-                    },
-                    body: JSON.stringify({ nome, endereco, telefone })
-                });
+                    const response = await fetch(endpoint, {
+                        method: 'PATCH',
+                        headers: {
+                            'apikey': key,
+                            'Authorization': `Bearer ${key}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify({ nome, endereco, telefone })
+                    });
 
-                if (!response.ok) throw new Error('Falha ao salvar no Supabase.');
-                addStoreForm.reset();
+                    if (!response.ok) throw new Error('Falha ao atualizar no Supabase.');
+                    
+                    btnCancelEditStore.click();
+                    loadStores();
+                } catch (error) {
+                    alert(`Erro ao atualizar: ${error.message}`);
+                }
+            } else {
+                let stores = getLocalStores();
+                stores = stores.map(s => s.id === editingStoreId ? { ...s, nome, endereco, telefone } : s);
+                localStorage.setItem('personality_local_stores', JSON.stringify(stores));
+                btnCancelEditStore.click();
                 loadStores();
-            } catch (error) {
-                alert(`Erro: ${error.message}`);
             }
         } else {
-            const stores = getLocalStores();
-            stores.push(newStore);
-            localStorage.setItem('personality_local_stores', JSON.stringify(stores));
-            addStoreForm.reset();
-            loadStores();
+            // Modo Criação (POST)
+            const newStore = {
+                id: Date.now().toString(),
+                nome,
+                endereco,
+                telefone
+            };
+
+            if (url && key) {
+                try {
+                    const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                    const endpoint = `${cleanUrl}/rest/v1/${storesTable}`;
+
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': key,
+                            'Authorization': `Bearer ${key}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify({ nome, endereco, telefone })
+                    });
+
+                    if (!response.ok) throw new Error('Falha ao salvar no Supabase.');
+                    addStoreForm.reset();
+                    loadStores();
+                } catch (error) {
+                    alert(`Erro: ${error.message}`);
+                }
+            } else {
+                const stores = getLocalStores();
+                stores.push(newStore);
+                localStorage.setItem('personality_local_stores', JSON.stringify(stores));
+                addStoreForm.reset();
+                loadStores();
+            }
         }
     });
 
@@ -310,8 +388,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const accessPasswordInput = document.getElementById('accessPassword');
     const accessTableBody = document.getElementById('accessTableBody');
 
+    const btnSubmitAccess = document.getElementById('btnSubmitAccess');
+    const btnCancelEditAccess = document.getElementById('btnCancelEditAccess');
+
+    let editingAccessId = null;
+
+    btnCancelEditAccess.addEventListener('click', () => {
+        createAccessForm.reset();
+        btnSubmitAccess.textContent = 'Criar Credencial de Acesso';
+        btnCancelEditAccess.style.display = 'none';
+        editingAccessId = null;
+    });
+
     async function loadAccessManager() {
-        // Popula o dropdown de lojas credenciadas
         accessStoreSelect.innerHTML = '<option value="">Carregando lojas...</option>';
         const stores = await getStoresList();
         
@@ -323,7 +412,6 @@ document.addEventListener('DOMContentLoaded', () => {
             accessStoreSelect.appendChild(opt);
         });
 
-        // Carrega tabela de credenciais
         loadAccessList();
     }
 
@@ -379,10 +467,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td><code>${escapeHtml(acc.usuario)}</code></td>
                 <td><code>${escapeHtml(acc.senha)}</code></td>
                 <td>
-                    <button class="btn btn-danger btn-sm delete-access-btn" data-id="${acc.id}">Excluir</button>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-gold btn-sm edit-access-btn" data-id="${acc.id}">Editar</button>
+                        <button class="btn btn-danger btn-sm delete-access-btn" data-id="${acc.id}">Excluir</button>
+                    </div>
                 </td>
             `;
             accessTableBody.appendChild(tr);
+        });
+
+        // Configura botões de edição
+        document.querySelectorAll('.edit-access-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                const acc = accesses.find(a => a.id.toString() === id.toString());
+                if (acc) {
+                    accessStoreSelect.value = acc.loja_nome;
+                    accessUserInput.value = acc.usuario;
+                    accessPasswordInput.value = acc.senha;
+
+                    btnSubmitAccess.textContent = 'Salvar Alterações 💾';
+                    btnCancelEditAccess.style.display = 'inline-block';
+                    editingAccessId = id;
+
+                    createAccessForm.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
         });
 
         // Configura botões de exclusão
@@ -411,6 +521,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 if (!response.ok) throw new Error('Falha ao excluir no Supabase.');
+                
+                if (editingAccessId === id) {
+                    btnCancelEditAccess.click();
+                }
+
                 loadAccessList();
             } catch (error) {
                 alert(`Erro: ${error.message}`);
@@ -419,11 +534,13 @@ document.addEventListener('DOMContentLoaded', () => {
             let accesses = getLocalAccesses();
             accesses = accesses.filter(acc => acc.id !== id);
             localStorage.setItem('personality_local_accesses', JSON.stringify(accesses));
+            if (editingAccessId === id) {
+                btnCancelEditAccess.click();
+            }
             loadAccessList();
         }
     }
 
-    // Formulário de Cadastro de Credencial
     createAccessForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -431,62 +548,105 @@ document.addEventListener('DOMContentLoaded', () => {
         const usuario = accessUserInput.value.trim().toLowerCase();
         const senha = accessPasswordInput.value.trim();
 
-        // Validação básica do usuário
         if (!/^[a-z0-9]+$/.test(usuario)) {
             alert('O usuário deve conter apenas letras minúsculas e números, sem espaços ou acentos.');
             return;
         }
 
-        const newAccess = {
-            id: Date.now().toString(),
-            loja_nome,
-            usuario,
-            senha
-        };
-
         const url = localStorage.getItem('personality_sb_url');
         const key = localStorage.getItem('personality_sb_key');
 
-        if (url && key) {
-            try {
-                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
-                const endpoint = `${cleanUrl}/rest/v1/acessos_lojas`;
+        if (editingAccessId) {
+            // Modo Edição (PATCH)
+            if (url && key) {
+                try {
+                    const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                    const endpoint = `${cleanUrl}/rest/v1/acessos_lojas?id=eq.${editingAccessId}`;
 
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: {
-                        'apikey': key,
-                        'Authorization': `Bearer ${key}`,
-                        'Content-Type': 'application/json',
-                        'Prefer': 'return=minimal'
-                    },
-                    body: JSON.stringify({ loja_nome, usuario, senha })
-                });
+                    const response = await fetch(endpoint, {
+                        method: 'PATCH',
+                        headers: {
+                            'apikey': key,
+                            'Authorization': `Bearer ${key}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify({ loja_nome, usuario, senha })
+                    });
 
-                if (!response.ok) {
-                    const errText = await response.text();
-                    if (errText.includes('duplicate key')) {
-                        throw new Error('Já existe um acesso cadastrado para esta loja ou com este usuário.');
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        if (errText.includes('duplicate key')) {
+                            throw new Error('Já existe um acesso cadastrado com este usuário.');
+                        }
+                        throw new Error(errText || 'Falha ao atualizar acesso no Supabase.');
                     }
-                    throw new Error(errText || 'Falha ao salvar acesso no Supabase.');
-                }
 
-                createAccessForm.reset();
+                    btnCancelEditAccess.click();
+                    loadAccessList();
+                } catch (error) {
+                    alert(`Erro ao atualizar: ${error.message}`);
+                }
+            } else {
+                let accesses = getLocalAccesses();
+                if (accesses.some(a => a.id !== editingAccessId && a.usuario === usuario)) {
+                    alert('Já existe um acesso cadastrado com este usuário.');
+                    return;
+                }
+                accesses = accesses.map(a => a.id === editingAccessId ? { ...a, loja_nome, usuario, senha } : a);
+                localStorage.setItem('personality_local_accesses', JSON.stringify(accesses));
+                btnCancelEditAccess.click();
                 loadAccessList();
-            } catch (error) {
-                alert(`Erro: ${error.message}`);
             }
         } else {
-            const accesses = getLocalAccesses();
-            // Verifica duplicados locais
-            if (accesses.some(a => a.loja_nome === loja_nome || a.usuario === usuario)) {
-                alert('Já existe um acesso cadastrado para esta loja ou com este usuário.');
-                return;
+            // Modo Criação (POST)
+            const newAccess = {
+                id: Date.now().toString(),
+                loja_nome,
+                usuario,
+                senha
+            };
+
+            if (url && key) {
+                try {
+                    const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                    const endpoint = `${cleanUrl}/rest/v1/acessos_lojas`;
+
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': key,
+                            'Authorization': `Bearer ${key}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify({ loja_nome, usuario, senha })
+                    });
+
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        if (errText.includes('duplicate key')) {
+                            throw new Error('Já existe um acesso cadastrado para esta loja ou com este usuário.');
+                        }
+                        throw new Error(errText || 'Falha ao salvar acesso no Supabase.');
+                    }
+
+                    createAccessForm.reset();
+                    loadAccessList();
+                } catch (error) {
+                    alert(`Erro: ${error.message}`);
+                }
+            } else {
+                const accesses = getLocalAccesses();
+                if (accesses.some(a => a.loja_nome === loja_nome || a.usuario === usuario)) {
+                    alert('Já existe um acesso cadastrado para esta loja ou com este usuário.');
+                    return;
+                }
+                accesses.push(newAccess);
+                localStorage.setItem('personality_local_accesses', JSON.stringify(accesses));
+                createAccessForm.reset();
+                loadAccessList();
             }
-            accesses.push(newAccess);
-            localStorage.setItem('personality_local_accesses', JSON.stringify(accesses));
-            createAccessForm.reset();
-            loadAccessList();
         }
     });
 
