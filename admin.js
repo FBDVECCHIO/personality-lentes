@@ -743,11 +743,47 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/'/g, "&#039;");
     }
 
-    // Limpar leads locais
-    btnClearLeads.addEventListener('click', () => {
-        if (confirm('Deseja limpar os dados de leads salvos localmente? Os leads do Supabase devem ser apagados no painel oficial.')) {
-            localStorage.removeItem('personality_local_leads');
-            loadLeads();
+    // Limpar leads locais e do Supabase
+    btnClearLeads.addEventListener('click', async () => {
+        const url = localStorage.getItem('personality_sb_url');
+        const key = localStorage.getItem('personality_sb_key');
+        const table = localStorage.getItem('personality_sb_table') || 'leads_personality';
+
+        if (url && key) {
+            if (confirm('ATENÇÃO: Deseja apagar permanentemente todos os leads salvos no banco de dados Supabase? Esta ação não pode ser desfeita!')) {
+                try {
+                    const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                    const endpoint = `${cleanUrl}/rest/v1/${table}?id=not.is.null`;
+
+                    const response = await fetch(endpoint, {
+                        method: 'DELETE',
+                        headers: {
+                            'apikey': key,
+                            'Authorization': `Bearer ${key}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        throw new Error(errText || 'Falha ao deletar leads do Supabase.');
+                    }
+
+                    // Limpa também o fallback local
+                    localStorage.removeItem('personality_local_leads');
+                    alert('Todos os leads do banco Supabase e dados locais foram apagados com sucesso!');
+                    loadLeads();
+                } catch (error) {
+                    console.error(error);
+                    alert(`Erro ao apagar leads do Supabase: ${error.message}`);
+                }
+            }
+        } else {
+            if (confirm('Deseja limpar os dados de leads salvos localmente?')) {
+                localStorage.removeItem('personality_local_leads');
+                alert('Leads locais apagados com sucesso!');
+                loadLeads();
+            }
         }
     });
 
