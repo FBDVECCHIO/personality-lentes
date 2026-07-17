@@ -377,7 +377,42 @@ document.addEventListener('DOMContentLoaded', () => {
 Apresente esse cupom na loja para garantir o seu benefício!`;
 
         document.getElementById('btnSendWaSummary').href = `https://api.whatsapp.com/send?phone=55${rawWhatsapp}&text=${encodeURIComponent(messageText)}`;
+
+        // Dispara o Webhook do Make diretamente via Frontend
+        triggerMakeWebhookFrontend({
+            name: nameInput.value.trim(),
+            email: emailInput.value.trim(),
+            whatsapp: whatsappInput.value.trim(),
+            loja: storeName,
+            loja_endereco: storeAddress,
+            loja_telefone: storePhone,
+            voucher: voucher,
+            message: messageInput.value.trim()
+        });
     };
+
+    async function triggerMakeWebhookFrontend(data) {
+        const webhookUrl = localStorage.getItem('personality_make_webhook') || '';
+        if (!webhookUrl) return;
+
+        try {
+            await fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    type: 'INSERT',
+                    table: 'leads_personality',
+                    schema: 'public',
+                    record: data
+                })
+            });
+            console.log('Webhook do Make disparado com sucesso via frontend.');
+        } catch (e) {
+            console.error('Erro ao disparar Webhook do Make:', e);
+        }
+    }
 
     const resetSubmitButton = () => {
         btnSubmit.disabled = false;

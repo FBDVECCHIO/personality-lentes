@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sbKeyInput = document.getElementById('sbKey');
     const sbTableInput = document.getElementById('sbTable');
     const sbStoresTableInput = document.getElementById('sbStoresTable');
+    const makeWebhookUrlInput = document.getElementById('makeWebhookUrl');
     const connStatus = document.getElementById('sbConnectionStatus');
 
     // Carrega configurações existentes do localStorage
@@ -49,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sbKeyInput.value = localStorage.getItem('personality_sb_key') || '';
     sbTableInput.value = localStorage.getItem('personality_sb_table') || 'leads_personality';
     sbStoresTableInput.value = localStorage.getItem('personality_sb_stores_table') || 'lojas_licenciadas';
+    makeWebhookUrlInput.value = localStorage.getItem('personality_make_webhook') || '';
 
     // Testa a conexão ao carregar a página se houver dados salvos
     if (sbUrlInput.value && sbKeyInput.value) {
@@ -62,12 +64,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const key = sbKeyInput.value.trim();
         const table = sbTableInput.value.trim();
         const storesTable = sbStoresTableInput.value.trim();
+        const makeWebhook = makeWebhookUrlInput.value.trim();
 
         // Salva no localStorage
         localStorage.setItem('personality_sb_url', url);
         localStorage.setItem('personality_sb_key', key);
         localStorage.setItem('personality_sb_table', table);
         localStorage.setItem('personality_sb_stores_table', storesTable);
+        localStorage.setItem('personality_make_webhook', makeWebhook);
 
         alert('Configurações salvas com sucesso! Testando conexão...');
         testConnection(url, key, table, storesTable);

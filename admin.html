@@ -81,6 +81,12 @@
                             <p class="input-hint">Tabela no banco de dados que irá receber as óticas: `nome`, `endereco`, `telefone`.</p>
                         </div>
 
+                        <div class="input-group">
+                            <label for="makeWebhookUrl">URL do Webhook do Make.com (Disparo de E-mails/WhatsApp)</label>
+                            <input type="url" id="makeWebhookUrl" placeholder="Ex: https://hook.us2.make.com/xxxxxxxxxxxx">
+                            <p class="input-hint">Opcional. Se configurado, a página enviará os dados do lead diretamente do navegador para o Make, sem depender de gatilhos do Supabase.</p>
+                        </div>
+
                         <div class="status-box" id="sbConnectionStatus">
                             <span class="status-dot"></span>
                             <span class="status-text">Não configurado / Sem conexão local</span>
@@ -100,6 +106,8 @@ create table if not exists leads_personality (
   whatsapp text not null,
   message text,
   loja text,
+  loja_endereco text,
+  loja_telefone text,
   voucher text,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
