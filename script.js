@@ -65,28 +65,77 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabButtons = document.querySelectorAll('.tab-btn');
     const tabPanes = document.querySelectorAll('.tab-pane');
 
+    const resetPaneCards = (pane) => {
+        if (!pane) return;
+        const allFilterBtn = pane.querySelector('.filter-btn[data-filter="all"]');
+        if (allFilterBtn) {
+            const paneFilterBtns = pane.querySelectorAll('.filter-btn');
+            paneFilterBtns.forEach(btn => btn.classList.remove('active'));
+            allFilterBtn.classList.add('active');
+        }
+        const cards = pane.querySelectorAll('.product-card');
+        cards.forEach(card => {
+            card.style.display = 'block';
+            card.style.animation = 'fadeIn 0.3s ease-out';
+        });
+    };
+
     const activateTab = (tabId) => {
+        let mainTabId = tabId;
+        let subFilterVal = null;
+
+        // Mapeamento de subfiltros do menu para as abas principais
+        if (tabId === 'visaosimples') {
+            mainTabId = 'linha-ia';
+            subFilterVal = 'visaosimples';
+        } else if (tabId === 'progressivos' || tabId === 'progressivo') {
+            mainTabId = 'linha-ia';
+            subFilterVal = 'progressivo';
+        } else if (tabId === 'ocupacionais' || tabId === 'office') {
+            mainTabId = 'linha-ia';
+            subFilterVal = 'office';
+        }
+
         tabButtons.forEach(btn => btn.classList.remove('active'));
         tabPanes.forEach(pane => pane.classList.remove('active'));
 
-        const activeBtn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
-        const activePane = document.getElementById(`tab-${tabId}`);
+        const activeBtn = document.querySelector(`.tab-btn[data-tab="${mainTabId}"]`);
+        const activePane = document.getElementById(`tab-${mainTabId}`);
         
         if (activeBtn && activePane) {
             activeBtn.classList.add('active');
             activePane.classList.add('active');
             
-            // Resetar subfiltros da aba ativada para "todos"
-            const allFilterBtn = activePane.querySelector('.filter-btn[data-filter="all"]');
-            if (allFilterBtn) {
-                allFilterBtn.classList.add('active');
-                // Mostrar todos os cards da aba ativada
-                const cards = activePane.querySelectorAll('.product-card');
-                cards.forEach(card => card.style.display = 'block');
-                
-                // Desativar outros botões de filtro da aba ativada
-                const otherFilters = activePane.querySelectorAll('.filter-btn:not([data-filter="all"])');
-                otherFilters.forEach(f => f.classList.remove('active'));
+            if (subFilterVal) {
+                const filterBtn = activePane.querySelector(`.filter-btn[data-filter="${subFilterVal}"]`);
+                if (filterBtn) {
+                    const paneFilterBtns = activePane.querySelectorAll('.filter-btn');
+                    paneFilterBtns.forEach(btn => btn.classList.remove('active'));
+                    filterBtn.classList.add('active');
+
+                    const cards = activePane.querySelectorAll('.product-card');
+                    cards.forEach(card => {
+                        const cardType = card.getAttribute('data-type');
+                        if (cardType === subFilterVal) {
+                            card.style.display = 'block';
+                            card.style.animation = 'fadeIn 0.3s ease-out';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                } else {
+                    resetPaneCards(activePane);
+                }
+            } else {
+                resetPaneCards(activePane);
+            }
+        } else {
+            const fallbackBtn = document.querySelector(`.tab-btn[data-tab="linha-ia"]`);
+            const fallbackPane = document.getElementById(`tab-linha-ia`);
+            if (fallbackBtn && fallbackPane) {
+                fallbackBtn.classList.add('active');
+                fallbackPane.classList.add('active');
+                resetPaneCards(fallbackPane);
             }
         }
     };
@@ -105,12 +154,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const filterVal = button.getAttribute('data-filter');
             const pane = button.closest('.tab-pane');
             
-            // Alternar classe active nos botões da aba atual
             const paneFilterBtns = pane.querySelectorAll('.filter-btn');
             paneFilterBtns.forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
             
-            // Filtrar os cards
             const cards = pane.querySelectorAll('.product-card');
             cards.forEach(card => {
                 const cardType = card.getAttribute('data-type');
