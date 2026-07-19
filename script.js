@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // -------------------------------------------------------------
-    // 2. Sistema de Abas de Produtos
+    // 2. Sistema de Abas e Filtros de Produtos
     // -------------------------------------------------------------
     const tabButtons = document.querySelectorAll('.tab-btn');
     const tabPanes = document.querySelectorAll('.tab-pane');
@@ -70,6 +70,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (activeBtn && activePane) {
             activeBtn.classList.add('active');
             activePane.classList.add('active');
+            
+            // Resetar subfiltros da aba ativada para "todos"
+            const allFilterBtn = activePane.querySelector('.filter-btn[data-filter="all"]');
+            if (allFilterBtn) {
+                allFilterBtn.classList.add('active');
+                // Mostrar todos os cards da aba ativada
+                const cards = activePane.querySelectorAll('.product-card');
+                cards.forEach(card => card.style.display = 'block');
+                
+                // Desativar outros botões de filtro da aba ativada
+                const otherFilters = activePane.querySelectorAll('.filter-btn:not([data-filter="all"])');
+                otherFilters.forEach(f => f.classList.remove('active'));
+            }
         }
     };
 
@@ -77,6 +90,58 @@ document.addEventListener('DOMContentLoaded', () => {
         button.addEventListener('click', () => {
             const tabId = button.getAttribute('data-tab');
             activateTab(tabId);
+        });
+    });
+
+    // Filtros de Subcategorias
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const filterVal = button.getAttribute('data-filter');
+            const pane = button.closest('.tab-pane');
+            
+            // Alternar classe active nos botões da aba atual
+            const paneFilterBtns = pane.querySelectorAll('.filter-btn');
+            paneFilterBtns.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            
+            // Filtrar os cards
+            const cards = pane.querySelectorAll('.product-card');
+            cards.forEach(card => {
+                const cardType = card.getAttribute('data-type');
+                if (filterVal === 'all' || cardType === filterVal) {
+                    card.style.display = 'block';
+                    card.style.animation = 'fadeIn 0.3s ease-out';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    // -------------------------------------------------------------
+    // 2b. Sistema de Abas de Tecnologias
+    // -------------------------------------------------------------
+    const techTabButtons = document.querySelectorAll('.tech-tab-btn');
+    const techPanes = document.querySelectorAll('.tech-pane');
+
+    const activateTechTab = (techId) => {
+        techTabButtons.forEach(btn => btn.classList.remove('active'));
+        techPanes.forEach(pane => pane.classList.remove('active'));
+
+        const activeBtn = document.querySelector(`.tech-tab-btn[data-tech="${techId}"]`);
+        const activePane = document.getElementById(`tech-${techId}`);
+        
+        if (activeBtn && activePane) {
+            activeBtn.classList.add('active');
+            activePane.classList.add('active');
+        }
+    };
+
+    techTabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const techId = button.getAttribute('data-tech');
+            activateTechTab(techId);
         });
     });
 

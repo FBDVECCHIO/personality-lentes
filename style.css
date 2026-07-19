@@ -1253,3 +1253,580 @@ body.no-scroll {
         font-size: 16px;
     }
 }
+
+/* -------------------------------------------------------------
+   13. Estilos Adicionados para Imagens Premium
+------------------------------------------------------------- */
+
+/* Hero Lens Image */
+.hero-lens-wrapper {
+    position: relative;
+    width: 320px;
+    height: 320px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hero-lens-image {
+    width: 290px;
+    height: 290px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid rgba(197, 168, 92, 0.4);
+    box-shadow: 
+        0 0 50px rgba(197, 168, 92, 0.15),
+        0 15px 35px rgba(0, 0, 0, 0.8);
+    transition: var(--transition);
+    animation: float 6s ease-in-out infinite;
+    z-index: 2;
+}
+
+.hero-lens-wrapper:hover .hero-lens-image {
+    transform: scale(1.05) translateY(-5px);
+    border-color: var(--gold-light);
+    box-shadow: 
+        0 0 60px rgba(197, 168, 92, 0.25),
+        0 20px 45px rgba(0, 0, 0, 0.9);
+}
+
+.hero-lens-glow {
+    position: absolute;
+    width: 350px;
+    height: 350px;
+    background: radial-gradient(circle, rgba(197, 168, 92, 0.12) 0%, rgba(0, 0, 0, 0) 70%);
+    pointer-events: none;
+    z-index: 1;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Seção A Marca (Imagens e Estrutura) */
+.about-info-col {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.about-visual-col {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.brand-image-container {
+    position: relative;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--border-gold);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    width: 100%;
+    max-width: 480px;
+}
+
+.brand-tech-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: var(--transition);
+    object-fit: cover;
+}
+
+.brand-image-container:hover .brand-tech-image {
+    transform: scale(1.05);
+}
+
+.brand-image-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 60%, rgba(7, 7, 8, 0.8) 100%);
+    pointer-events: none;
+}
+
+/* Card de Lente - Imagem */
+.product-image-wrapper {
+    width: 100%;
+    height: 180px;
+    overflow: hidden;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-gray);
+    margin-bottom: 20px;
+    background: #0d0d10;
+    position: relative;
+}
+
+.product-card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: var(--transition);
+    opacity: 0.85;
+}
+
+.product-card:hover .product-card-image {
+    transform: scale(1.08);
+    opacity: 1;
+}
+
+/* Lojas - Imagem */
+.store-visual-card {
+    position: relative;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--border-gold);
+    margin-top: 30px;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+    max-width: 480px;
+}
+
+.store-partner-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+    transition: var(--transition);
+    opacity: 0.85;
+}
+
+.store-visual-card:hover .store-partner-image {
+    transform: scale(1.05);
+    opacity: 1;
+}
+
+.store-visual-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 50%, rgba(7, 7, 8, 0.7) 100%);
+    pointer-events: none;
+}
+
+/* -------------------------------------------------------------
+   14. Seção Tecnologias Ópticas (Abas e Diagramas)
+------------------------------------------------------------- */
+.tecnologias-section {
+    border-top: 1px solid var(--border-gray);
+    background: linear-gradient(180deg, var(--bg-dark) 0%, rgba(18, 18, 21, 0.4) 100%);
+    position: relative;
+}
+
+.tech-tabs-container {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 48px;
+    flex-wrap: wrap;
+}
+
+.tech-tab-btn {
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid var(--border-gray);
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 12px 20px;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.tech-tab-btn:hover {
+    color: var(--text-white);
+    border-color: rgba(197, 168, 92, 0.3);
+}
+
+.tech-tab-btn.active {
+    background: var(--gold-gradient);
+    color: var(--bg-dark);
+    border-color: transparent;
+    box-shadow: 0 8px 16px rgba(197, 168, 92, 0.2);
+}
+
+/* Painel de Conteúdo de Tecnologias */
+.tech-pane {
+    display: none;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.tech-pane.active {
+    display: block;
+}
+
+.tech-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 60px;
+    align-items: center;
+}
+
+@media (max-width: 968px) {
+    .tech-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+}
+
+.tech-text h3 {
+    font-family: var(--font-heading);
+    font-size: 26px;
+    color: var(--gold-light);
+    margin-bottom: 20px;
+    font-weight: 700;
+}
+
+.tech-text p {
+    color: var(--text-muted);
+    font-size: 15px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+}
+
+.tech-features-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.tech-features-list li {
+    font-size: 14px;
+    color: var(--text-white);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tech-visual-col {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.tech-image-container {
+    position: relative;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--border-gold);
+    box-shadow: 
+        0 0 40px rgba(197, 168, 92, 0.06),
+        0 20px 40px rgba(0, 0, 0, 0.7);
+    width: 100%;
+    max-width: 440px;
+}
+
+.tech-diagram-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: var(--transition);
+    object-fit: cover;
+    opacity: 0.9;
+}
+
+.tech-image-container:hover .tech-diagram-image {
+    transform: scale(1.03);
+    opacity: 1;
+}
+
+.tech-image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 70%, rgba(7, 7, 8, 0.6) 100%);
+    pointer-events: none;
+}
+
+/* -------------------------------------------------------------
+   15. Filtros de Produtos e Indicadores de Preço
+------------------------------------------------------------- */
+.subtabs-container {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 24px 0 40px 0;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-gray);
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: 12px;
+    padding: 8px 16px;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.filter-btn:hover {
+    color: var(--text-white);
+    border-color: rgba(197, 168, 92, 0.2);
+}
+
+.filter-btn.active {
+    background: transparent;
+    color: var(--gold-light);
+    border-color: var(--border-gold);
+    box-shadow: inset 0 0 10px rgba(197, 168, 92, 0.1);
+}
+
+/* Badges de Categoria de Lentes */
+.product-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    background: rgba(197, 168, 92, 0.1);
+    color: var(--gold-light);
+    border: 1px solid rgba(197, 168, 92, 0.2);
+    margin-bottom: 12px;
+    align-self: flex-start;
+}
+
+.product-badge.traditional {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-white);
+    border-color: var(--border-gray);
+}
+
+.product-badge.coating-green {
+    background: rgba(46, 196, 182, 0.08);
+    color: #2ec4b6;
+    border-color: rgba(46, 196, 182, 0.25);
+    box-shadow: 0 0 10px rgba(46, 196, 182, 0.15);
+}
+
+.product-badge.coating-blue {
+    background: rgba(0, 180, 216, 0.08);
+    color: #00b4d8;
+    border-color: rgba(0, 180, 216, 0.25);
+    box-shadow: 0 0 10px rgba(0, 180, 216, 0.15);
+}
+
+/* Elasticidade de Investimento */
+.price-elasticity {
+    margin-top: auto; /* Empurra para o fundo do card */
+    padding-top: 20px;
+    border-top: 1px solid var(--border-gray);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: left;
+}
+
+.price-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.price-range {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gold-light);
+    font-family: var(--font-heading);
+}
+
+/* Modificações e Correções no Product Card */
+.product-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    height: 100%;
+}
+
+.product-summary {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 16px;
+    text-align: left;
+}
+
+.product-features {
+    text-align: left;
+    margin-bottom: 20px;
+    padding-left: 0;
+}
+
+.product-features li {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    list-style-type: none;
+    position: relative;
+    padding-left: 16px;
+}
+
+.product-features li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 8px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gold-light);
+    box-shadow: 0 0 5px rgba(197, 168, 92, 0.5);
+}
+
+/* -------------------------------------------------------------
+   15b. Novos Layouts Premium dos Cards de Lentes
+------------------------------------------------------------- */
+.product-effect-wrapper {
+    background: rgba(255, 255, 255, 0.01);
+    border-left: 3px solid var(--border-gold);
+    padding: 14px 18px;
+    margin: 16px 0 24px 0;
+    border-radius: 0 8px 8px 0;
+    text-align: left;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.effect-title {
+    font-size: 12px;
+    color: var(--text-white);
+    font-weight: 700;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.effect-quote {
+    font-size: 13px;
+    color: var(--gold-light);
+    font-style: italic;
+    margin: 0 0 10px 0;
+    line-height: 1.4;
+    font-family: var(--font-heading);
+}
+
+.effect-context {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.product-tech-tags-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-white);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: left;
+    margin-bottom: 8px;
+}
+
+.product-tech-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 24px;
+    justify-content: flex-start;
+}
+
+.tech-tag {
+    font-size: 10px;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-muted);
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: var(--transition);
+}
+
+.tech-tag:hover {
+    color: var(--text-white);
+    border-color: rgba(197, 168, 92, 0.3);
+    background: rgba(197, 168, 92, 0.03);
+}
+
+.product-benefits-meters {
+    margin-bottom: 24px;
+    text-align: left;
+}
+
+.meters-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-white);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+}
+
+.benefit-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.benefit-name {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.benefit-meter {
+    display: flex;
+    gap: 4px;
+}
+
+.meter-block {
+    width: 14px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
+    transition: var(--transition);
+}
+
+.meter-block.active {
+    background: var(--gold-light);
+    box-shadow: 0 0 8px rgba(197, 168, 92, 0.4);
+}
+
+.coating-specs {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-gray);
+    padding-bottom: 12px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    gap: 4px;
+}
+
+.coating-specs span {
+    display: inline;
+}
+
+.coating-specs strong {
+    color: var(--text-white);
+    font-weight: 600;
+}

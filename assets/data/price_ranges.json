@@ -1,0 +1,62 @@
+{
+    "Gold Design IA": {
+        "min": 9528.5,
+        "max": 16224.0
+    },
+    "Premium HD IA": {
+        "min": 5784.0,
+        "max": 13160.8
+    },
+    "Tecno Line IA": {
+        "min": 5325.0,
+        "max": 13025.0
+    },
+    "Gold Design": {
+        "min": 4304.0,
+        "max": 12380.5
+    },
+    "Premium HD": {
+        "min": 2446.4,
+        "max": 11896.0
+    },
+    "Tecno Line": {
+        "min": 2074.25,
+        "max": 10107.2
+    },
+    "Maxvision": {
+        "min": 1274.4,
+        "max": 6792.5
+    },
+    "Multi Premium": {
+        "min": 864.5,
+        "max": 5370.900000000001
+    },
+    "Gold Line": {
+        "min": 792.0,
+        "max": 3728.0
+    },
+    "Gold Design Office IA": {
+        "min": 2682.0,
+        "max": 8750.0
+    },
+    "Gold Design Office": {
+        "min": 1244.5,
+        "max": 7166.0
+    },
+    "Gold Comfort IA": {
+        "min": 1463.0,
+        "max": 9395.0
+    },
+    "Gold Premium IA": {
+        "min": 1784.0,
+        "max": 10274.0
+    },
+    "Gold Comfort": {
+        "min": 900.0,
+        "max": 7368.0
+    },
+    "Gold Premium": {
+        "min": 528.0,
+        "max": 8385.0
+    }
+}
