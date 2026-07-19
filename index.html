@@ -1403,7 +1403,7 @@
                     <form id="assistanceForm" novalidate>
                         <h3 style="font-family: var(--font-heading); font-size: 20px; color: var(--gold-light); margin-bottom: 20px; text-align: center;">Preencha os dados para agendar seu atendimento:</h3>
                         
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="ast-form-row">
                             <div class="input-group">
                                 <label for="astPurchaseDate">Data da Compra *</label>
                                 <input type="date" id="astPurchaseDate" required>
@@ -1417,7 +1417,7 @@
                             </div>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="ast-form-row">
                             <div class="input-group">
                                 <label for="astEmail">Seu E-mail *</label>
                                 <input type="email" id="astEmail" placeholder="Ex: maria@email.com" required>
@@ -1432,7 +1432,7 @@
                         </div>
 
                         <!-- Campos com aviso do Certificado de Garantia -->
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="ast-form-row">
                             <div class="input-group">
                                 <label for="astOsNumber">Número da Ordem de Serviço (O.S.) *</label>
                                 <input type="text" id="astOsNumber" placeholder="Ex: OS-98421" required>
@@ -1456,7 +1456,7 @@
                             <span class="error-message" id="astStoreError">Selecione a ótica onde realizou a compra.</span>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="ast-form-row">
                             <div class="input-group">
                                 <label for="astProduct">Linha da Lente Adquirida *</label>
                                 <select id="astProduct" required>
@@ -1491,14 +1491,14 @@
                             <div class="input-group">
                                 <label for="astCoating">Tratamento Antirreflexo *</label>
                                 <select id="astCoating" required>
-                                    <option value="">Selecione o Tratamento...</option>
-                                    <option value="Personality Diamond AR (Topo de Linha)">Personality Diamond AR (Topo de Linha)</option>
-                                    <option value="Personality Blue Shield AR (Filtro Azul)">Personality Blue Shield AR (Filtro Azul)</option>
-                                    <option value="Personality Crystal AR">Personality Crystal AR</option>
-                                    <option value="Personality Super Hydro">Personality Super Hydro</option>
-                                    <option value="Sem Tratamento Antirreflexo">Sem Tratamento / Acabamento</option>
+                                    <option value="">Selecione o Antirreflexo...</option>
+                                    <option value="Incolor">Incolor</option>
+                                    <option value="Clean Green">Clean Green</option>
+                                    <option value="Clean Blue">Clean Blue</option>
+                                    <option value="Premium Green">Premium Green</option>
+                                    <option value="Premium Blue">Premium Blue</option>
                                 </select>
-                                <span class="error-message" id="astCoatingError">Selecione o tratamento antirreflexo.</span>
+                                <span class="error-message" id="astCoatingError">Selecione o antirreflexo.</span>
                             </div>
                         </div>
 
@@ -1510,7 +1510,7 @@
                             <span class="error-message" id="astReasonError">Selecione o motivo principal.</span>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="ast-form-row">
                             <div class="input-group">
                                 <label for="astDate">Data de Atendimento *</label>
                                 <input type="date" id="astDate" required>
@@ -1555,7 +1555,7 @@
                             <h3 id="astProtocol" style="font-family: var(--font-heading); font-size: 26px; font-weight: 800; color: #fff; margin-top: 6px; letter-spacing: 1px;">PERS-AST-XXXX</h3>
                         </div>
 
-                        <div id="astSummaryDetails" style="margin-top: 10px; font-size: 13px; text-align: left; color: var(--text-muted); border-top: 1px solid var(--border-gray); padding-top: 16px; width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div id="astSummaryDetails" class="ast-summary-grid">
                             <div>
                                 <p style="margin-bottom: 6px;">📍 <strong>Ótica:</strong> <span id="astSummaryStore" style="color: #fff; font-weight: 600;">-</span></p>
                                 <p style="margin-bottom: 6px;">📄 <strong>O.S.:</strong> <span id="astSummaryOs" style="color: #fff; font-weight: 600;">-</span></p>
@@ -1563,7 +1563,7 @@
                                 <p style="margin-bottom: 6px;">📅 <strong>Data da Compra:</strong> <span id="astSummaryPurchaseDate" style="color: #fff;">-</span></p>
                             </div>
                             <div>
-                                <p style="margin-bottom: 6px;">👓 <strong>Lente / Tratamento:</strong> <span id="astSummaryProductCoating" style="color: #fff; font-weight: 600;">-</span></p>
+                                <p style="margin-bottom: 6px;">👓 <strong>Lente / Antirreflexo:</strong> <span id="astSummaryProductCoating" style="color: #fff; font-weight: 600;">-</span></p>
                                 <p style="margin-bottom: 6px;">📅 <strong>Atendimento:</strong> <span id="astSummaryDateTime" style="color: #fff; font-weight: 600;">-</span></p>
                                 <p style="margin-bottom: 6px;">👨‍🔧 <strong>Técnico:</strong> <span id="astSummaryTech" style="color: var(--gold-light); font-weight: 600;">-</span></p>
                                 <p style="margin-bottom: 6px;">📞 <strong>Contato:</strong> <span id="astSummaryTechContact" style="color: #fff;">-</span></p>
