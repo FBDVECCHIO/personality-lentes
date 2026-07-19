@@ -38,6 +38,7 @@
                 <button class="side-btn" data-section="acessos">🔑 Acessos das Lojas</button>
                 <button class="side-btn" data-section="tecnicos">👨‍🔧 Equipe Técnica</button>
                 <button class="side-btn" data-section="assistencias">🛠️ Chamados de Assistência</button>
+                <button class="side-btn" data-section="motivos">📋 Motivos do Chamado</button>
                 <button class="side-btn" data-section="dominio">🌐 Domínio e Vercel</button>
                 <button class="side-btn" data-section="imagens">📸 Banco de Imagens</button>
                 <button class="side-btn" data-section="leads">📥 Leads Recebidos</button>
@@ -143,7 +144,7 @@ create table if not exists tecnicos_personality (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- 5. Tabela de Chamados de Assistência Técnica
+-- 5. Tabela de Chamados de Assistência Técnica (Com O.S., CRM Médico, Tratamento e Data da Compra)
 create table if not exists chamados_assistencia (
   id uuid default gen_random_uuid() primary key,
   protocolo text not null,
@@ -152,6 +153,10 @@ create table if not exists chamados_assistencia (
   cliente_whatsapp text not null,
   loja_nome text not null,
   linha_produto text not null,
+  tratamento text not null,
+  data_compra date not null,
+  os_numero text not null,
+  medico_crm text not null,
   motivo text not null,
   data_atendimento date not null,
   horario_atendimento text not null,
@@ -163,12 +168,20 @@ create table if not exists chamados_assistencia (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- 6. Liberar acesso às tabelas (caso RLS esteja ativo)
+-- 6. Tabela de Motivos do Chamado
+create table if not exists motivos_assistencia (
+  id uuid default gen_random_uuid() primary key,
+  motivo text not null unique,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 7. Liberar acesso às tabelas (desativar RLS para API pública)
 alter table leads_personality disable row level security;
 alter table lojas_licenciadas disable row level security;
 alter table acessos_lojas disable row level security;
 alter table tecnicos_personality disable row level security;
 alter table chamados_assistencia disable row level security;
+alter table motivos_assistencia disable row level security;
 </code></pre>
                     </div>
                 </div>
@@ -351,7 +364,7 @@ alter table chamados_assistencia disable row level security;
                 <div class="glass-card section-card">
                     <div class="card-header">
                         <h2>Chamados de <span class="gold-text">Assistência Técnica & Garantia</span></h2>
-                        <p>Acompanhe todos os chamados abertos pelos clientes, os técnicos atribuídos e o status dos agendamentos.</p>
+                        <p>Acompanhe todos os chamados abertos pelos clientes, os técnicos atribuídos, dados da O.S., CRM médico e status dos agendamentos.</p>
                     </div>
 
                     <div class="admin-actions">
@@ -367,15 +380,50 @@ alter table chamados_assistencia disable row level security;
                                 <tr>
                                     <th>Protocolo</th>
                                     <th>Cliente</th>
-                                    <th>WhatsApp / E-mail</th>
-                                    <th>Ótica de Compra</th>
-                                    <th>Linha / Motivo</th>
-                                    <th>Data / Hora</th>
+                                    <th>Ótica / Compra</th>
+                                    <th>O.S. / Médico CRM</th>
+                                    <th>Lente / Tratamento / Motivo</th>
+                                    <th>Agendamento</th>
                                     <th>Técnico Responsável</th>
                                     <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody id="ticketsTableBody">
+                                <!-- Preenchido via Javascript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção: Gerenciar Motivos de Assistência -->
+            <div class="admin-section" id="sec-motivos">
+                <div class="glass-card section-card">
+                    <div class="card-header">
+                        <h2>Opções de <span class="gold-text">Motivos do Chamado</span></h2>
+                        <p>Cadastre ou remova os motivos de assistência técnica e garantia que aparecem na caixa de seleção para o consumidor final.</p>
+                    </div>
+
+                    <form id="addReasonForm" style="margin-bottom: 28px;" novalidate>
+                        <h4 style="color: var(--gold-light); margin-bottom: 12px;">Adicionar Novo Motivo de Atendimento:</h4>
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                            <input type="text" id="newReasonInput" placeholder="Ex: Adaptação Visual & Ajuste de Foco" style="flex: 1; min-width: 260px;" required>
+                            <button type="submit" class="btn btn-gold">Adicionar Motivo</button>
+                            <button type="button" class="btn btn-outline-gold" id="btnResetReasons">Restaurar Padrões</button>
+                        </div>
+                    </form>
+
+                    <div class="table-container">
+                        <h4 style="color: var(--gold-light); margin-bottom: 12px;">Motivos Cadastrados no Sistema:</h4>
+                        <table class="leads-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">#</th>
+                                    <th>Descrição do Motivo</th>
+                                    <th style="width: 120px;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reasonsTableBody">
                                 <!-- Preenchido via Javascript -->
                             </tbody>
                         </table>

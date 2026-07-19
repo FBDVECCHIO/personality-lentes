@@ -187,18 +187,19 @@ body.no-scroll {
 .desktop-nav {
     display: flex;
     align-items: center;
-    gap: 32px;
+    gap: 16px;
 }
 
 .nav-link {
     color: var(--text-muted);
     text-decoration: none;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
     transition: var(--transition);
     position: relative;
     padding: 6px 0;
+    white-space: nowrap;
 }
 
 .nav-link:hover, .nav-link.active {
@@ -291,7 +292,7 @@ body.no-scroll {
 }
 
 /* Responsividade do Menu */
-@media (max-width: 968px) {
+@media (max-width: 1120px) {
     .desktop-nav {
         display: none;
     }
@@ -1841,4 +1842,17 @@ select optgroup {
     background: #18181b;
     color: var(--gold-light);
     font-weight: 600;
+}
+
+/* Dica / Alerta do Certificado de Garantia */
+.cert-alert-hint {
+    display: block;
+    font-size: 11px;
+    color: var(--gold-light);
+    margin-top: 4px;
+    background: rgba(197, 168, 92, 0.08);
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid rgba(197, 168, 92, 0.2);
+    line-height: 1.3;
 }

@@ -774,11 +774,15 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
     // 7. Agendamento de Assistência Técnica & Garantia
     // -------------------------------------------------------------
     const assistanceForm = document.getElementById('assistanceForm');
+    const astPurchaseDateInput = document.getElementById('astPurchaseDate');
     const astNameInput = document.getElementById('astName');
     const astEmailInput = document.getElementById('astEmail');
     const astWhatsappInput = document.getElementById('astWhatsapp');
+    const astOsNumberInput = document.getElementById('astOsNumber');
+    const astDoctorCrmInput = document.getElementById('astDoctorCrm');
     const astStoreSelect = document.getElementById('astStore');
     const astProductSelect = document.getElementById('astProduct');
+    const astCoatingSelect = document.getElementById('astCoating');
     const astReasonSelect = document.getElementById('astReason');
     const astDateInput = document.getElementById('astDate');
     const astTimeSelect = document.getElementById('astTime');
@@ -789,7 +793,10 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
     const astSuccessAlert = document.getElementById('astSuccessAlert');
     const astProtocolH3 = document.getElementById('astProtocol');
     const astSummaryStore = document.getElementById('astSummaryStore');
-    const astSummaryProduct = document.getElementById('astSummaryProduct');
+    const astSummaryOs = document.getElementById('astSummaryOs');
+    const astSummaryDoctor = document.getElementById('astSummaryDoctor');
+    const astSummaryPurchaseDate = document.getElementById('astSummaryPurchaseDate');
+    const astSummaryProductCoating = document.getElementById('astSummaryProductCoating');
     const astSummaryDateTime = document.getElementById('astSummaryDateTime');
     const astSummaryTech = document.getElementById('astSummaryTech');
     const astSummaryTechContact = document.getElementById('astSummaryTechContact');
@@ -812,6 +819,57 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
             e.target.value = value;
         });
     }
+
+    // Carrega motivos de assistência dinâmicos do Supabase/Local
+    async function loadAssistanceReasons() {
+        if (!astReasonSelect) return;
+        const defaultReasons = [
+            "Adaptação Visual & Ajuste de Foco",
+            "Tomada de Parâmetros / DNP / Altura",
+            "Garantia de Antirreflexo / Tratamento Superficial",
+            "Ajuste de Armação & Montagem",
+            "Análise Técnica de Laboratório",
+            "Outros Assuntos de Suporte"
+        ];
+
+        let list = [];
+        const url = localStorage.getItem('personality_sb_url');
+        const key = localStorage.getItem('personality_sb_key');
+
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const endpoint = `${cleanUrl}/rest/v1/motivos_assistencia?select=*&order=created_at.asc`;
+
+                const response = await fetch(endpoint, {
+                    method: 'GET',
+                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.length > 0) list = data.map(d => d.motivo);
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        if (!list || list.length === 0) {
+            const local = localStorage.getItem('personality_local_motivos');
+            list = local ? JSON.parse(local) : defaultReasons;
+        }
+
+        astReasonSelect.innerHTML = '<option value="">Selecione o Motivo Principal...</option>';
+        list.forEach(reason => {
+            const opt = document.createElement('option');
+            opt.value = reason;
+            opt.textContent = reason;
+            astReasonSelect.appendChild(opt);
+        });
+    }
+
+    loadAssistanceReasons();
 
     function generateAssistanceProtocol() {
         const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -870,18 +928,29 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
         assistanceForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
+            const purchaseDateVal = astPurchaseDateInput.value;
             const nameVal = astNameInput.value.trim();
             const emailVal = astEmailInput.value.trim();
             const whatsappVal = astWhatsappInput.value.trim();
             const rawWhatsapp = whatsappVal.replace(/\D/g, '');
+            const osVal = astOsNumberInput.value.trim();
+            const doctorCrmVal = astDoctorCrmInput.value.trim();
             const storeVal = astStoreSelect.value;
             const productVal = astProductSelect.value;
+            const coatingVal = astCoatingSelect.value;
             const reasonVal = astReasonSelect.value;
             const dateVal = astDateInput.value;
             const timeVal = astTimeSelect.value;
             const obsVal = astObsInput ? astObsInput.value.trim() : '';
 
             let isValid = true;
+
+            if (!purchaseDateVal) {
+                showError(astPurchaseDateInput, document.getElementById('astPurchaseDateError'), true);
+                isValid = false;
+            } else {
+                showError(astPurchaseDateInput, document.getElementById('astPurchaseDateError'), false);
+            }
 
             if (nameVal.length < 3) {
                 showError(astNameInput, document.getElementById('astNameError'), true);
@@ -904,6 +973,20 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
                 showError(astWhatsappInput, document.getElementById('astWhatsappError'), false);
             }
 
+            if (osVal.length < 2) {
+                showError(astOsNumberInput, document.getElementById('astOsNumberError'), true);
+                isValid = false;
+            } else {
+                showError(astOsNumberInput, document.getElementById('astOsNumberError'), false);
+            }
+
+            if (doctorCrmVal.length < 3) {
+                showError(astDoctorCrmInput, document.getElementById('astDoctorCrmError'), true);
+                isValid = false;
+            } else {
+                showError(astDoctorCrmInput, document.getElementById('astDoctorCrmError'), false);
+            }
+
             if (!storeVal) {
                 document.getElementById('astStoreError').style.display = 'block';
                 astStoreSelect.classList.add('invalid');
@@ -920,6 +1003,15 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
             } else {
                 document.getElementById('astProductError').style.display = 'none';
                 astProductSelect.classList.remove('invalid');
+            }
+
+            if (!coatingVal) {
+                document.getElementById('astCoatingError').style.display = 'block';
+                astCoatingSelect.classList.add('invalid');
+                isValid = false;
+            } else {
+                document.getElementById('astCoatingError').style.display = 'none';
+                astCoatingSelect.classList.remove('invalid');
             }
 
             if (!reasonVal) {
@@ -966,8 +1058,12 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
                 cliente_nome: nameVal,
                 cliente_email: emailVal,
                 cliente_whatsapp: whatsappVal,
+                data_compra: purchaseDateVal,
+                os_numero: osVal,
+                medico_crm: doctorCrmVal,
                 loja_nome: storeVal,
                 linha_produto: productVal,
+                tratamento: coatingVal,
                 motivo: reasonVal,
                 data_atendimento: dateVal,
                 horario_atendimento: timeVal,
@@ -1018,10 +1114,17 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
                                 email: ticketData.cliente_email,
                                 whatsapp: ticketData.cliente_whatsapp
                             },
-                            loja: {
-                                nome: ticketData.loja_nome,
-                                endereco: storeAddress,
-                                telefone: storePhone
+                            compra: {
+                                data_compra: ticketData.data_compra,
+                                os_numero: ticketData.os_numero,
+                                medico_crm: ticketData.medico_crm,
+                                loja_nome: ticketData.loja_nome,
+                                loja_endereco: storeAddress,
+                                loja_telefone: storePhone
+                            },
+                            produto: {
+                                linha: ticketData.linha_produto,
+                                tratamento: ticketData.tratamento
                             },
                             tecnico: {
                                 nome: ticketData.tecnico_nome,
@@ -1030,10 +1133,9 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
                                 especialidade: assignedTech.especialidade || 'Assistência Técnica'
                             },
                             agendamento: {
-                                produto: ticketData.linha_produto,
                                 motivo: ticketData.motivo,
-                                data: ticketData.data_atendimento,
-                                horario: ticketData.horario_atendimento,
+                                data_atendimento: ticketData.data_atendimento,
+                                horario_atendimento: ticketData.horario_atendimento,
                                 observacoes: ticketData.observacoes
                             }
                         })
@@ -1059,11 +1161,14 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
         astSuccessAlert.style.display = 'flex';
 
         astProtocolH3.textContent = ticketData.protocolo;
-        astSummaryStore.textContent = ticketData.loja_nome;
-        astSummaryProduct.textContent = `${ticketData.linha_produto} (${ticketData.motivo})`;
-        astSummaryDateTime.textContent = `${ticketData.data_atendimento} às ${ticketData.horario_atendimento}`;
-        astSummaryTech.textContent = `${assignedTech.nome} (${assignedTech.especialidade || 'Técnico Especialista'})`;
-        astSummaryTechContact.textContent = `${assignedTech.whatsapp} / ${assignedTech.email}`;
+        if (astSummaryStore) astSummaryStore.textContent = ticketData.loja_nome;
+        if (astSummaryOs) astSummaryOs.textContent = ticketData.os_numero;
+        if (astSummaryDoctor) astSummaryDoctor.textContent = ticketData.medico_crm;
+        if (astSummaryPurchaseDate) astSummaryPurchaseDate.textContent = ticketData.data_compra;
+        if (astSummaryProductCoating) astSummaryProductCoating.textContent = `${ticketData.linha_produto} - ${ticketData.tratamento}`;
+        if (astSummaryDateTime) astSummaryDateTime.textContent = `${ticketData.data_atendimento} às ${ticketData.horario_atendimento}`;
+        if (astSummaryTech) astSummaryTech.textContent = `${assignedTech.nome} (${assignedTech.especialidade || 'Técnico Especialista'})`;
+        if (astSummaryTechContact) astSummaryTechContact.textContent = `${assignedTech.whatsapp} / ${assignedTech.email}`;
 
         btnCopyAstProtocol.onclick = () => {
             navigator.clipboard.writeText(ticketData.protocolo);
@@ -1072,7 +1177,7 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
         };
 
         const techRawPhone = (assignedTech.whatsapp || '').replace(/\D/g, '');
-        const waMsg = encodeURIComponent(`Olá ${assignedTech.nome}! Gostaria de confirmar o agendamento do meu chamado Protocolo *${ticketData.protocolo}* para o dia ${ticketData.data_atendimento} às ${ticketData.horario_atendimento}. (Cliente: ${ticketData.cliente_nome})`);
+        const waMsg = encodeURIComponent(`Olá ${assignedTech.nome}! Gostaria de confirmar o agendamento do meu chamado Protocolo *${ticketData.protocolo}* (O.S.: ${ticketData.os_numero}) para o dia ${ticketData.data_atendimento} às ${ticketData.horario_atendimento}. (Cliente: ${ticketData.cliente_nome})`);
         btnSendAstWaSummary.href = `https://wa.me/55${techRawPhone}?text=${waMsg}`;
     }
 

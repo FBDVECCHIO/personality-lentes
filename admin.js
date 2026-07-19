@@ -34,6 +34,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadTechniciansManager();
             } else if (sectionId === 'assistencias') {
                 loadTickets();
+            } else if (sectionId === 'motivos') {
+                loadMotivosManager();
             }
         });
     });
@@ -1155,10 +1157,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><strong style="color: var(--gold-light);">${escapeHtml(t.protocolo || 'N/A')}</strong></td>
-                <td><strong>${escapeHtml(t.cliente_nome)}</strong></td>
-                <td>${escapeHtml(t.cliente_whatsapp)}<br><small style="color: var(--text-muted);">${escapeHtml(t.cliente_email)}</small></td>
-                <td>${escapeHtml(t.loja_nome)}</td>
-                <td><strong>${escapeHtml(t.linha_produto)}</strong><br><small style="color: var(--text-muted);">${escapeHtml(t.motivo)}</small></td>
+                <td><strong>${escapeHtml(t.cliente_nome)}</strong><br><small style="color: var(--text-muted);">${escapeHtml(t.cliente_whatsapp)} | ${escapeHtml(t.cliente_email)}</small></td>
+                <td><strong>${escapeHtml(t.loja_nome)}</strong><br><small style="color: var(--text-muted);">Comprado em: ${escapeHtml(t.data_compra || 'N/I')}</small></td>
+                <td><strong>O.S.: ${escapeHtml(t.os_numero || 'N/I')}</strong><br><small style="color: var(--text-muted);">Dr(a): ${escapeHtml(t.medico_crm || 'N/I')}</small></td>
+                <td><strong>${escapeHtml(t.linha_produto)}</strong><br><small style="color: var(--gold-light);">${escapeHtml(t.tratamento || 'Tratamento Padrão')}</small><br><small style="color: var(--text-muted);">${escapeHtml(t.motivo)}</small></td>
                 <td>📅 ${escapeHtml(t.data_atendimento)}<br>⏰ ${escapeHtml(t.horario_atendimento)}</td>
                 <td>👤 <strong>${escapeHtml(t.tecnico_nome)}</strong><br><small style="color: var(--text-muted);">${escapeHtml(t.tecnico_whatsapp)}</small></td>
                 <td><span class="store-badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(10, 185, 129, 0.3);">${escapeHtml(t.status || 'Agendado')}</span></td>
@@ -1176,7 +1178,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             let csvContent = "\uFEFF";
-            csvContent += "Protocolo;Cliente_Nome;Cliente_Email;Cliente_Whatsapp;Loja_Compra;Linha_Produto;Motivo;Data_Atendimento;Horario;Tecnico_Responsavel;Tecnico_Email;Tecnico_Whatsapp;Status;Data_Abertura\n";
+            csvContent += "Protocolo;Cliente_Nome;Cliente_Email;Cliente_Whatsapp;Data_Compra;OS_Numero;Medico_CRM;Loja_Compra;Linha_Produto;Tratamento;Motivo;Data_Atendimento;Horario;Tecnico_Responsavel;Tecnico_Email;Tecnico_Whatsapp;Status;Data_Abertura\n";
 
             tickets.forEach(t => {
                 const line = [
@@ -1184,8 +1186,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     `"${(t.cliente_nome || '').replace(/"/g, '""')}"`,
                     `"${(t.cliente_email || '').replace(/"/g, '""')}"`,
                     `"${t.cliente_whatsapp || ''}"`,
+                    `"${t.data_compra || ''}"`,
+                    `"${(t.os_numero || '').replace(/"/g, '""')}"`,
+                    `"${(t.medico_crm || '').replace(/"/g, '""')}"`,
                     `"${(t.loja_nome || '').replace(/"/g, '""')}"`,
                     `"${(t.linha_produto || '').replace(/"/g, '""')}"`,
+                    `"${(t.tratamento || '').replace(/"/g, '""')}"`,
                     `"${(t.motivo || '').replace(/"/g, '""')}"`,
                     `"${t.data_atendimento || ''}"`,
                     `"${t.horario_atendimento || ''}"`,
@@ -1207,6 +1213,173 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        });
+    }
+
+    // -------------------------------------------------------------
+    // 8. Gerenciamento de Motivos de Assistência Técnica
+    // -------------------------------------------------------------
+    const addReasonForm = document.getElementById('addReasonForm');
+    const newReasonInput = document.getElementById('newReasonInput');
+    const btnResetReasons = document.getElementById('btnResetReasons');
+    const reasonsTableBody = document.getElementById('reasonsTableBody');
+
+    const defaultReasonsList = [
+        "Adaptação Visual & Ajuste de Foco",
+        "Tomada de Parâmetros / DNP / Altura",
+        "Garantia de Antirreflexo / Tratamento Superficial",
+        "Ajuste de Armação & Montagem",
+        "Análise Técnica de Laboratório",
+        "Outros Assuntos de Suporte"
+    ];
+
+    async function getMotivosList() {
+        const url = localStorage.getItem('personality_sb_url');
+        const key = localStorage.getItem('personality_sb_key');
+
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const endpoint = `${cleanUrl}/rest/v1/motivos_assistencia?select=*&order=created_at.asc`;
+
+                const response = await fetch(endpoint, {
+                    method: 'GET',
+                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.length > 0) return data.map(d => d.motivo);
+                }
+            } catch (error) {
+                console.error('Erro ao buscar motivos no Supabase:', error);
+            }
+        }
+        return getLocalMotivos();
+    }
+
+    function getLocalMotivos() {
+        const local = localStorage.getItem('personality_local_motivos');
+        if (!local) {
+            localStorage.setItem('personality_local_motivos', JSON.stringify(defaultReasonsList));
+            return defaultReasonsList;
+        }
+        return JSON.parse(local);
+    }
+
+    async function loadMotivosManager() {
+        if (!reasonsTableBody) return;
+        reasonsTableBody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">Buscando motivos...</td></tr>`;
+        const list = await getMotivosList();
+        renderReasonsTable(list);
+    }
+
+    function renderReasonsTable(list) {
+        if (!reasonsTableBody) return;
+        reasonsTableBody.innerHTML = '';
+
+        if (!list || list.length === 0) {
+            reasonsTableBody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 16px 0;">Nenhum motivo cadastrado.</td></tr>`;
+            return;
+        }
+
+        list.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${index + 1}</strong></td>
+                <td><strong>${escapeHtml(item)}</strong></td>
+                <td>
+                    <button class="btn btn-sm btn-danger btn-delete-reason" data-reason="${escapeHtml(item)}">🗑️ Excluir</button>
+                </td>
+            `;
+            reasonsTableBody.appendChild(tr);
+        });
+
+        document.querySelectorAll('.btn-delete-reason').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const reasonToDelete = btn.getAttribute('data-reason');
+                if (confirm(`Excluir o motivo "${reasonToDelete}"?`)) {
+                    await deleteMotivo(reasonToDelete);
+                }
+            });
+        });
+    }
+
+    async function deleteMotivo(reasonText) {
+        const url = localStorage.getItem('personality_sb_url');
+        const key = localStorage.getItem('personality_sb_key');
+
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const endpoint = `${cleanUrl}/rest/v1/motivos_assistencia?motivo=eq.${encodeURIComponent(reasonText)}`;
+
+                await fetch(endpoint, {
+                    method: 'DELETE',
+                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        let list = getLocalMotivos();
+        list = list.filter(r => r !== reasonText);
+        localStorage.setItem('personality_local_motivos', JSON.stringify(list));
+        loadMotivosManager();
+    }
+
+    if (addReasonForm) {
+        addReasonForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newReason = newReasonInput.value.trim();
+            if (newReason.length < 3) {
+                alert('Informe um motivo válido com pelo menos 3 caracteres.');
+                return;
+            }
+
+            const url = localStorage.getItem('personality_sb_url');
+            const key = localStorage.getItem('personality_sb_key');
+
+            if (url && key) {
+                try {
+                    const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                    const endpoint = `${cleanUrl}/rest/v1/motivos_assistencia`;
+
+                    await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': key,
+                            'Authorization': `Bearer ${key}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify({ motivo: newReason })
+                    });
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+
+            let list = getLocalMotivos();
+            if (!list.includes(newReason)) {
+                list.push(newReason);
+                localStorage.setItem('personality_local_motivos', JSON.stringify(list));
+            }
+
+            newReasonInput.value = '';
+            alert('Motivo adicionado com sucesso!');
+            loadMotivosManager();
+        });
+    }
+
+    if (btnResetReasons) {
+        btnResetReasons.addEventListener('click', async () => {
+            if (confirm('Deseja restaurar os motivos padrões de atendimento?')) {
+                localStorage.setItem('personality_local_motivos', JSON.stringify(defaultReasonsList));
+                alert('Motivos padrões restaurados com sucesso!');
+                loadMotivosManager();
+            }
         });
     }
 });
