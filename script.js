@@ -6,6 +6,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const STORES_STORAGE_KEY = 'personality_local_stores';
     const ACCESS_STORAGE_KEY = 'personality_local_accesses';
 
+    // Credenciais Padrão do Supabase (Disponíveis Globalmente para Celulares e Novos Navegadores)
+    const DEFAULT_SB_URL = 'https://mngwfearwjkpisararbe.supabase.co';
+    const DEFAULT_SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1uZ3dmZWFyd2prcGlzYXJhcmJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1OTc5MzksImV4cCI6MjA5NjE3MzkzOX0.vk9Ol41NU2RI72-ZZKIcm7hzccYBjzPPptb6rZv_mKs';
+
+    function getSupabaseUrl() {
+        const customUrl = localStorage.getItem('personality_sb_url');
+        return (customUrl && customUrl.trim()) ? customUrl.trim() : DEFAULT_SB_URL;
+    }
+
+    function getSupabaseKey() {
+        const customKey = localStorage.getItem('personality_sb_key');
+        return (customKey && customKey.trim()) ? customKey.trim() : DEFAULT_SB_KEY;
+    }
+
     // Lojas Padrão (Sem dados fictícios de exemplo)
     const defaultStores = [];
 
@@ -217,8 +231,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const storesContainer = document.getElementById('storesContainer');
 
     async function loadLicensedStores() {
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
         const storesTable = localStorage.getItem('personality_sb_stores_table') || 'lojas_licenciadas';
 
         let stores = [];
@@ -415,8 +429,8 @@ document.addEventListener('DOMContentLoaded', () => {
             timestamp: new Date().toISOString()
         };
 
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
         const table = localStorage.getItem('personality_sb_table') || 'leads_personality';
 
         if (url && key) {
@@ -876,8 +890,8 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
         ];
 
         let list = [];
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
 
         if (url && key) {
             try {
@@ -924,8 +938,8 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
     }
 
     async function getAssignedTechnician(storeName) {
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
 
         const fallbackTechs = [
             { nome: "Carlos Andrade", email: "carlos.tecnico@personality.com.br", whatsapp: "(11) 97777-6666", especialidade: "Optometrista & Medidas HD", loja_atendida: "Todas as Lojas" },
@@ -1118,8 +1132,8 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
                 timestamp: new Date().toISOString()
             };
 
-            const url = localStorage.getItem('personality_sb_url');
-            const key = localStorage.getItem('personality_sb_key');
+            const url = getSupabaseUrl();
+            const key = getSupabaseKey();
 
             if (url && key) {
                 try {

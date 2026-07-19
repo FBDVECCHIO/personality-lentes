@@ -51,9 +51,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const makeWebhookUrlInput = document.getElementById('makeWebhookUrl');
     const connStatus = document.getElementById('sbConnectionStatus');
 
-    // Carrega configurações existentes do localStorage
-    sbUrlInput.value = localStorage.getItem('personality_sb_url') || '';
-    sbKeyInput.value = localStorage.getItem('personality_sb_key') || '';
+    // Credenciais Padrão do Supabase
+    const DEFAULT_SB_URL = 'https://mngwfearwjkpisararbe.supabase.co';
+    const DEFAULT_SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1uZ3dmZWFyd2prcGlzYXJhcmJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1OTc5MzksImV4cCI6MjA5NjE3MzkzOX0.vk9Ol41NU2RI72-ZZKIcm7hzccYBjzPPptb6rZv_mKs';
+
+    function getSupabaseUrl() {
+        const customUrl = localStorage.getItem('personality_sb_url');
+        return (customUrl && customUrl.trim()) ? customUrl.trim() : DEFAULT_SB_URL;
+    }
+
+    function getSupabaseKey() {
+        const customKey = localStorage.getItem('personality_sb_key');
+        return (customKey && customKey.trim()) ? customKey.trim() : DEFAULT_SB_KEY;
+    }
+
+    // Carrega configurações existentes do localStorage ou valores padrão
+    sbUrlInput.value = localStorage.getItem('personality_sb_url') || DEFAULT_SB_URL;
+    sbKeyInput.value = localStorage.getItem('personality_sb_key') || DEFAULT_SB_KEY;
     sbTableInput.value = localStorage.getItem('personality_sb_table') || 'leads_personality';
     sbStoresTableInput.value = localStorage.getItem('personality_sb_stores_table') || 'lojas_licenciadas';
     makeWebhookUrlInput.value = localStorage.getItem('personality_make_webhook') || '';
@@ -174,8 +188,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     async function getStoresList() {
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
         const storesTable = localStorage.getItem('personality_sb_stores_table') || 'lojas_licenciadas';
 
         if (url && key) {
