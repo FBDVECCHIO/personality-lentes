@@ -174,13 +174,44 @@ create table if not exists motivos_assistencia (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- 7. Liberar acesso às tabelas (desativar RLS para API pública)
-alter table leads_personality disable row level security;
-alter table lojas_licenciadas disable row level security;
-alter table acessos_lojas disable row level security;
-alter table tecnicos_personality disable row level security;
-alter table chamados_assistencia disable row level security;
-alter table motivos_assistencia disable row level security;
+-- 7. Habilitar RLS (Row Level Security) e Criar Políticas de Acesso Nativas
+alter table leads_personality enable row level security;
+alter table lojas_licenciadas enable row level security;
+alter table acessos_lojas enable row level security;
+alter table tecnicos_personality enable row level security;
+alter table chamados_assistencia enable row level security;
+alter table motivos_assistencia enable row level security;
+
+-- Criar Políticas de Permissão Pública
+create policy "Permitir select em leads_personality" on leads_personality for select using (true);
+create policy "Permitir insert em leads_personality" on leads_personality for insert with check (true);
+create policy "Permitir update em leads_personality" on leads_personality for update using (true);
+create policy "Permitir delete em leads_personality" on leads_personality for delete using (true);
+
+create policy "Permitir select em lojas_licenciadas" on lojas_licenciadas for select using (true);
+create policy "Permitir insert em lojas_licenciadas" on lojas_licenciadas for insert with check (true);
+create policy "Permitir update em lojas_licenciadas" on lojas_licenciadas for update using (true);
+create policy "Permitir delete em lojas_licenciadas" on lojas_licenciadas for delete using (true);
+
+create policy "Permitir select em acessos_lojas" on acessos_lojas for select using (true);
+create policy "Permitir insert em acessos_lojas" on acessos_lojas for insert with check (true);
+create policy "Permitir update em acessos_lojas" on acessos_lojas for update using (true);
+create policy "Permitir delete em acessos_lojas" on acessos_lojas for delete using (true);
+
+create policy "Permitir select em tecnicos_personality" on tecnicos_personality for select using (true);
+create policy "Permitir insert em tecnicos_personality" on tecnicos_personality for insert with check (true);
+create policy "Permitir update em tecnicos_personality" on tecnicos_personality for update using (true);
+create policy "Permitir delete em tecnicos_personality" on tecnicos_personality for delete using (true);
+
+create policy "Permitir select em chamados_assistencia" on chamados_assistencia for select using (true);
+create policy "Permitir insert em chamados_assistencia" on chamados_assistencia for insert with check (true);
+create policy "Permitir update em chamados_assistencia" on chamados_assistencia for update using (true);
+create policy "Permitir delete em chamados_assistencia" on chamados_assistencia for delete using (true);
+
+create policy "Permitir select em motivos_assistencia" on motivos_assistencia for select using (true);
+create policy "Permitir insert em motivos_assistencia" on motivos_assistencia for insert with check (true);
+create policy "Permitir update em motivos_assistencia" on motivos_assistencia for update using (true);
+create policy "Permitir delete em motivos_assistencia" on motivos_assistencia for delete using (true);
 </code></pre>
                     </div>
                 </div>
