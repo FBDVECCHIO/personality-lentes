@@ -164,10 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let editingStoreId = null;
 
-    const defaultStores = [
-        { id: "1", nome: "Ótica Prime & Cia", endereco: "Av. Paulista, 1000 - Bela Vista, São Paulo - SP", telefone: "(11) 3222-1234" },
-        { id: "2", nome: "Atelier da Visão", endereco: "Al. Lorena, 452 - Jardins, São Paulo - SP", telefone: "(11) 3888-5678" }
-    ];
+    const defaultStores = [];
 
     btnCancelEditStore.addEventListener('click', () => {
         addStoreForm.reset();
