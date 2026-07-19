@@ -6,11 +6,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const STORES_STORAGE_KEY = 'personality_local_stores';
     const ACCESS_STORAGE_KEY = 'personality_local_accesses';
 
-    // Lojas Padrão caso não haja banco configurado
+    // Lojas Padrão caso não haja banco configurado (8 Lojas: 2 colunas de 4)
     const defaultStores = [
         { id: "1", nome: "Ótica Prime & Cia", endereco: "Av. Paulista, 1000 - Bela Vista, São Paulo - SP", telefone: "(11) 3222-1234" },
         { id: "2", nome: "Atelier da Visão", endereco: "Al. Lorena, 452 - Jardins, São Paulo - SP", telefone: "(11) 3888-5678" },
-        { id: "3", nome: "Euro Óptica Concept", endereco: "Av. Faria Lima, 2500 - Pinheiros, São Paulo - SP", telefone: "(11) 3099-4321" }
+        { id: "3", nome: "Euro Óptica Concept", endereco: "Av. Faria Lima, 2500 - Pinheiros, São Paulo - SP", telefone: "(11) 3099-4321" },
+        { id: "4", nome: "Ótica Visão Imperial", endereco: "R. Oscar Freire, 890 - Cerqueira César, São Paulo - SP", telefone: "(11) 3062-8890" },
+        { id: "5", nome: "Boutique dos Óculos", endereco: "Av. Moema, 310 - Moema, São Paulo - SP", telefone: "(11) 5051-2244" },
+        { id: "6", nome: "Centro Óptico Elegance", endereco: "R. Domingos de Morais, 1450 - Vila Mariana, São Paulo - SP", telefone: "(11) 5575-9988" },
+        { id: "7", nome: "Óptica Gold Precision", endereco: "Av. Rebouças, 1800 - Pinheiros, São Paulo - SP", telefone: "(11) 3081-3311" },
+        { id: "8", nome: "Excellence Visão Studio", endereco: "R. Pamplona, 1100 - Jardim Paulista, São Paulo - SP", telefone: "(11) 3141-7755" }
     ];
 
     // Chaves de Sessão do Parceiro
