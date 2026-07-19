@@ -40,6 +40,7 @@
                 
                 <a href="#lojas" class="nav-link">LOJAS LICENCIADAS</a>
                 <a href="#portal-loja" class="nav-link">PARCEIRO LICENCIADO</a>
+                <a href="#assistencia" class="nav-link">ASSISTÊNCIA & GARANTIA</a>
                 <a href="#contato" class="nav-link">GARANTIR 50% OFF</a>
             </nav>
 
@@ -62,6 +63,7 @@
             <a href="#produtos" class="mobile-link submenu-link" data-tab="ocupacionais">└ Ocupacionais</a>
             <a href="#lojas" class="mobile-link">LOJAS LICENCIADAS</a>
             <a href="#portal-loja" class="mobile-link">PARCEIRO LICENCIADO</a>
+            <a href="#assistencia" class="mobile-link">ASSISTÊNCIA & GARANTIA</a>
             <a href="#contato" class="mobile-link">GARANTIR 50% OFF</a>
         </nav>
     </div>
@@ -1378,6 +1380,157 @@
                             <button class="btn btn-outline-gold btn-sm" id="btnCopyVoucher" style="flex: 1; min-width: 140px;">Copiar Código</button>
                             <a href="#" target="_blank" class="btn btn-sm" id="btnSendWaSummary" style="flex: 1.2; min-width: 200px; background: #25d366; color: #fff; border: none; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
                                 💬 Receber no WhatsApp
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Seção: Assistência Técnica & Garantia -->
+    <section id="assistencia" class="section-padding" style="background: linear-gradient(180deg, rgba(18, 18, 21, 0.6) 0%, var(--bg-dark) 100%); border-top: 1px solid var(--border-gray);">
+        <div class="container">
+            <div class="section-header text-center">
+                <span class="badge-pill">PÓS-VENDA & SUPORTE EXCLUSIVO</span>
+                <h2 class="section-title">Agendamento de <span class="gold-text">Assistência Técnica</span></h2>
+                <div class="gold-divider"></div>
+                <p class="section-subtitle">Abra seu chamado de suporte, ajuste de parâmetros ou garantia com o técnico responsável de sua ótica.</p>
+            </div>
+
+            <div class="contact-grid" style="max-width: 850px; margin: 0 auto;">
+                <div class="contact-form-container glass-card" style="padding: 40px;">
+                    <form id="assistanceForm" novalidate>
+                        <h3 style="font-family: var(--font-heading); font-size: 20px; color: var(--gold-light); margin-bottom: 20px; text-align: center;">Preencha os dados para agendar seu atendimento:</h3>
+                        
+                        <div class="input-group">
+                            <label for="astName">Seu Nome Completo</label>
+                            <input type="text" id="astName" placeholder="Ex: Maria Oliveira" required>
+                            <span class="error-message" id="astNameError">Por favor, preencha seu nome completo.</span>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="astEmail">Seu E-mail</label>
+                            <input type="email" id="astEmail" placeholder="Ex: maria@email.com" required>
+                            <span class="error-message" id="astEmailError">Insira um e-mail válido.</span>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="astWhatsapp">WhatsApp (com DDD)</label>
+                            <input type="tel" id="astWhatsapp" placeholder="(00) 00000-0000" required>
+                            <span class="error-message" id="astWhatsappError">Insira um WhatsApp válido.</span>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="astStore">Ótica onde comprou as Lentes PERSONALITY</label>
+                            <select id="astStore" required>
+                                <option value="">Carregando óticas credenciadas...</option>
+                            </select>
+                            <span class="error-message" id="astStoreError">Selecione a ótica onde realizou a compra.</span>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="astProduct">Linha da Lente Adquirida</label>
+                            <select id="astProduct" required>
+                                <option value="">Selecione a Linha de Produto...</option>
+                                <optgroup label="Progressivos (Multifocais IA)">
+                                    <option value="Gold Design IA">Gold Design IA (Topo de Linha)</option>
+                                    <option value="Premium HD IA">Premium HD IA</option>
+                                    <option value="Tecno Line IA">Tecno Line IA</option>
+                                </optgroup>
+                                <optgroup label="Progressivos Digitais">
+                                    <option value="Gold Design">Gold Design</option>
+                                    <option value="Premium HD">Premium HD</option>
+                                    <option value="Tecno Line">Tecno Line</option>
+                                    <option value="Maxvision">Maxvision</option>
+                                    <option value="Multi Premium">Multi Premium</option>
+                                    <option value="Gold Line">Gold Line</option>
+                                </optgroup>
+                                <optgroup label="Ocupacionais (Office)">
+                                    <option value="Gold Design Office IA">Gold Design Office IA</option>
+                                    <option value="Gold Design Office">Gold Design Office</option>
+                                </optgroup>
+                                <optgroup label="Visão Simples Customizada">
+                                    <option value="VS Gold Comfort IA">VS Gold Comfort IA</option>
+                                    <option value="VS Gold Premium IA">VS Gold Premium IA</option>
+                                    <option value="VS Gold Comfort">VS Gold Comfort</option>
+                                    <option value="VS Gold Premium">VS Gold Premium</option>
+                                </optgroup>
+                            </select>
+                            <span class="error-message" id="astProductError">Selecione a linha de lente.</span>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="astReason">Motivo do Atendimento / Chamado</label>
+                            <select id="astReason" required>
+                                <option value="">Selecione o Motivo Principal...</option>
+                                <option value="Adaptação Visual & Ajuste de Foco">Adaptação Visual & Ajuste de Foco</option>
+                                <option value="Tomada de Parâmetros / DNP / Altura">Tomada de Parâmetros / DNP / Altura</option>
+                                <option value="Garantia de Antirreflexo / Tratamento Superficial">Garantia de Antirreflexo / Tratamento Superficial</option>
+                                <option value="Ajuste de Armação & Montagem">Ajuste de Armação & Montagem</option>
+                                <option value="Análise Técnica de Laboratório">Análise Técnica de Laboratório</option>
+                                <option value="Outros Assuntos de Suporte">Outros Assuntos de Suporte</option>
+                            </select>
+                            <span class="error-message" id="astReasonError">Selecione o motivo principal.</span>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div class="input-group">
+                                <label for="astDate">Data de Atendimento</label>
+                                <input type="date" id="astDate" required>
+                                <span class="error-message" id="astDateError">Selecione uma data.</span>
+                            </div>
+
+                            <div class="input-group">
+                                <label for="astTime">Horário Preferencial</label>
+                                <select id="astTime" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="09:00">09:00</option>
+                                    <option value="10:30">10:30</option>
+                                    <option value="14:00">14:00</option>
+                                    <option value="15:30">15:30</option>
+                                    <option value="17:00">17:00</option>
+                                </select>
+                                <span class="error-message" id="astTimeError">Escolha o horário.</span>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="astObs">Observações Adicionais (opcional)</label>
+                            <textarea id="astObs" rows="3" placeholder="Descreva mais detalhes caso necessário..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-gold btn-full" id="btnSubmitAst">
+                            <span class="btn-text">Confirmar e Agendar Assistência</span>
+                            <div class="spinner" id="btnAstSpinner" style="display: none;"></div>
+                        </button>
+                    </form>
+
+                    <!-- Comprovante de Agendamento (Oculto Inicialmente) -->
+                    <div class="success-alert" id="astSuccessAlert" style="display: none; flex-direction: column; align-items: center; gap: 16px;">
+                        <span class="success-alert-icon">✓</span>
+                        <div class="text-center">
+                            <h4 style="font-size: 22px; color: #fff;">Chamado Agendado com Sucesso!</h4>
+                            <p style="margin-top: 4px; color: var(--text-muted);">Todos os envolvidos (Você, a Ótica e o Técnico Responsável) receberão os dados compilados.</p>
+                        </div>
+
+                        <div class="coupon-box" style="margin-top: 15px; width: 100%; border: 1.5px dashed var(--gold-primary); background: rgba(197, 168, 92, 0.08); padding: 18px; border-radius: 12px; text-align: center;">
+                            <span style="font-size: 11px; font-weight: 700; color: var(--gold-light); letter-spacing: 2px;">PROTOCOLO DO ATENDIMENTO</span>
+                            <h3 id="astProtocol" style="font-family: var(--font-heading); font-size: 26px; font-weight: 800; color: #fff; margin-top: 6px; letter-spacing: 1px;">PERS-AST-XXXX</h3>
+                        </div>
+
+                        <div id="astSummaryDetails" style="margin-top: 10px; font-size: 13px; text-align: left; color: var(--text-muted); border-top: 1px solid var(--border-gray); padding-top: 16px; width: 100%;">
+                            <p style="margin-bottom: 6px;">📍 <strong>Ótica:</strong> <span id="astSummaryStore" style="color: #fff; font-weight: 600;">-</span></p>
+                            <p style="margin-bottom: 6px;">👓 <strong>Produto:</strong> <span id="astSummaryProduct" style="color: #fff; font-weight: 600;">-</span></p>
+                            <p style="margin-bottom: 6px;">📅 <strong>Data & Hora:</strong> <span id="astSummaryDateTime" style="color: #fff; font-weight: 600;">-</span></p>
+                            <p style="margin-bottom: 6px;">👨‍🔧 <strong>Técnico Responsável:</strong> <span id="astSummaryTech" style="color: var(--gold-light); font-weight: 600;">-</span></p>
+                            <p style="margin-bottom: 6px;">📞 <strong>Contato do Técnico:</strong> <span id="astSummaryTechContact" style="color: #fff;">-</span></p>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; width: 100%; flex-wrap: wrap; margin-top: 10px;">
+                            <button class="btn btn-outline-gold btn-sm" id="btnCopyAstProtocol" style="flex: 1; min-width: 140px;">Copiar Protocolo</button>
+                            <a href="#" target="_blank" class="btn btn-sm" id="btnSendAstWaSummary" style="flex: 1.2; min-width: 200px; background: #25d366; color: #fff; border: none; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                                💬 WhatsApp do Técnico
                             </a>
                         </div>
                     </div>

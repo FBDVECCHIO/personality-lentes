@@ -30,6 +30,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadStores();
             } else if (sectionId === 'acessos') {
                 loadAccessManager();
+            } else if (sectionId === 'tecnicos') {
+                loadTechniciansManager();
+            } else if (sectionId === 'assistencias') {
+                loadTickets();
             }
         });
     });
@@ -849,4 +853,360 @@ document.addEventListener('DOMContentLoaded', () => {
         link.click();
         document.body.removeChild(link);
     });
+
+    // -------------------------------------------------------------
+    // 6. Gerenciamento de Equipe Técnica (Suporte & Garantia)
+    // -------------------------------------------------------------
+    const addTechnicianForm = document.getElementById('addTechnicianForm');
+    const techNameInput = document.getElementById('techName');
+    const techEmailInput = document.getElementById('techEmail');
+    const techWhatsappInput = document.getElementById('techWhatsapp');
+    const techSpecialtyInput = document.getElementById('techSpecialty');
+    const techStoreSelect = document.getElementById('techStore');
+    const btnSubmitTech = document.getElementById('btnSubmitTech');
+    const btnCancelEditTech = document.getElementById('btnCancelEditTech');
+    const techTableBody = document.getElementById('techTableBody');
+    let editingTechId = null;
+
+    const defaultTechs = [
+        { id: "1", nome: "Carlos Andrade", email: "carlos.tecnico@personality.com.br", whatsapp: "(11) 97777-6666", especialidade: "Optometrista & Tomada de Medidas HD", loja_atendida: "Todas as Lojas" },
+        { id: "2", nome: "Eng. Ricardo Santos", email: "ricardo.laboratorio@personality.com.br", whatsapp: "(11) 98888-5555", especialidade: "Garantia AR & Tratamentos de Superfície", loja_atendida: "Todas as Lojas" }
+    ];
+
+    if (btnCancelEditTech) {
+        btnCancelEditTech.addEventListener('click', () => {
+            addTechnicianForm.reset();
+            btnSubmitTech.textContent = 'Cadastrar Técnico Responsável';
+            btnCancelEditTech.style.display = 'none';
+            editingTechId = null;
+        });
+    }
+
+    async function loadTechniciansManager() {
+        if (!techStoreSelect) return;
+        techStoreSelect.innerHTML = '<option value="Todas as Lojas">Carregando lojas...</option>';
+        const stores = await getStoresList();
+        
+        techStoreSelect.innerHTML = '<option value="Todas as Lojas">Todas as Lojas (Técnico Geral da Rede)</option>';
+        stores.forEach(store => {
+            const opt = document.createElement('option');
+            opt.value = store.nome;
+            opt.textContent = store.nome;
+            techStoreSelect.appendChild(opt);
+        });
+
+        loadTechsList();
+    }
+
+    async function getTechsList() {
+        const url = localStorage.getItem('personality_sb_url');
+        const key = localStorage.getItem('personality_sb_key');
+
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const endpoint = `${cleanUrl}/rest/v1/tecnicos_personality?select=*&order=nome.asc`;
+
+                const response = await fetch(endpoint, {
+                    method: 'GET',
+                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.length > 0) return data;
+                }
+            } catch (error) {
+                console.error('Erro ao buscar técnicos no Supabase:', error);
+            }
+        }
+        return getLocalTechs();
+    }
+
+    function getLocalTechs() {
+        const local = localStorage.getItem('personality_local_techs');
+        if (!local) {
+            localStorage.setItem('personality_local_techs', JSON.stringify(defaultTechs));
+            return defaultTechs;
+        }
+        return JSON.parse(local);
+    }
+
+    async function loadTechsList() {
+        if (!techTableBody) return;
+        techTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Buscando equipe técnica...</td></tr>`;
+        const techs = await getTechsList();
+        renderTechsTable(techs);
+    }
+
+    function renderTechsTable(techs) {
+        if (!techTableBody) return;
+        techTableBody.innerHTML = '';
+        if (!techs || techs.length === 0) {
+            techTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Nenhum técnico cadastrado.</td></tr>`;
+            return;
+        }
+
+        techs.forEach(tech => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${escapeHtml(tech.nome)}</strong></td>
+                <td>${escapeHtml(tech.email)}</td>
+                <td>${escapeHtml(tech.whatsapp)}</td>
+                <td><span class="store-badge">${escapeHtml(tech.especialidade || 'Geral')}</span></td>
+                <td>${escapeHtml(tech.loja_atendida || 'Todas as Lojas')}</td>
+                <td>
+                    <button class="btn btn-sm btn-gold btn-edit-tech" data-id="${tech.id}" data-nome="${escapeHtml(tech.nome)}" data-email="${escapeHtml(tech.email)}" data-whatsapp="${escapeHtml(tech.whatsapp)}" data-especialidade="${escapeHtml(tech.especialidade)}" data-loja="${escapeHtml(tech.loja_atendida)}">✏️ Editar</button>
+                    <button class="btn btn-sm btn-danger btn-delete-tech" data-id="${tech.id}">🗑️ Excluir</button>
+                </td>
+            `;
+            techTableBody.appendChild(tr);
+        });
+
+        document.querySelectorAll('.btn-edit-tech').forEach(btn => {
+            btn.addEventListener('click', () => {
+                editingTechId = btn.getAttribute('data-id');
+                techNameInput.value = btn.getAttribute('data-nome');
+                techEmailInput.value = btn.getAttribute('data-email');
+                techWhatsappInput.value = btn.getAttribute('data-whatsapp');
+                techSpecialtyInput.value = btn.getAttribute('data-especialidade');
+                techStoreSelect.value = btn.getAttribute('data-loja') || 'Todas as Lojas';
+
+                btnSubmitTech.textContent = 'Salvar Alterações do Técnico';
+                btnCancelEditTech.style.display = 'inline-block';
+                window.scrollTo({ top: addTechnicianForm.offsetTop - 100, behavior: 'smooth' });
+            });
+        });
+
+        document.querySelectorAll('.btn-delete-tech').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.getAttribute('data-id');
+                if (confirm('Deseja excluir este técnico?')) {
+                    await deleteTech(id);
+                }
+            });
+        });
+    }
+
+    async function deleteTech(id) {
+        const url = localStorage.getItem('personality_sb_url');
+        const key = localStorage.getItem('personality_sb_key');
+
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const endpoint = `${cleanUrl}/rest/v1/tecnicos_personality?id=eq.${id}`;
+
+                const response = await fetch(endpoint, {
+                    method: 'DELETE',
+                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                });
+
+                if (!response.ok) throw new Error('Falha ao excluir técnico no Supabase.');
+                if (editingTechId === id) btnCancelEditTech.click();
+                loadTechsList();
+            } catch (error) {
+                alert(`Erro: ${error.message}`);
+            }
+        } else {
+            let techs = getLocalTechs();
+            techs = techs.filter(t => t.id !== id);
+            localStorage.setItem('personality_local_techs', JSON.stringify(techs));
+            if (editingTechId === id) btnCancelEditTech.click();
+            loadTechsList();
+        }
+    }
+
+    if (addTechnicianForm) {
+        addTechnicianForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const nome = techNameInput.value.trim();
+            const email = techEmailInput.value.trim();
+            const whatsapp = techWhatsappInput.value.trim();
+            const especialidade = techSpecialtyInput.value.trim();
+            const loja_atendida = techStoreSelect.value;
+
+            if (nome.length < 3 || !email.includes('@') || whatsapp.replace(/\D/g, '').length < 10) {
+                alert('Por favor, preencha todos os campos do técnico corretamente.');
+                return;
+            }
+
+            const url = localStorage.getItem('personality_sb_url');
+            const key = localStorage.getItem('personality_sb_key');
+
+            if (editingTechId) {
+                if (url && key) {
+                    try {
+                        const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                        const endpoint = `${cleanUrl}/rest/v1/tecnicos_personality?id=eq.${editingTechId}`;
+
+                        const response = await fetch(endpoint, {
+                            method: 'PATCH',
+                            headers: {
+                                'apikey': key,
+                                'Authorization': `Bearer ${key}`,
+                                'Content-Type': 'application/json',
+                                'Prefer': 'return=minimal'
+                            },
+                            body: JSON.stringify({ nome, email, whatsapp, especialidade, loja_atendida })
+                        });
+
+                        if (!response.ok) throw new Error('Falha ao atualizar técnico no Supabase.');
+                    } catch (error) {
+                        alert(`Erro ao editar técnico: ${error.message}`);
+                        return;
+                    }
+                } else {
+                    let techs = getLocalTechs();
+                    const idx = techs.findIndex(t => t.id === editingTechId);
+                    if (idx !== -1) {
+                        techs[idx] = { ...techs[idx], nome, email, whatsapp, especialidade, loja_atendida };
+                        localStorage.setItem('personality_local_techs', JSON.stringify(techs));
+                    }
+                }
+            } else {
+                if (url && key) {
+                    try {
+                        const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                        const endpoint = `${cleanUrl}/rest/v1/tecnicos_personality`;
+
+                        const response = await fetch(endpoint, {
+                            method: 'POST',
+                            headers: {
+                                'apikey': key,
+                                'Authorization': `Bearer ${key}`,
+                                'Content-Type': 'application/json',
+                                'Prefer': 'return=minimal'
+                            },
+                            body: JSON.stringify({ nome, email, whatsapp, especialidade, loja_atendida })
+                        });
+
+                        if (!response.ok) throw new Error('Falha ao cadastrar técnico no Supabase.');
+                    } catch (error) {
+                        alert(`Erro ao cadastrar técnico: ${error.message}`);
+                        return;
+                    }
+                } else {
+                    let techs = getLocalTechs();
+                    const newTech = { id: Date.now().toString(), nome, email, whatsapp, especialidade, loja_atendida };
+                    techs.push(newTech);
+                    localStorage.setItem('personality_local_techs', JSON.stringify(techs));
+                }
+            }
+
+            addTechnicianForm.reset();
+            if (btnCancelEditTech) btnCancelEditTech.click();
+            alert('Técnico salvo com sucesso!');
+            loadTechsList();
+        });
+    }
+
+    // -------------------------------------------------------------
+    // 7. Chamados de Assistência Técnica & Garantia
+    // -------------------------------------------------------------
+    const ticketsCount = document.getElementById('ticketsCount');
+    const btnExportTickets = document.getElementById('btnExportTickets');
+    const ticketsTableBody = document.getElementById('ticketsTableBody');
+
+    async function getTicketsList() {
+        const url = localStorage.getItem('personality_sb_url');
+        const key = localStorage.getItem('personality_sb_key');
+
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const endpoint = `${cleanUrl}/rest/v1/chamados_assistencia?select=*&order=created_at.desc`;
+
+                const response = await fetch(endpoint, {
+                    method: 'GET',
+                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data) return data;
+                }
+            } catch (error) {
+                console.error('Erro ao buscar chamados no Supabase:', error);
+            }
+        }
+        return JSON.parse(localStorage.getItem('personality_local_tickets')) || [];
+    }
+
+    async function loadTickets() {
+        if (!ticketsTableBody) return;
+        ticketsTableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Buscando chamados de assistência...</td></tr>`;
+        const tickets = await getTicketsList();
+        renderTicketsTable(tickets);
+    }
+
+    function renderTicketsTable(tickets) {
+        if (!ticketsTableBody) return;
+        ticketsTableBody.innerHTML = '';
+        if (ticketsCount) ticketsCount.textContent = tickets.length;
+
+        if (!tickets || tickets.length === 0) {
+            ticketsTableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Nenhum chamado de assistência registrado até o momento.</td></tr>`;
+            return;
+        }
+
+        tickets.forEach(t => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong style="color: var(--gold-light);">${escapeHtml(t.protocolo || 'N/A')}</strong></td>
+                <td><strong>${escapeHtml(t.cliente_nome)}</strong></td>
+                <td>${escapeHtml(t.cliente_whatsapp)}<br><small style="color: var(--text-muted);">${escapeHtml(t.cliente_email)}</small></td>
+                <td>${escapeHtml(t.loja_nome)}</td>
+                <td><strong>${escapeHtml(t.linha_produto)}</strong><br><small style="color: var(--text-muted);">${escapeHtml(t.motivo)}</small></td>
+                <td>📅 ${escapeHtml(t.data_atendimento)}<br>⏰ ${escapeHtml(t.horario_atendimento)}</td>
+                <td>👤 <strong>${escapeHtml(t.tecnico_nome)}</strong><br><small style="color: var(--text-muted);">${escapeHtml(t.tecnico_whatsapp)}</small></td>
+                <td><span class="store-badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(10, 185, 129, 0.3);">${escapeHtml(t.status || 'Agendado')}</span></td>
+            `;
+            ticketsTableBody.appendChild(tr);
+        });
+    }
+
+    if (btnExportTickets) {
+        btnExportTickets.addEventListener('click', async () => {
+            const tickets = await getTicketsList();
+            if (!tickets || tickets.length === 0) {
+                alert('Não há dados de chamados para exportar.');
+                return;
+            }
+
+            let csvContent = "\uFEFF";
+            csvContent += "Protocolo;Cliente_Nome;Cliente_Email;Cliente_Whatsapp;Loja_Compra;Linha_Produto;Motivo;Data_Atendimento;Horario;Tecnico_Responsavel;Tecnico_Email;Tecnico_Whatsapp;Status;Data_Abertura\n";
+
+            tickets.forEach(t => {
+                const line = [
+                    `"${t.protocolo || ''}"`,
+                    `"${(t.cliente_nome || '').replace(/"/g, '""')}"`,
+                    `"${(t.cliente_email || '').replace(/"/g, '""')}"`,
+                    `"${t.cliente_whatsapp || ''}"`,
+                    `"${(t.loja_nome || '').replace(/"/g, '""')}"`,
+                    `"${(t.linha_produto || '').replace(/"/g, '""')}"`,
+                    `"${(t.motivo || '').replace(/"/g, '""')}"`,
+                    `"${t.data_atendimento || ''}"`,
+                    `"${t.horario_atendimento || ''}"`,
+                    `"${(t.tecnico_nome || '').replace(/"/g, '""')}"`,
+                    `"${(t.tecnico_email || '').replace(/"/g, '""')}"`,
+                    `"${t.tecnico_whatsapp || ''}"`,
+                    `"${t.status || 'Agendado'}"`,
+                    `"${t.created_at || ''}"`
+                ].join(';');
+                csvContent += line + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const downloadUrl = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", downloadUrl);
+            link.setAttribute("download", `chamados_assistencia_personality_${new Date().toISOString().slice(0,10)}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    }
 });

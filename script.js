@@ -220,8 +220,14 @@ document.addEventListener('DOMContentLoaded', () => {
         leadStoreSelect.innerHTML = '<option value="">Selecione uma Ótica Licenciada...</option>';
         storesContainer.innerHTML = '';
 
+        const astStoreSelect = document.getElementById('astStore');
+        if (astStoreSelect) {
+            astStoreSelect.innerHTML = '<option value="">Selecione a Ótica onde realizou a compra...</option>';
+        }
+
         if (stores.length === 0) {
             leadStoreSelect.innerHTML = '<option value="">Nenhuma ótica credenciada cadastrada</option>';
+            if (astStoreSelect) astStoreSelect.innerHTML = '<option value="">Nenhuma ótica parceira cadastrada</option>';
             storesContainer.innerHTML = `<div class="store-card" style="grid-column: span 2; text-align: center;"><p>Nenhuma ótica parceira credenciada no momento.</p></div>`;
             return;
         }
@@ -231,6 +237,13 @@ document.addEventListener('DOMContentLoaded', () => {
             option.value = store.nome;
             option.textContent = store.nome;
             leadStoreSelect.appendChild(option);
+
+            if (astStoreSelect) {
+                const astOpt = document.createElement('option');
+                astOpt.value = store.nome;
+                astOpt.textContent = store.nome;
+                astStoreSelect.appendChild(astOpt);
+            }
 
             const card = document.createElement('div');
             card.className = 'store-card';
@@ -758,7 +771,313 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
     });
 
     // -------------------------------------------------------------
-    // 7. Botão Voltar ao Topo
+    // 7. Agendamento de Assistência Técnica & Garantia
+    // -------------------------------------------------------------
+    const assistanceForm = document.getElementById('assistanceForm');
+    const astNameInput = document.getElementById('astName');
+    const astEmailInput = document.getElementById('astEmail');
+    const astWhatsappInput = document.getElementById('astWhatsapp');
+    const astStoreSelect = document.getElementById('astStore');
+    const astProductSelect = document.getElementById('astProduct');
+    const astReasonSelect = document.getElementById('astReason');
+    const astDateInput = document.getElementById('astDate');
+    const astTimeSelect = document.getElementById('astTime');
+    const astObsInput = document.getElementById('astObs');
+    const btnSubmitAst = document.getElementById('btnSubmitAst');
+    const btnAstSpinner = document.getElementById('btnAstSpinner');
+    
+    const astSuccessAlert = document.getElementById('astSuccessAlert');
+    const astProtocolH3 = document.getElementById('astProtocol');
+    const astSummaryStore = document.getElementById('astSummaryStore');
+    const astSummaryProduct = document.getElementById('astSummaryProduct');
+    const astSummaryDateTime = document.getElementById('astSummaryDateTime');
+    const astSummaryTech = document.getElementById('astSummaryTech');
+    const astSummaryTechContact = document.getElementById('astSummaryTechContact');
+    const btnCopyAstProtocol = document.getElementById('btnCopyAstProtocol');
+    const btnSendAstWaSummary = document.getElementById('btnSendAstWaSummary');
+
+    if (astDateInput) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        astDateInput.min = tomorrow.toISOString().split('T')[0];
+    }
+
+    if (astWhatsappInput) {
+        astWhatsappInput.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 0) value = '(' + value;
+            if (value.length > 3) value = value.slice(0, 3) + ') ' + value.slice(3);
+            if (value.length > 10) value = value.slice(0, 10) + '-' + value.slice(10);
+            if (value.length > 15) value = value.slice(0, 15);
+            e.target.value = value;
+        });
+    }
+
+    function generateAssistanceProtocol() {
+        const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        let code = '';
+        for (let i = 0; i < 4; i++) {
+            code += chars[Math.floor(Math.random() * chars.length)];
+        }
+        return `PERS-AST-${code}`;
+    }
+
+    async function getAssignedTechnician(storeName) {
+        const url = localStorage.getItem('personality_sb_url');
+        const key = localStorage.getItem('personality_sb_key');
+
+        const fallbackTechs = [
+            { nome: "Carlos Andrade", email: "carlos.tecnico@personality.com.br", whatsapp: "(11) 97777-6666", especialidade: "Optometrista & Medidas HD", loja_atendida: "Todas as Lojas" },
+            { nome: "Eng. Ricardo Santos", email: "ricardo.laboratorio@personality.com.br", whatsapp: "(11) 98888-5555", especialidade: "Garantia AR & Laboratório", loja_atendida: "Todas as Lojas" }
+        ];
+
+        let techs = [];
+
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const endpoint = `${cleanUrl}/rest/v1/tecnicos_personality?select=*`;
+
+                const response = await fetch(endpoint, {
+                    method: 'GET',
+                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                });
+
+                if (response.ok) {
+                    techs = await response.json();
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        if (!techs || techs.length === 0) {
+            const local = localStorage.getItem('personality_local_techs');
+            techs = local ? JSON.parse(local) : fallbackTechs;
+        }
+
+        if (!techs || techs.length === 0) {
+            techs = fallbackTechs;
+        }
+
+        const storeTech = techs.find(t => t.loja_atendida && t.loja_atendida.toLowerCase() === storeName.toLowerCase());
+        if (storeTech) return storeTech;
+
+        return techs[0];
+    }
+
+    if (assistanceForm) {
+        assistanceForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const nameVal = astNameInput.value.trim();
+            const emailVal = astEmailInput.value.trim();
+            const whatsappVal = astWhatsappInput.value.trim();
+            const rawWhatsapp = whatsappVal.replace(/\D/g, '');
+            const storeVal = astStoreSelect.value;
+            const productVal = astProductSelect.value;
+            const reasonVal = astReasonSelect.value;
+            const dateVal = astDateInput.value;
+            const timeVal = astTimeSelect.value;
+            const obsVal = astObsInput ? astObsInput.value.trim() : '';
+
+            let isValid = true;
+
+            if (nameVal.length < 3) {
+                showError(astNameInput, document.getElementById('astNameError'), true);
+                isValid = false;
+            } else {
+                showError(astNameInput, document.getElementById('astNameError'), false);
+            }
+
+            if (!emailVal.includes('@')) {
+                showError(astEmailInput, document.getElementById('astEmailError'), true);
+                isValid = false;
+            } else {
+                showError(astEmailInput, document.getElementById('astEmailError'), false);
+            }
+
+            if (rawWhatsapp.length < 10 || rawWhatsapp.length > 11) {
+                showError(astWhatsappInput, document.getElementById('astWhatsappError'), true);
+                isValid = false;
+            } else {
+                showError(astWhatsappInput, document.getElementById('astWhatsappError'), false);
+            }
+
+            if (!storeVal) {
+                document.getElementById('astStoreError').style.display = 'block';
+                astStoreSelect.classList.add('invalid');
+                isValid = false;
+            } else {
+                document.getElementById('astStoreError').style.display = 'none';
+                astStoreSelect.classList.remove('invalid');
+            }
+
+            if (!productVal) {
+                document.getElementById('astProductError').style.display = 'block';
+                astProductSelect.classList.add('invalid');
+                isValid = false;
+            } else {
+                document.getElementById('astProductError').style.display = 'none';
+                astProductSelect.classList.remove('invalid');
+            }
+
+            if (!reasonVal) {
+                document.getElementById('astReasonError').style.display = 'block';
+                astReasonSelect.classList.add('invalid');
+                isValid = false;
+            } else {
+                document.getElementById('astReasonError').style.display = 'none';
+                astReasonSelect.classList.remove('invalid');
+            }
+
+            if (!dateVal) {
+                showError(astDateInput, document.getElementById('astDateError'), true);
+                isValid = false;
+            } else {
+                showError(astDateInput, document.getElementById('astDateError'), false);
+            }
+
+            if (!timeVal) {
+                document.getElementById('astTimeError').style.display = 'block';
+                astTimeSelect.classList.add('invalid');
+                isValid = false;
+            } else {
+                document.getElementById('astTimeError').style.display = 'none';
+                astTimeSelect.classList.remove('invalid');
+            }
+
+            if (!isValid) return;
+
+            btnSubmitAst.disabled = true;
+            btnAstSpinner.style.display = 'inline-block';
+            btnSubmitAst.querySelector('.btn-text').textContent = 'Agendando Chamado...';
+
+            const protocolCode = generateAssistanceProtocol();
+
+            const chosenStoreObj = loadedStoresList.find(s => s.nome === storeVal);
+            const storeAddress = chosenStoreObj ? chosenStoreObj.endereco : '';
+            const storePhone = chosenStoreObj ? chosenStoreObj.telefone : '';
+
+            const assignedTech = await getAssignedTechnician(storeVal);
+
+            const ticketData = {
+                protocolo: protocolCode,
+                cliente_nome: nameVal,
+                cliente_email: emailVal,
+                cliente_whatsapp: whatsappVal,
+                loja_nome: storeVal,
+                linha_produto: productVal,
+                motivo: reasonVal,
+                data_atendimento: dateVal,
+                horario_atendimento: timeVal,
+                tecnico_nome: assignedTech.nome,
+                tecnico_email: assignedTech.email,
+                tecnico_whatsapp: assignedTech.whatsapp,
+                status: 'Agendado',
+                observacoes: obsVal,
+                timestamp: new Date().toISOString()
+            };
+
+            const url = localStorage.getItem('personality_sb_url');
+            const key = localStorage.getItem('personality_sb_key');
+
+            if (url && key) {
+                try {
+                    const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                    const endpoint = `${cleanUrl}/rest/v1/chamados_assistencia`;
+
+                    await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': key,
+                            'Authorization': `Bearer ${key}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify(ticketData)
+                    });
+                } catch (error) {
+                    console.error('Erro ao salvar chamado no Supabase:', error);
+                }
+            }
+
+            saveTicketToLocalStorage(ticketData);
+
+            const makeWebhookUrl = localStorage.getItem('personality_make_webhook');
+            if (makeWebhookUrl) {
+                try {
+                    await fetch(makeWebhookUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            tipo_evento: "CHAMADO_ASSISTENCIA",
+                            protocolo: ticketData.protocolo,
+                            cliente: {
+                                nome: ticketData.cliente_nome,
+                                email: ticketData.cliente_email,
+                                whatsapp: ticketData.cliente_whatsapp
+                            },
+                            loja: {
+                                nome: ticketData.loja_nome,
+                                endereco: storeAddress,
+                                telefone: storePhone
+                            },
+                            tecnico: {
+                                nome: ticketData.tecnico_nome,
+                                email: ticketData.tecnico_email,
+                                whatsapp: ticketData.tecnico_whatsapp,
+                                especialidade: assignedTech.especialidade || 'Assistência Técnica'
+                            },
+                            agendamento: {
+                                produto: ticketData.linha_produto,
+                                motivo: ticketData.motivo,
+                                data: ticketData.data_atendimento,
+                                horario: ticketData.horario_atendimento,
+                                observacoes: ticketData.observacoes
+                            }
+                        })
+                    });
+                } catch (webhookErr) {
+                    console.warn('Alerta Webhook Make:', webhookErr);
+                }
+            }
+
+            showAstFormSuccess(ticketData, assignedTech);
+        });
+    }
+
+    function saveTicketToLocalStorage(ticketData) {
+        const local = localStorage.getItem('personality_local_tickets');
+        const tickets = local ? JSON.parse(local) : [];
+        tickets.unshift(ticketData);
+        localStorage.setItem('personality_local_tickets', JSON.stringify(tickets));
+    }
+
+    function showAstFormSuccess(ticketData, assignedTech) {
+        assistanceForm.style.display = 'none';
+        astSuccessAlert.style.display = 'flex';
+
+        astProtocolH3.textContent = ticketData.protocolo;
+        astSummaryStore.textContent = ticketData.loja_nome;
+        astSummaryProduct.textContent = `${ticketData.linha_produto} (${ticketData.motivo})`;
+        astSummaryDateTime.textContent = `${ticketData.data_atendimento} às ${ticketData.horario_atendimento}`;
+        astSummaryTech.textContent = `${assignedTech.nome} (${assignedTech.especialidade || 'Técnico Especialista'})`;
+        astSummaryTechContact.textContent = `${assignedTech.whatsapp} / ${assignedTech.email}`;
+
+        btnCopyAstProtocol.onclick = () => {
+            navigator.clipboard.writeText(ticketData.protocolo);
+            btnCopyAstProtocol.textContent = 'Copiado! ✓';
+            setTimeout(() => { btnCopyAstProtocol.textContent = 'Copiar Protocolo'; }, 2000);
+        };
+
+        const techRawPhone = (assignedTech.whatsapp || '').replace(/\D/g, '');
+        const waMsg = encodeURIComponent(`Olá ${assignedTech.nome}! Gostaria de confirmar o agendamento do meu chamado Protocolo *${ticketData.protocolo}* para o dia ${ticketData.data_atendimento} às ${ticketData.horario_atendimento}. (Cliente: ${ticketData.cliente_nome})`);
+        btnSendAstWaSummary.href = `https://wa.me/55${techRawPhone}?text=${waMsg}`;
+    }
+
+    // -------------------------------------------------------------
+    // 8. Botão Voltar ao Topo
     // -------------------------------------------------------------
     const backToTopBtn = document.getElementById('backToTop');
 

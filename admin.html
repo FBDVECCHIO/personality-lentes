@@ -36,6 +36,8 @@
                 <button class="side-btn active" data-section="supabase">🗄️ Banco Supabase</button>
                 <button class="side-btn" data-section="lojas">🏪 Lojas Licenciadas</button>
                 <button class="side-btn" data-section="acessos">🔑 Acessos das Lojas</button>
+                <button class="side-btn" data-section="tecnicos">👨‍🔧 Equipe Técnica</button>
+                <button class="side-btn" data-section="assistencias">🛠️ Chamados de Assistência</button>
                 <button class="side-btn" data-section="dominio">🌐 Domínio e Vercel</button>
                 <button class="side-btn" data-section="imagens">📸 Banco de Imagens</button>
                 <button class="side-btn" data-section="leads">📥 Leads Recebidos</button>
@@ -130,10 +132,43 @@ create table if not exists acessos_lojas (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- 4. Liberar acesso às tabelas (caso RLS esteja ativo)
+-- 4. Tabela de Equipe Técnica (Suporte & Garantia)
+create table if not exists tecnicos_personality (
+  id uuid default gen_random_uuid() primary key,
+  nome text not null,
+  email text not null,
+  whatsapp text not null,
+  especialidade text default 'Assistência Geral',
+  loja_atendida text default 'Todas as Lojas',
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 5. Tabela de Chamados de Assistência Técnica
+create table if not exists chamados_assistencia (
+  id uuid default gen_random_uuid() primary key,
+  protocolo text not null,
+  cliente_nome text not null,
+  cliente_email text not null,
+  cliente_whatsapp text not null,
+  loja_nome text not null,
+  linha_produto text not null,
+  motivo text not null,
+  data_atendimento date not null,
+  horario_atendimento text not null,
+  tecnico_nome text not null,
+  tecnico_email text not null,
+  tecnico_whatsapp text not null,
+  status text default 'Agendado',
+  observacoes text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 6. Liberar acesso às tabelas (caso RLS esteja ativo)
 alter table leads_personality disable row level security;
 alter table lojas_licenciadas disable row level security;
 alter table acessos_lojas disable row level security;
+alter table tecnicos_personality disable row level security;
+alter table chamados_assistencia disable row level security;
 </code></pre>
                     </div>
                 </div>
@@ -237,6 +272,113 @@ alter table acessos_lojas disable row level security;
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção: Gerenciar Equipe Técnica -->
+            <div class="admin-section" id="sec-tecnicos">
+                <div class="glass-card section-card">
+                    <div class="card-header">
+                        <h2>Gerenciamento da <span class="gold-text">Equipe Técnica & Especialistas</span></h2>
+                        <p>Cadastre os técnicos e responsáveis que receberão os chamados de assistência, ajuste de parâmetros e garantia.</p>
+                    </div>
+
+                    <!-- Formulário de Cadastro de Técnico -->
+                    <form id="addTechnicianForm" style="margin-bottom: 32px;" novalidate>
+                        <h4 style="color: var(--gold-light); margin-bottom: 16px;">Cadastrar / Editar Técnico:</h4>
+                        
+                        <div class="input-group">
+                            <label for="techName">Nome Completo do Técnico</label>
+                            <input type="text" id="techName" placeholder="Ex: Carlos Andrade" required>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="techEmail">E-mail do Técnico (para recebimento do chamado)</label>
+                            <input type="email" id="techEmail" placeholder="Ex: carlos.tecnico@personality.com.br" required>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="techWhatsapp">WhatsApp do Técnico (com DDD)</label>
+                            <input type="tel" id="techWhatsapp" placeholder="(11) 97777-6666" required>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="techSpecialty">Especialidade / Função</label>
+                            <input type="text" id="techSpecialty" placeholder="Ex: Optometrista / Especialista em Montagem HD / Garantia" value="Assistência Técnica & Garantia" required>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="techStore">Ótica Atendida / Vinculada</label>
+                            <select id="techStore">
+                                <option value="Todas as Lojas">Todas as Lojas (Técnico Geral da Rede)</option>
+                                <!-- Preenchido dinamicamente via JS -->
+                            </select>
+                        </div>
+
+                        <div style="display: flex; gap: 12px;">
+                            <button type="submit" class="btn btn-gold" id="btnSubmitTech">Cadastrar Técnico Responsável</button>
+                            <button type="button" class="btn btn-outline-gold" id="btnCancelEditTech" style="display: none;">Cancelar Edição</button>
+                        </div>
+                    </form>
+
+                    <!-- Tabela de Técnicos -->
+                    <div class="stores-list-wrapper">
+                        <h4 style="color: var(--gold-light); margin-bottom: 16px;">Técnicos Cadastrados:</h4>
+                        <div class="table-container">
+                            <table class="leads-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>E-mail</th>
+                                        <th>WhatsApp</th>
+                                        <th>Especialidade</th>
+                                        <th>Ótica Atendida</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="techTableBody">
+                                    <!-- Preenchido via Javascript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção: Chamados de Assistência Técnica -->
+            <div class="admin-section" id="sec-assistencias">
+                <div class="glass-card section-card">
+                    <div class="card-header">
+                        <h2>Chamados de <span class="gold-text">Assistência Técnica & Garantia</span></h2>
+                        <p>Acompanhe todos os chamados abertos pelos clientes, os técnicos atribuídos e o status dos agendamentos.</p>
+                    </div>
+
+                    <div class="admin-actions">
+                        <div class="stats-badge">Total de Chamados: <span id="ticketsCount">0</span></div>
+                        <div class="action-buttons">
+                            <button class="btn btn-success btn-sm" id="btnExportTickets">📥 Exportar Chamados (CSV)</button>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="leads-table">
+                            <thead>
+                                <tr>
+                                    <th>Protocolo</th>
+                                    <th>Cliente</th>
+                                    <th>WhatsApp / E-mail</th>
+                                    <th>Ótica de Compra</th>
+                                    <th>Linha / Motivo</th>
+                                    <th>Data / Hora</th>
+                                    <th>Técnico Responsável</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ticketsTableBody">
+                                <!-- Preenchido via Javascript -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
