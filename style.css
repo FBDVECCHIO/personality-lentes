@@ -162,25 +162,27 @@ body.no-scroll {
 .logo {
     display: flex;
     align-items: center;
-    gap: 8px;
     text-decoration: none;
 }
 
-.logo-icon {
-    font-size: 24px;
+.header-logo-img {
+    height: 42px;
+    width: auto;
+    max-width: 220px;
+    object-fit: contain;
+    transition: var(--transition);
 }
 
-.logo-text {
-    font-family: var(--font-heading);
-    font-weight: 800;
-    font-size: 24px;
-    letter-spacing: 1px;
-    color: var(--text-white);
+.logo:hover .header-logo-img {
+    transform: scale(1.03);
+    filter: drop-shadow(0 0 10px rgba(197, 168, 92, 0.4));
 }
 
-.logo-text span.gold-dot {
-    color: var(--gold-primary);
-    -webkit-text-fill-color: var(--gold-primary);
+@media (max-width: 600px) {
+    .header-logo-img {
+        height: 32px;
+        max-width: 170px;
+    }
 }
 
 /* Menu de Navegação Desktop */
