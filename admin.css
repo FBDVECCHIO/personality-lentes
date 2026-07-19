@@ -3,34 +3,40 @@
 /* Layout 2 Colunas para Formulários do Admin */
 .form-grid-2 {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 16px;
     margin-bottom: 16px;
+    width: 100%;
 }
 
-/* Layout de Duas Colunas do Dashboard */
+/* Layout de Duas Colunas do Dashboard com Prevenção de Transbordamento */
 .admin-container {
     display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 32px;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 24px;
     align-items: flex-start;
-    padding-top: 40px;
+    padding-top: 30px;
     padding-bottom: 80px;
+    width: 100%;
+    max-width: 1300px;
+    box-sizing: border-box;
 }
 
-@media (max-width: 968px) {
+@media (max-width: 1080px) {
     .admin-container {
         grid-template-columns: 1fr;
-        gap: 24px;
+        gap: 20px;
     }
 }
 
 /* Sidebar */
 .admin-sidebar {
-    padding: 30px;
+    padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: 20px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .sidebar-header h3 {
@@ -48,7 +54,7 @@
 .sidebar-nav {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
 .side-btn {
@@ -56,14 +62,17 @@
     border: 1px solid transparent;
     color: var(--text-muted);
     font-family: var(--font-sans);
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     text-align: left;
-    padding: 12px 16px;
+    padding: 10px 14px;
     border-radius: 8px;
     cursor: pointer;
     transition: var(--transition);
     width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .side-btn:hover {
@@ -77,10 +86,14 @@
     color: var(--gold-light);
 }
 
-/* Controle de Exibição das Seções */
+/* Controle de Exibição das Seções sem Transbordamento */
 .admin-section {
     display: none;
     animation: fadeIn 0.4s ease-out;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .admin-section.active {
@@ -88,12 +101,16 @@
 }
 
 .section-card {
-    padding: 40px;
+    padding: 32px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 @media (max-width: 600px) {
     .section-card {
-        padding: 24px;
+        padding: 20px 16px;
     }
 }
 
