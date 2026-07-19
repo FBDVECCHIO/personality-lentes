@@ -1857,11 +1857,19 @@ select optgroup {
     line-height: 1.3;
 }
 
+/* Wrapper Central do Formulário de Assistência */
+.assistance-form-wrapper {
+    width: 100%;
+    max-width: 860px;
+    margin: 0 auto;
+}
+
 /* Grid Responsivo para o Formulário de Assistência */
 .ast-form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
+    gap: 20px;
+    margin-bottom: 6px;
 }
 
 .ast-summary-grid {
@@ -1874,10 +1882,10 @@ select optgroup {
     width: 100%;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 16px;
 }
 
-@media (max-width: 680px) {
+@media (max-width: 768px) {
     .ast-form-row {
         grid-template-columns: 1fr !important;
         gap: 16px;
@@ -1885,15 +1893,15 @@ select optgroup {
 
     .ast-summary-grid {
         grid-template-columns: 1fr !important;
-        gap: 8px;
+        gap: 10px;
     }
 
     .contact-form-container.glass-card {
-        padding: 20px !important;
+        padding: 24px 18px !important;
     }
 
     .cert-alert-hint {
-        font-size: 10px;
-        padding: 4px 6px;
+        font-size: 11px;
+        padding: 6px 8px;
     }
 }
