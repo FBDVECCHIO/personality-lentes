@@ -1546,7 +1546,7 @@ document.addEventListener('DOMContentLoaded', () => {
             categoria: 'Lançamento Exclusivo',
             descricao: 'Especificações completas da inovadora lente fotossensível inteligente que se transforma em espelhada ao escurecer no sol.',
             formato: 'PDF • Apresentação Oficial',
-            url_download: '#'
+            url_download: 'downloads/SHINE%20MIRROR.pdf'
         }
     ];
 
