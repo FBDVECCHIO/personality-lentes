@@ -107,6 +107,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadTickets();
             } else if (sectionId === 'motivos') {
                 loadMotivosManager();
+            } else if (sectionId === 'downloads') {
+                loadAdminDownloadsManager();
             }
         });
     });
@@ -1521,5 +1523,241 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadMotivosManager();
             }
         });
+    }
+
+    // -------------------------------------------------------------
+    // Gerenciamento da Central de Downloads (Materiais)
+    // -------------------------------------------------------------
+    const downloadMaterialForm = document.getElementById('downloadMaterialForm');
+    const downloadFormTitle = document.getElementById('downloadFormTitle');
+    const downloadEditId = document.getElementById('downloadEditId');
+    const downloadTitulo = document.getElementById('downloadTitulo');
+    const downloadCategoria = document.getElementById('downloadCategoria');
+    const downloadFormato = document.getElementById('downloadFormato');
+    const downloadUrl = document.getElementById('downloadUrl');
+    const downloadDescricao = document.getElementById('downloadDescricao');
+    const btnCancelDownload = document.getElementById('btnCancelDownload');
+    const downloadMaterialsTableBody = document.getElementById('downloadMaterialsTableBody');
+
+    const defaultDownloadsAdmin = [
+        {
+            id: 'dl-1',
+            titulo: 'Catálogo Oficial Personality 2026',
+            categoria: 'Catálogo Geral',
+            descricao: 'Apresentação completa das linhas de inteligência artificial, multifocais e antirreflexos.',
+            formato: 'PDF • 5.8 MB',
+            url_download: '#'
+        },
+        {
+            id: 'dl-2',
+            titulo: 'Tabela Comparativa de Dioptrias & Índices',
+            categoria: 'Tabela Técnica',
+            descricao: 'Guia completo com os índices de refração de 1.50 a 1.76, espessuras e diâmetros.',
+            formato: 'PDF • 2.1 MB',
+            url_download: '#'
+        },
+        {
+            id: 'dl-3',
+            titulo: 'Guia de Tratamentos Antirreflexo & Garantia',
+            categoria: 'Manual & Garantia',
+            descricao: 'Especificações das 22 camadas de proteção, certificado e recomendações de limpeza.',
+            formato: 'PDF • 1.5 MB',
+            url_download: '#'
+        }
+    ];
+
+    async function loadAdminDownloadsManager() {
+        if (!downloadMaterialsTableBody) return;
+        downloadMaterialsTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">Buscando materiais...</td></tr>`;
+
+        const url = localStorage.getItem('personality_sb_url');
+        const key = localStorage.getItem('personality_sb_key');
+
+        let downloads = [];
+
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const endpoint = `${cleanUrl}/rest/v1/materiais_download?select=*&order=created_at.desc`;
+
+                const response = await fetch(endpoint, {
+                    method: 'GET',
+                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                });
+
+                if (response.ok) {
+                    downloads = await response.json();
+                } else {
+                    throw new Error('Falha ao carregar do Supabase');
+                }
+            } catch (err) {
+                console.error(err);
+                downloads = getLocalAdminDownloads();
+            }
+        } else {
+            downloads = getLocalAdminDownloads();
+        }
+
+        if (!downloads || downloads.length === 0) {
+            downloads = defaultDownloadsAdmin;
+            localStorage.setItem('personality_local_downloads', JSON.stringify(downloads));
+        }
+
+        renderAdminDownloadsTable(downloads);
+    }
+
+    function getLocalAdminDownloads() {
+        const local = localStorage.getItem('personality_local_downloads');
+        return local ? JSON.parse(local) : defaultDownloadsAdmin;
+    }
+
+    function renderAdminDownloadsTable(items) {
+        if (!downloadMaterialsTableBody) return;
+        downloadMaterialsTableBody.innerHTML = '';
+
+        if (items.length === 0) {
+            downloadMaterialsTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">Nenhum material cadastrado.</td></tr>`;
+            return;
+        }
+
+        items.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>
+                    <strong style="color:#fff;">${item.titulo}</strong><br>
+                    <span style="font-size: 11px; color: var(--gold-light);">${item.categoria}</span>
+                </td>
+                <td style="font-size: 12.5px; color: var(--text-muted);">${item.descricao}</td>
+                <td style="font-size: 12px; color: var(--gold-light);">${item.formato}</td>
+                <td style="font-size: 11px; word-break: break-all;">
+                    <a href="${item.url_download}" target="_blank" style="color: var(--gold-light); text-decoration: underline;">${item.url_download && item.url_download !== '#' ? 'Acessar Link' : 'Sem Link'}</a>
+                </td>
+                <td>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="btn btn-sm btn-gold btn-edit-dl" data-id="${item.id}">✏️ Editar</button>
+                        <button class="btn btn-sm btn-danger btn-del-dl" data-id="${item.id}">🗑️ Excluir</button>
+                    </div>
+                </td>
+            `;
+
+            tr.querySelector('.btn-edit-dl').onclick = () => editAdminDownloadItem(item);
+            tr.querySelector('.btn-del-dl').onclick = () => deleteAdminDownloadItem(item.id);
+
+            downloadMaterialsTableBody.appendChild(tr);
+        });
+    }
+
+    function editAdminDownloadItem(item) {
+        if (!downloadMaterialForm) return;
+        downloadEditId.value = item.id;
+        downloadTitulo.value = item.titulo;
+        downloadCategoria.value = item.categoria;
+        downloadFormato.value = item.formato;
+        downloadUrl.value = item.url_download === '#' ? '' : item.url_download;
+        downloadDescricao.value = item.descricao;
+
+        downloadFormTitle.textContent = '✏️ Editar Material de Download';
+        btnCancelDownload.style.display = 'inline-block';
+        window.scrollTo({ top: downloadMaterialForm.offsetTop - 100, behavior: 'smooth' });
+    }
+
+    function resetAdminDownloadForm() {
+        if (!downloadMaterialForm) return;
+        downloadEditId.value = '';
+        downloadMaterialForm.reset();
+        downloadFormTitle.textContent = '➕ Cadastrar Novo Material para Download';
+        btnCancelDownload.style.display = 'none';
+    }
+
+    if (btnCancelDownload) {
+        btnCancelDownload.onclick = resetAdminDownloadForm;
+    }
+
+    if (downloadMaterialForm) {
+        downloadMaterialForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const isEdit = !!downloadEditId.value;
+            const payload = {
+                id: isEdit ? downloadEditId.value : `dl-${Date.now()}`,
+                titulo: downloadTitulo.value.trim(),
+                categoria: downloadCategoria.value,
+                formato: downloadFormato.value.trim(),
+                url_download: downloadUrl.value.trim() || '#',
+                descricao: downloadDescricao.value.trim()
+            };
+
+            const url = localStorage.getItem('personality_sb_url');
+            const key = localStorage.getItem('personality_sb_key');
+
+            if (url && key) {
+                try {
+                    const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                    const endpoint = isEdit 
+                        ? `${cleanUrl}/rest/v1/materiais_download?id=eq.${payload.id}`
+                        : `${cleanUrl}/rest/v1/materiais_download`;
+
+                    const method = isEdit ? 'PATCH' : 'POST';
+
+                    await fetch(endpoint, {
+                        method: method,
+                        headers: {
+                            'apikey': key,
+                            'Authorization': `Bearer ${key}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify(isEdit ? {
+                            titulo: payload.titulo,
+                            categoria: payload.categoria,
+                            formato: payload.formato,
+                            url_download: payload.url_download,
+                            descricao: payload.descricao
+                        } : payload)
+                    });
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+
+            let localList = getLocalAdminDownloads();
+            if (isEdit) {
+                const idx = localList.findIndex(i => String(i.id) === String(payload.id));
+                if (idx !== -1) localList[idx] = payload;
+            } else {
+                localList.unshift(payload);
+            }
+
+            localStorage.setItem('personality_local_downloads', JSON.stringify(localList));
+            resetAdminDownloadForm();
+            alert(isEdit ? 'Material atualizado com sucesso!' : 'Material cadastrado com sucesso!');
+            loadAdminDownloadsManager();
+        });
+    }
+
+    async function deleteAdminDownloadItem(id) {
+        if (!confirm('Tem certeza que deseja excluir este material de download?')) return;
+
+        const url = localStorage.getItem('personality_sb_url');
+        const key = localStorage.getItem('personality_sb_key');
+
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const endpoint = `${cleanUrl}/rest/v1/materiais_download?id=eq.${id}`;
+
+                await fetch(endpoint, {
+                    method: 'DELETE',
+                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        let localList = getLocalAdminDownloads();
+        localList = localList.filter(i => String(i.id) !== String(id));
+        localStorage.setItem('personality_local_downloads', JSON.stringify(localList));
+        loadAdminDownloadsManager();
     }
 });

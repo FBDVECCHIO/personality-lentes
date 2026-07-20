@@ -1294,6 +1294,117 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
         });
     });
 
+    // -------------------------------------------------------------
+    // Central de Downloads (Carregamento via Supabase + Fallback Local)
+    // -------------------------------------------------------------
+    const downloadsGrid = document.getElementById('downloadsGrid');
+
+    const defaultDownloads = [
+        {
+            id: 'dl-1',
+            titulo: 'Catálogo Oficial Personality 2026',
+            categoria: 'Catálogo Geral',
+            descricao: 'Apresentação completa das linhas de inteligência artificial, multifocais e antirreflexos.',
+            formato: 'PDF • 5.8 MB',
+            url_download: '#'
+        },
+        {
+            id: 'dl-2',
+            titulo: 'Tabela Comparativa de Dioptrias & Índices',
+            categoria: 'Tabela Técnica',
+            descricao: 'Guia completo com os índices de refração de 1.50 a 1.76, espessuras e diâmetros.',
+            formato: 'PDF • 2.1 MB',
+            url_download: '#'
+        },
+        {
+            id: 'dl-3',
+            titulo: 'Guia de Tratamentos Antirreflexo & Garantia',
+            categoria: 'Manual & Garantia',
+            descricao: 'Especificações das 22 camadas de proteção, certificado e recomendações de limpeza.',
+            formato: 'PDF • 1.5 MB',
+            url_download: '#'
+        }
+    ];
+
+    async function loadDownloadsList() {
+        if (!downloadsGrid) return;
+
+        downloadsGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 20px;">Carregando materiais de download...</div>`;
+
+        const url = localStorage.getItem('personality_sb_url');
+        const key = localStorage.getItem('personality_sb_key');
+
+        let downloads = [];
+
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const endpoint = `${cleanUrl}/rest/v1/materiais_download?select=*&order=created_at.desc`;
+
+                const response = await fetch(endpoint, {
+                    method: 'GET',
+                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                });
+
+                if (response.ok) {
+                    downloads = await response.json();
+                } else {
+                    throw new Error('Falha ao carregar materiais do Supabase.');
+                }
+            } catch (error) {
+                console.error(error);
+                downloads = getLocalDownloads();
+            }
+        } else {
+            downloads = getLocalDownloads();
+        }
+
+        if (!downloads || downloads.length === 0) {
+            downloads = defaultDownloads;
+        }
+
+        renderDownloadsGrid(downloads);
+    }
+
+    function getLocalDownloads() {
+        const local = localStorage.getItem('personality_local_downloads');
+        return local ? JSON.parse(local) : defaultDownloads;
+    }
+
+    function renderDownloadsGrid(items) {
+        if (!downloadsGrid) return;
+        downloadsGrid.innerHTML = '';
+
+        items.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'glass-card download-card';
+            card.style.cssText = `padding: 24px; border-radius: 16px; border: 1px solid var(--border-gray); background: rgba(20, 20, 26, 0.7); display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease;`;
+
+            const hasUrl = item.url_download && item.url_download !== '#' && item.url_download.trim() !== '';
+            const downloadLinkAttr = hasUrl ? `href="${item.url_download}" target="_blank" download` : `onclick="alert('Arquivo estará disponível para download em breve!')" style="cursor: pointer;"`;
+
+            card.innerHTML = `
+                <div>
+                    <span style="background: rgba(197, 168, 92, 0.15); border: 1px solid var(--border-gold); color: var(--gold-light); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; margin-bottom: 12px;">${item.categoria || 'Documento'}</span>
+                    <h3 style="font-family: var(--font-heading); font-size: 18px; color: #fff; margin-bottom: 8px; line-height: 1.3;">${item.titulo}</h3>
+                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px;">${item.descricao}</p>
+                </div>
+                <div>
+                    <div style="font-size: 12px; color: var(--gold-light); font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 6px;">
+                        <span>📑</span> <span>${item.formato || 'PDF'}</span>
+                    </div>
+                    <a ${downloadLinkAttr} class="btn btn-gold btn-full btn-sm" style="font-size: 13.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px;">
+                        📥 Baixar Material
+                    </a>
+                </div>
+            `;
+
+            downloadsGrid.appendChild(card);
+        });
+    }
+
+    loadDownloadsList();
+
     // Inicia verificação do Portal do Parceiro
     checkPartnerSession();
 });

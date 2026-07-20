@@ -60,6 +60,7 @@
                 <button class="side-btn" data-section="tecnicos">👨‍🔧 Equipe Técnica</button>
                 <button class="side-btn" data-section="assistencias">🛠️ Chamados de Assistência</button>
                 <button class="side-btn" data-section="motivos">📋 Motivos do Chamado</button>
+                <button class="side-btn" data-section="downloads">📁 Central de Downloads</button>
                 <button class="side-btn" data-section="dominio">🌐 Domínio e Vercel</button>
                 <button class="side-btn" data-section="imagens">📸 Banco de Imagens</button>
                 <button class="side-btn" data-section="leads">📥 Leads Recebidos</button>
@@ -580,6 +581,78 @@ create policy "Permitir delete em motivos_assistencia" on motivos_assistencia fo
                                 </div>
                             </label>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção: Central de Downloads (Materiais) -->
+            <div class="admin-section" id="sec-downloads">
+                <div class="glass-card section-card">
+                    <div class="card-header">
+                        <h2>Central de Downloads <span class="gold-text">(Gerenciamento de Materiais)</span></h2>
+                        <p>Adicione, edite ou remova PDFs, catálogos e tabelas técnicas disponíveis para os clientes no site.</p>
+                    </div>
+
+                    <!-- Formulário de Cadastro/Edição de Material -->
+                    <form id="downloadMaterialForm" style="margin-bottom: 30px; background: rgba(255,255,255,0.02); padding: 24px; border-radius: 14px; border: 1px solid var(--border-gold);">
+                        <h4 id="downloadFormTitle" style="font-family: var(--font-heading); color: var(--gold-light); margin-bottom: 16px;">➕ Cadastrar Novo Material para Download</h4>
+                        <input type="hidden" id="downloadEditId" value="">
+
+                        <div class="ast-form-row">
+                            <div class="input-group">
+                                <label for="downloadTitulo">Título do Material</label>
+                                <input type="text" id="downloadTitulo" placeholder="Ex: Catálogo Oficial Personality 2026" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="downloadCategoria">Categoria</label>
+                                <select id="downloadCategoria" required>
+                                    <option value="Catálogo Geral">Catálogo Geral</option>
+                                    <option value="Tabela Técnica">Tabela Técnica / Dioptrias</option>
+                                    <option value="Manual & Garantia">Manual & Garantia</option>
+                                    <option value="Ficha Técnica">Ficha Técnica</option>
+                                    <option value="Outros">Outros Documentos</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="ast-form-row">
+                            <div class="input-group">
+                                <label for="downloadFormato">Formato / Tamanho</label>
+                                <input type="text" id="downloadFormato" placeholder="Ex: PDF • 4.5 MB" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="downloadUrl">Link / URL do Arquivo (PDF/ZIP)</label>
+                                <input type="url" id="downloadUrl" placeholder="Ex: https://... ou link do arquivo" required>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="downloadDescricao">Descrição Curta</label>
+                            <input type="text" id="downloadDescricao" placeholder="Ex: Portfólio completo de lentes de inteligência artificial e tratamentos AR." required>
+                        </div>
+
+                        <div style="display: flex; gap: 12px; margin-top: 16px;">
+                            <button type="submit" class="btn btn-gold" id="btnSaveDownload">💾 Salvar Material</button>
+                            <button type="button" class="btn btn-secondary" id="btnCancelDownload" style="display: none;">Cancelar Edição</button>
+                        </div>
+                    </form>
+
+                    <!-- Tabela de Materiais -->
+                    <div class="table-container">
+                        <table class="leads-table">
+                            <thead>
+                                <tr>
+                                    <th>Título / Categoria</th>
+                                    <th>Descrição</th>
+                                    <th>Formato/Tamanho</th>
+                                    <th>Link do Arquivo</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="downloadMaterialsTableBody">
+                                <!-- Preenchido via Javascript -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

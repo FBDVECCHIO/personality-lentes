@@ -2022,4 +2022,22 @@ select optgroup {
     .tech-effects-grid {
         grid-template-columns: 1fr !important;
     }
+
+    .downloads-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+}
+
+/* Central de Downloads */
+.downloads-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+@media (max-width: 992px) {
+    .downloads-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
