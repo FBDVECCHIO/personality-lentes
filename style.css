@@ -1963,3 +1963,24 @@ select optgroup {
         padding: 6px 8px;
     }
 }
+
+/* Seção Exclusiva Lente 1.61 Gold */
+.lente-gold-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 40px;
+    align-items: center;
+    margin-top: 30px;
+}
+
+@media (max-width: 992px) {
+    .lente-gold-grid {
+        grid-template-columns: 1fr !important;
+        gap: 28px !important;
+    }
+
+    .gold-specs-grid {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+}
