@@ -73,7 +73,18 @@
 
     <!-- Seção HOME (Hero) -->
     <section id="home" class="hero-section">
-        <div class="container hero-container">
+        <!-- Fundo de Vídeo em Looping com Efeito Golden Wave Sutil -->
+        <div class="hero-video-container">
+            <video autoplay loop muted playsinline class="hero-bg-video">
+                <source src="https://assets.mixkit.co/videos/preview/mixkit-gold-particles-floating-in-the-dark-41530-large.mp4" type="video/mp4">
+            </video>
+            <!-- Máscara de fundo predominantemente preto -->
+            <div class="hero-video-overlay"></div>
+            <!-- Camada de Ondas Douradas Ondulantes (Golden Wave Effect) -->
+            <div class="golden-wave-layer"></div>
+        </div>
+
+        <div class="container hero-container" style="position: relative; z-index: 5;">
             <div class="hero-content">
                 <div class="gold-badge">PROMOÇÃO DE LANÇAMENTO EXCLUSIVA ⚡</div>
                 <h1 class="hero-title">Garanta suas lentes <span class="gold-text">PERSONALITY com 15% OFF</span></h1>
