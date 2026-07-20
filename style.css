@@ -1964,23 +1964,21 @@ select optgroup {
     }
 }
 
-/* Seção Exclusiva Lente 1.61 Gold */
-.lente-gold-grid {
+/* Seção Exclusiva Lente 1.61 Gold - Layout Empilhado Horizontal */
+.lente-gold-features-grid {
     display: grid;
-    grid-template-columns: 1fr 1.1fr;
-    gap: 40px;
-    align-items: center;
-    margin-top: 30px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
 }
 
 @media (max-width: 992px) {
-    .lente-gold-grid {
+    .lente-gold-features-grid {
         grid-template-columns: 1fr !important;
-        gap: 28px !important;
+        gap: 16px !important;
     }
 
     .gold-specs-grid {
         grid-template-columns: 1fr !important;
-        gap: 8px !important;
+        gap: 10px !important;
     }
 }
