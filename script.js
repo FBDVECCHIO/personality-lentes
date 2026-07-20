@@ -357,7 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let i = 0; i < 4; i++) {
             code += chars[Math.floor(Math.random() * chars.length)];
         }
-        return `PERS-50-${code}`;
+        return `PERS-15-${code}`;
     }
 
     contactForm.addEventListener('submit', async (e) => {
@@ -501,7 +501,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('successStoreAddress').textContent = storeAddress || 'Endereço não cadastrado';
         document.getElementById('successStorePhone').textContent = storePhone ? `Telefone: ${storePhone}` : 'Telefone não cadastrado';
 
-        const messageText = `Olá! Acabei de gerar meu voucher de *50% de desconto* nas lentes *PERSONALITY*! 🎉
+        const messageText = `Olá! Acabei de gerar meu voucher de *15% de desconto* nas lentes *PERSONALITY*! 🎉
 
 🎟️ *Código do Voucher:* ${voucher}
 

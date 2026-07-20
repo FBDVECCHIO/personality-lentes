@@ -2,6 +2,77 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     // -------------------------------------------------------------
+    // 0. Autenticação e Bloqueio por Senha do Painel Master
+    // -------------------------------------------------------------
+    const masterAuthModal = document.getElementById('masterAuthModal');
+    const masterAuthForm = document.getElementById('masterAuthForm');
+    const masterPasswordInput = document.getElementById('masterPasswordInput');
+    const masterAuthError = document.getElementById('masterAuthError');
+    const btnMasterLogout = document.getElementById('btnMasterLogout');
+    const changeMasterPasswordForm = document.getElementById('changeMasterPasswordForm');
+    const newMasterPassword = document.getElementById('newMasterPassword');
+
+    const getMasterPassword = () => {
+        return localStorage.getItem('personality_master_password') || 'admin123';
+    };
+
+    const checkMasterAuth = () => {
+        const isAuth = sessionStorage.getItem('personality_master_auth') === 'true';
+        if (isAuth) {
+            if (masterAuthModal) masterAuthModal.style.display = 'none';
+        } else {
+            if (masterAuthModal) {
+                masterAuthModal.style.display = 'flex';
+                setTimeout(() => { if (masterPasswordInput) masterPasswordInput.focus(); }, 100);
+            }
+        }
+    };
+
+    if (masterAuthForm) {
+        masterAuthForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const inputPass = masterPasswordInput.value.trim();
+            const correctPass = getMasterPassword();
+
+            if (inputPass === correctPass) {
+                sessionStorage.setItem('personality_master_auth', 'true');
+                if (masterAuthError) masterAuthError.style.display = 'none';
+                masterAuthForm.reset();
+                masterAuthModal.style.display = 'none';
+            } else {
+                if (masterAuthError) masterAuthError.style.display = 'block';
+                masterPasswordInput.classList.add('invalid');
+                masterPasswordInput.select();
+            }
+        });
+    }
+
+    if (btnMasterLogout) {
+        btnMasterLogout.addEventListener('click', () => {
+            if (confirm('Deseja bloquear o Painel Master e encerrar a sessão de administração?')) {
+                sessionStorage.removeItem('personality_master_auth');
+                checkMasterAuth();
+            }
+        });
+    }
+
+    if (changeMasterPasswordForm) {
+        changeMasterPasswordForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newPass = newMasterPassword.value.trim();
+            if (newPass.length < 4) {
+                alert('A senha master deve ter pelo menos 4 caracteres.');
+                return;
+            }
+            localStorage.setItem('personality_master_password', newPass);
+            alert('Senha do Painel Master atualizada com sucesso! Use a nova senha nas próximas conexões.');
+            changeMasterPasswordForm.reset();
+        });
+    }
+
+    checkMasterAuth();
+
+    // -------------------------------------------------------------
     // 1. Alternância de Seções na Sidebar
     // -------------------------------------------------------------
     const sideButtons = document.querySelectorAll('.side-btn');

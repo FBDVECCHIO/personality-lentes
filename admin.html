@@ -12,6 +12,28 @@
     <link rel="stylesheet" href="admin.css">
 </head>
 <body class="admin-body">
+    <!-- Modal de Autenticação do Painel Master (Bloqueio por Senha) -->
+    <div id="masterAuthModal" class="master-auth-overlay" style="display: flex;">
+        <div class="master-auth-card glass-card">
+            <div class="master-auth-header">
+                <div class="master-lock-icon">🔒</div>
+                <h2>Painel Master <span class="gold-text">PERSONALITY</span></h2>
+                <p>Acesso exclusivo para administradores. Digite a senha master para continuar.</p>
+            </div>
+            <form id="masterAuthForm">
+                <div class="input-group">
+                    <label for="masterPasswordInput">Senha de Acesso Master</label>
+                    <input type="password" id="masterPasswordInput" placeholder="Digite a senha master..." required autofocus autocomplete="current-password">
+                    <span class="error-message" id="masterAuthError" style="display: none; color: #ff5555; margin-top: 6px;">Senha incorreta! Tente novamente.</span>
+                </div>
+                <button type="submit" class="btn btn-gold btn-full">Entrar no Painel Master 🔑</button>
+            </form>
+            <div style="margin-top: 18px; text-align: center;">
+                <a href="index.html" style="color: var(--text-muted); font-size: 13px; text-decoration: none;">← Voltar para o Site Principal</a>
+            </div>
+        </div>
+    </div>
+
     <!-- Efeitos de Fundo (Gold Glow) -->
     <div class="bg-glow bg-glow-1"></div>
 
@@ -42,8 +64,9 @@
                 <button class="side-btn" data-section="imagens">📸 Banco de Imagens</button>
                 <button class="side-btn" data-section="leads">📥 Leads Recebidos</button>
             </nav>
-            <div class="sidebar-footer">
+            <div class="sidebar-footer" style="display: flex; flex-direction: column; gap: 8px;">
                 <a href="index.html" class="btn btn-outline-gold btn-full btn-sm">← Voltar para o Site</a>
+                <button id="btnMasterLogout" class="btn btn-full btn-sm" style="background: rgba(255, 85, 85, 0.15); color: #ff6b6b; border: 1px solid rgba(255, 85, 85, 0.3); font-weight: 600;">🔒 Bloquear / Sair</button>
             </div>
         </aside>
 
@@ -214,6 +237,21 @@ create policy "Permitir update em motivos_assistencia" on motivos_assistencia fo
 create policy "Permitir delete em motivos_assistencia" on motivos_assistencia for delete using (true);
 </code></pre>
                     </div>
+                </div>
+
+                <!-- Card de Segurança: Senha de Acesso Master -->
+                <div class="glass-card section-card" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <h2>🔐 Segurança: <span class="gold-text">Senha do Painel Master</span></h2>
+                        <p>Altere a senha de proteção do Painel Master. (Senha padrão inicial: <code>admin123</code>)</p>
+                    </div>
+                    <form id="changeMasterPasswordForm">
+                        <div class="input-group">
+                            <label for="newMasterPassword">Nova Senha Master</label>
+                            <input type="password" id="newMasterPassword" placeholder="Digite a nova senha..." required minlength="4">
+                        </div>
+                        <button type="submit" class="btn btn-gold">Atualizar Senha Master 💾</button>
+                    </form>
                 </div>
             </div>
 

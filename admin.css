@@ -449,3 +449,50 @@
 .wa-link:hover {
     color: #34d399;
 }
+
+/* Overlay de Bloqueio do Painel Master */
+.master-auth-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(7, 7, 10, 0.96);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 99999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.master-auth-card {
+    max-width: 420px;
+    width: 100%;
+    padding: 36px 28px;
+    border-radius: 16px;
+    border: 1px solid var(--border-gold);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(197, 168, 92, 0.15);
+    text-align: center;
+    background: #0d0d12;
+}
+
+.master-lock-icon {
+    font-size: 44px;
+    margin-bottom: 12px;
+}
+
+.master-auth-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.master-auth-header p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
