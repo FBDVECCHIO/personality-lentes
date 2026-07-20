@@ -1997,3 +1997,20 @@ select optgroup {
         gap: 16px !important;
     }
 }
+
+/* Responsividade da Seção Tecnologias & Materiais */
+@media (max-width: 1100px) {
+    .materials-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .materials-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .tech-effects-grid {
+        grid-template-columns: 1fr !important;
+    }
+}

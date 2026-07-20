@@ -1258,6 +1258,42 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
         });
     });
 
+    // -------------------------------------------------------------
+    // Tab Switching para Seção Tecnologias & Materiais
+    // -------------------------------------------------------------
+    const tmTabButtons = document.querySelectorAll('.tm-tab-btn');
+    const tmPanes = document.querySelectorAll('.tm-pane');
+
+    tmTabButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tmId = btn.getAttribute('data-tm');
+            
+            tmTabButtons.forEach(b => {
+                b.classList.remove('active');
+                b.style.background = 'rgba(255,255,255,0.03)';
+                b.style.color = 'var(--text-muted)';
+                b.style.border = '1px solid var(--border-gray)';
+                b.style.fontWeight = '600';
+            });
+            
+            btn.classList.add('active');
+            btn.style.background = 'var(--gold-gradient)';
+            btn.style.color = '#000';
+            btn.style.border = '1px solid var(--border-gold)';
+            btn.style.fontWeight = '700';
+
+            tmPanes.forEach(pane => {
+                if (pane.id === `tm-${tmId}`) {
+                    pane.style.display = 'block';
+                    pane.classList.add('active');
+                } else {
+                    pane.style.display = 'none';
+                    pane.classList.remove('active');
+                }
+            });
+        });
+    });
+
     // Inicia verificação do Portal do Parceiro
     checkPartnerSession();
 });
