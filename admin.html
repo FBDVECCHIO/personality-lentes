@@ -205,32 +205,56 @@ alter table tecnicos_personality enable row level security;
 alter table chamados_assistencia enable row level security;
 alter table motivos_assistencia enable row level security;
 
--- Criar Políticas de Permissão Pública
+-- Criar Políticas de Permissão Pública (Limpando antigas se existirem)
+drop policy if exists "Permitir select em leads_personality" on leads_personality;
+drop policy if exists "Permitir insert em leads_personality" on leads_personality;
+drop policy if exists "Permitir update em leads_personality" on leads_personality;
+drop policy if exists "Permitir delete em leads_personality" on leads_personality;
 create policy "Permitir select em leads_personality" on leads_personality for select using (true);
 create policy "Permitir insert em leads_personality" on leads_personality for insert with check (true);
 create policy "Permitir update em leads_personality" on leads_personality for update using (true);
 create policy "Permitir delete em leads_personality" on leads_personality for delete using (true);
 
+drop policy if exists "Permitir select em lojas_licenciadas" on lojas_licenciadas;
+drop policy if exists "Permitir insert em lojas_licenciadas" on lojas_licenciadas;
+drop policy if exists "Permitir update em lojas_licenciadas" on lojas_licenciadas;
+drop policy if exists "Permitir delete em lojas_licenciadas" on lojas_licenciadas;
 create policy "Permitir select em lojas_licenciadas" on lojas_licenciadas for select using (true);
 create policy "Permitir insert em lojas_licenciadas" on lojas_licenciadas for insert with check (true);
 create policy "Permitir update em lojas_licenciadas" on lojas_licenciadas for update using (true);
 create policy "Permitir delete em lojas_licenciadas" on lojas_licenciadas for delete using (true);
 
+drop policy if exists "Permitir select em acessos_lojas" on acessos_lojas;
+drop policy if exists "Permitir insert em acessos_lojas" on acessos_lojas;
+drop policy if exists "Permitir update em acessos_lojas" on acessos_lojas;
+drop policy if exists "Permitir delete em acessos_lojas" on acessos_lojas;
 create policy "Permitir select em acessos_lojas" on acessos_lojas for select using (true);
 create policy "Permitir insert em acessos_lojas" on acessos_lojas for insert with check (true);
 create policy "Permitir update em acessos_lojas" on acessos_lojas for update using (true);
 create policy "Permitir delete em acessos_lojas" on acessos_lojas for delete using (true);
 
+drop policy if exists "Permitir select em tecnicos_personality" on tecnicos_personality;
+drop policy if exists "Permitir insert em tecnicos_personality" on tecnicos_personality;
+drop policy if exists "Permitir update em tecnicos_personality" on tecnicos_personality;
+drop policy if exists "Permitir delete em tecnicos_personality" on tecnicos_personality;
 create policy "Permitir select em tecnicos_personality" on tecnicos_personality for select using (true);
 create policy "Permitir insert em tecnicos_personality" on tecnicos_personality for insert with check (true);
 create policy "Permitir update em tecnicos_personality" on tecnicos_personality for update using (true);
 create policy "Permitir delete em tecnicos_personality" on tecnicos_personality for delete using (true);
 
+drop policy if exists "Permitir select em chamados_assistencia" on chamados_assistencia;
+drop policy if exists "Permitir insert em chamados_assistencia" on chamados_assistencia;
+drop policy if exists "Permitir update em chamados_assistencia" on chamados_assistencia;
+drop policy if exists "Permitir delete em chamados_assistencia" on chamados_assistencia;
 create policy "Permitir select em chamados_assistencia" on chamados_assistencia for select using (true);
 create policy "Permitir insert em chamados_assistencia" on chamados_assistencia for insert with check (true);
 create policy "Permitir update em chamados_assistencia" on chamados_assistencia for update using (true);
 create policy "Permitir delete em chamados_assistencia" on chamados_assistencia for delete using (true);
 
+drop policy if exists "Permitir select em motivos_assistencia" on motivos_assistencia;
+drop policy if exists "Permitir insert em motivos_assistencia" on motivos_assistencia;
+drop policy if exists "Permitir update em motivos_assistencia" on motivos_assistencia;
+drop policy if exists "Permitir delete em motivos_assistencia" on motivos_assistencia;
 create policy "Permitir select em motivos_assistencia" on motivos_assistencia for select using (true);
 create policy "Permitir insert em motivos_assistencia" on motivos_assistencia for insert with check (true);
 create policy "Permitir update em motivos_assistencia" on motivos_assistencia for update using (true);
