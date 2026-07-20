@@ -1415,6 +1415,97 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
 
     loadDownloadsList();
 
+    // -------------------------------------------------------------
+    // Golden Wave 60FPS Video Canvas Engine para a Home
+    // -------------------------------------------------------------
+    const heroCanvas = document.getElementById('heroGoldenWaveCanvas');
+    if (heroCanvas) {
+        const ctx = heroCanvas.getContext('2d');
+        let width = heroCanvas.width = heroCanvas.offsetWidth || window.innerWidth;
+        let height = heroCanvas.height = heroCanvas.offsetHeight || window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            if (!heroCanvas) return;
+            width = heroCanvas.width = heroCanvas.offsetWidth || window.innerWidth;
+            height = heroCanvas.height = heroCanvas.offsetHeight || window.innerHeight;
+        });
+
+        let step = 0;
+        const lines = [
+            { amplitude: 45, wavelength: 0.0028, speed: 0.012, opacity: 0.28, width: 3.5, yOffset: 0.45 },
+            { amplitude: 65, wavelength: 0.0018, speed: 0.008, opacity: 0.38, width: 4.5, yOffset: 0.52 },
+            { amplitude: 35, wavelength: 0.0035, speed: 0.015, opacity: 0.22, width: 2.5, yOffset: 0.58 },
+            { amplitude: 55, wavelength: 0.0022, speed: 0.006, opacity: 0.42, width: 5.5, yOffset: 0.65 },
+            { amplitude: 75, wavelength: 0.0015, speed: 0.010, opacity: 0.20, width: 6.5, yOffset: 0.72 }
+        ];
+
+        const particles = Array.from({ length: 40 }, () => ({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            radius: Math.random() * 2.2 + 0.8,
+            speedY: Math.random() * 0.4 + 0.12,
+            speedX: Math.sin(Math.random() * Math.PI) * 0.2,
+            opacity: Math.random() * 0.5 + 0.25
+        }));
+
+        function drawGoldenWaves() {
+            ctx.clearRect(0, 0, width, height);
+
+            ctx.fillStyle = '#08080a';
+            ctx.fillRect(0, 0, width, height);
+
+            step += 0.7;
+
+            lines.forEach((line) => {
+                ctx.beginPath();
+                const centerY = height * line.yOffset;
+
+                for (let x = 0; x <= width; x += 5) {
+                    const y = centerY + Math.sin(x * line.wavelength + step * line.speed) * line.amplitude + Math.cos(x * 0.0008 + step * 0.004) * 18;
+                    if (x === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+
+                const grad = ctx.createLinearGradient(0, 0, width, 0);
+                grad.addColorStop(0, `rgba(197, 168, 92, 0)`);
+                grad.addColorStop(0.2, `rgba(212, 175, 55, ${line.opacity})`);
+                grad.addColorStop(0.5, `rgba(255, 223, 138, ${line.opacity + 0.18})`);
+                grad.addColorStop(0.8, `rgba(197, 168, 92, ${line.opacity})`);
+                grad.addColorStop(1, `rgba(197, 168, 92, 0)`);
+
+                ctx.strokeStyle = grad;
+                ctx.lineWidth = line.width;
+                ctx.shadowBlur = 18;
+                ctx.shadowColor = 'rgba(212, 175, 55, 0.45)';
+                ctx.stroke();
+            });
+
+            particles.forEach((p) => {
+                p.y -= p.speedY;
+                p.x += Math.sin(step * 0.02) * p.speedX;
+
+                if (p.y < -10) {
+                    p.y = height + 10;
+                    p.x = Math.random() * width;
+                }
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 215, 0, ${p.opacity})`;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = 'rgba(255, 215, 0, 0.65)';
+                ctx.fill();
+            });
+
+            requestAnimationFrame(drawGoldenWaves);
+        }
+
+        drawGoldenWaves();
+    }
+
     // Inicia verificação do Portal do Parceiro
     checkPartnerSession();
 });
