@@ -1371,10 +1371,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td><strong>${index + 1}</strong></td>
                 <td><strong>${escapeHtml(item)}</strong></td>
                 <td>
-                    <button class="btn btn-sm btn-danger btn-delete-reason" data-reason="${escapeHtml(item)}">🗑️ Excluir</button>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-sm btn-outline-gold btn-edit-reason" data-reason="${escapeHtml(item)}">✏️ Editar</button>
+                        <button class="btn btn-sm btn-danger btn-delete-reason" data-reason="${escapeHtml(item)}">🗑️ Excluir</button>
+                    </div>
                 </td>
             `;
             reasonsTableBody.appendChild(tr);
+        });
+
+        document.querySelectorAll('.btn-edit-reason').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const oldReasonText = btn.getAttribute('data-reason');
+                const newReasonText = prompt(`Editar descrição do motivo de atendimento:\n\nMotivo atual:\n"${oldReasonText}"`, oldReasonText);
+                
+                if (newReasonText !== null) {
+                    const trimmedNew = newReasonText.trim();
+                    if (trimmedNew.length < 3) {
+                        alert('O motivo deve conter pelo menos 3 caracteres.');
+                        return;
+                    }
+                    if (trimmedNew !== oldReasonText) {
+                        await editMotivo(oldReasonText, trimmedNew);
+                    }
+                }
+            });
         });
 
         document.querySelectorAll('.btn-delete-reason').forEach(btn => {
@@ -1385,6 +1406,43 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
+    }
+
+    async function editMotivo(oldReasonText, newReasonText) {
+        const url = localStorage.getItem('personality_sb_url');
+        const key = localStorage.getItem('personality_sb_key');
+
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const endpoint = `${cleanUrl}/rest/v1/motivos_assistencia?motivo=eq.${encodeURIComponent(oldReasonText)}`;
+
+                const response = await fetch(endpoint, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': key,
+                        'Authorization': `Bearer ${key}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({ motivo: newReasonText })
+                });
+
+                if (!response.ok) {
+                    const errText = await response.text();
+                    console.warn('Erro ao atualizar motivo no Supabase:', errText);
+                }
+            } catch (err) {
+                console.error('Erro no PATCH do motivo:', err);
+            }
+        }
+
+        let list = getLocalMotivos();
+        list = list.map(r => (r === oldReasonText ? newReasonText : r));
+        localStorage.setItem('personality_local_motivos', JSON.stringify(list));
+
+        alert('Motivo atualizado com sucesso!');
+        loadMotivosManager();
     }
 
     async function deleteMotivo(reasonText) {
