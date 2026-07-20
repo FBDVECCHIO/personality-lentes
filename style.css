@@ -1983,3 +1983,17 @@ select optgroup {
         gap: 8px !important;
     }
 }
+
+/* Seção A Marca - Grade de Benefícios Redistribuída */
+.brand-benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+@media (max-width: 992px) {
+    .brand-benefits-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+}
