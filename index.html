@@ -1329,13 +1329,13 @@
                 <p class="section-subtitle" style="font-size: 16px; color: var(--text-muted);">Explore os tratamentos inteligentes e os índices de refração de alta precisão para a combinação perfeita da sua lente.</p>
             </div>
 
-            <!-- TAB / NAVEGAÇÃO INTERNA ENTRE 'TECNOLOGIAS ADICIONAIS' E 'MATERIAIS DE LENTES' -->
+            <!-- TAB / NAVEGAÇÃO INTERNA ENTRE 'TECNOLOGIAS ADICIONAIS' E 'COMPARATIVO DE MATERIAIS' -->
             <div class="tech-materials-tabs" style="display: flex; justify-content: center; gap: 16px; margin-bottom: 36px; flex-wrap: wrap;">
                 <button class="tm-tab-btn active" data-tm="tecnologias" style="padding: 12px 28px; border-radius: 30px; border: 1px solid var(--border-gold); background: var(--gold-gradient); color: #000; font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.3s ease;">
-                    ✨ Tecnologias & Efeitos Especiais
+                    ✨ Tecnologias Adicionais
                 </button>
                 <button class="tm-tab-btn" data-tm="materiais" style="padding: 12px 28px; border-radius: 30px; border: 1px solid var(--border-gray); background: rgba(255,255,255,0.03); color: var(--text-muted); font-weight: 600; font-size: 15px; cursor: pointer; transition: all 0.3s ease;">
-                    📐 Comparativo de Materiais (Índices 1.50 a 1.74)
+                    📐 Comparativo de Materiais
                 </button>
             </div>
 
@@ -1404,7 +1404,7 @@
                 </div>
             </div>
 
-            <!-- PAINEL 2: MATERIAIS DE LENTES E ÍNDICES DE REFRAÇÃO (1.50, 1.59, 1.61, 1.67, 1.74) -->
+            <!-- PAINEL 2: MATERIAIS DE LENTES E ÍNDICES DE REFRAÇÃO (1.50 a 1.76) -->
             <div class="tm-pane" id="tm-materiais" style="display: none;">
                 
                 <div class="text-center" style="margin-bottom: 28px;">
@@ -1416,66 +1416,78 @@
                     </p>
                 </div>
 
-                <!-- Cards dos Materiais (1.50, 1.59, 1.61, 1.67, 1.74) -->
-                <div class="materials-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 32px;">
+                <!-- Cards dos Materiais (1.50, 1.59, 1.61, 1.67, 1.74, 1.76) -->
+                <div class="materials-grid">
                     
                     <!-- 1.50 CR-39 -->
-                    <div class="glass-card material-card text-center" style="padding: 22px 14px; border-radius: 16px; border: 1px solid var(--border-gray); background: rgba(20, 20, 26, 0.7);">
-                        <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px;">Padrão</span>
-                        <h4 style="font-family: var(--font-heading); font-size: 20px; color: var(--gold-light); margin-bottom: 8px;">Índice 1.50</h4>
-                        <span style="font-size: 12px; font-weight: 700; color: #fff; display: block; margin-bottom: 12px;">CR-39 (Resina)</span>
-                        <div style="font-size: 12px; color: var(--text-muted); line-height: 1.4; text-align: left; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px;">
+                    <div class="glass-card material-card text-center" style="padding: 20px 12px; border-radius: 16px; border: 1px solid var(--border-gray); background: rgba(20, 20, 26, 0.7);">
+                        <span style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px;">Padrão</span>
+                        <h4 style="font-family: var(--font-heading); font-size: 19px; color: var(--gold-light); margin-bottom: 6px;">Índice 1.50</h4>
+                        <span style="font-size: 11.5px; font-weight: 700; color: #fff; display: block; margin-bottom: 10px;">CR-39 (Resina)</span>
+                        <div style="font-size: 11.5px; color: var(--text-muted); line-height: 1.4; text-align: left; background: rgba(255,255,255,0.02); padding: 9px; border-radius: 8px;">
                             <strong>Grau Indicado:</strong> Baixo (0 a ±2.00)<br>
                             <strong>Espessura:</strong> Convencional<br>
-                            <strong>Aro Ideal:</strong> Fechado (Acetato/Metal)
+                            <strong>Aro Ideal:</strong> Fechado
                         </div>
                     </div>
 
                     <!-- 1.59 Policarbonato -->
-                    <div class="glass-card material-card text-center" style="padding: 22px 14px; border-radius: 16px; border: 1px solid var(--border-gray); background: rgba(20, 20, 26, 0.7);">
-                        <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px;">Resistente</span>
-                        <h4 style="font-family: var(--font-heading); font-size: 20px; color: var(--gold-light); margin-bottom: 8px;">Índice 1.59</h4>
-                        <span style="font-size: 12px; font-weight: 700; color: #fff; display: block; margin-bottom: 12px;">Policarbonato</span>
-                        <div style="font-size: 12px; color: var(--text-muted); line-height: 1.4; text-align: left; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px;">
+                    <div class="glass-card material-card text-center" style="padding: 20px 12px; border-radius: 16px; border: 1px solid var(--border-gray); background: rgba(20, 20, 26, 0.7);">
+                        <span style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px;">Resistente</span>
+                        <h4 style="font-family: var(--font-heading); font-size: 19px; color: var(--gold-light); margin-bottom: 6px;">Índice 1.59</h4>
+                        <span style="font-size: 11.5px; font-weight: 700; color: #fff; display: block; margin-bottom: 10px;">Policarbonato</span>
+                        <div style="font-size: 11.5px; color: var(--text-muted); line-height: 1.4; text-align: left; background: rgba(255,255,255,0.02); padding: 9px; border-radius: 8px;">
                             <strong>Grau Indicado:</strong> Até ±4.00<br>
                             <strong>Resistência:</strong> Alta à quebra<br>
-                            <strong>Aro Ideal:</strong> Nylon, Balgriff e Infantil
+                            <strong>Aro Ideal:</strong> Nylon/Balgriff
                         </div>
                     </div>
 
-                    <!-- 1.61 High Index -->
-                    <div class="glass-card material-card text-center" style="padding: 22px 14px; border-radius: 16px; border: 1.5px solid var(--gold-primary); background: rgba(30, 25, 18, 0.8);">
-                        <span style="background: var(--gold-gradient); color: #000; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 10px; text-transform: uppercase;">Gold Exclusivo</span>
-                        <h4 style="font-family: var(--font-heading); font-size: 20px; color: var(--gold-light); margin-top: 4px; margin-bottom: 8px;">Índice 1.61</h4>
-                        <span style="font-size: 12px; font-weight: 700; color: #fff; display: block; margin-bottom: 12px;">High Index 1.61</span>
-                        <div style="font-size: 12px; color: var(--text-muted); line-height: 1.4; text-align: left; background: rgba(197,168,92,0.06); padding: 10px; border-radius: 8px;">
+                    <!-- 1.61 High Index CORINGA -->
+                    <div class="glass-card material-card text-center" style="padding: 20px 12px; border-radius: 16px; border: 1.5px solid var(--border-gold); background: rgba(26, 24, 20, 0.85);">
+                        <span style="background: rgba(197, 168, 92, 0.2); border: 1px solid var(--border-gold); color: var(--gold-light); font-size: 9.5px; font-weight: 800; padding: 2px 8px; border-radius: 10px; text-transform: uppercase;">CORINGA ⚡</span>
+                        <h4 style="font-family: var(--font-heading); font-size: 19px; color: var(--gold-light); margin-top: 4px; margin-bottom: 6px;">Índice 1.61</h4>
+                        <span style="font-size: 11.5px; font-weight: 700; color: #fff; display: block; margin-bottom: 10px;">High Index 1.61</span>
+                        <div style="font-size: 11.5px; color: var(--text-muted); line-height: 1.4; text-align: left; background: rgba(197,168,92,0.06); padding: 9px; border-radius: 8px;">
                             <strong>Grau Indicado:</strong> Até ±5.00<br>
-                            <strong>Espessura:</strong> 20% mais fina<br>
-                            <strong>Aro Ideal:</strong> Qualquer tipo de armação
+                            <strong>Perfil:</strong> Lente Coringa<br>
+                            <strong>Aro Ideal:</strong> Qualquer armação
                         </div>
                     </div>
 
-                    <!-- 1.67 Extra Fina -->
-                    <div class="glass-card material-card text-center" style="padding: 22px 14px; border-radius: 16px; border: 1px solid var(--border-gray); background: rgba(20, 20, 26, 0.7);">
-                        <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px;">Ultrafina</span>
-                        <h4 style="font-family: var(--font-heading); font-size: 20px; color: var(--gold-light); margin-bottom: 8px;">Índice 1.67</h4>
-                        <span style="font-size: 12px; font-weight: 700; color: #fff; display: block; margin-bottom: 12px;">Ultra High Index</span>
-                        <div style="font-size: 12px; color: var(--text-muted); line-height: 1.4; text-align: left; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px;">
-                            <strong>Grau Indicado:</strong> Médio/Alto (±4.00 a ±8.00)<br>
+                    <!-- 1.67 Extra Fina MAIS FINAS E LEVES -->
+                    <div class="glass-card material-card text-center" style="padding: 20px 12px; border-radius: 16px; border: 1px solid var(--border-gray); background: rgba(20, 20, 26, 0.7);">
+                        <span style="font-size: 9.5px; color: var(--gold-light); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">MAIS FINAS E LEVES</span>
+                        <h4 style="font-family: var(--font-heading); font-size: 19px; color: var(--gold-light); margin-bottom: 6px;">Índice 1.67</h4>
+                        <span style="font-size: 11.5px; font-weight: 700; color: #fff; display: block; margin-bottom: 10px;">Ultra High Index</span>
+                        <div style="font-size: 11.5px; color: var(--text-muted); line-height: 1.4; text-align: left; background: rgba(255,255,255,0.02); padding: 9px; border-radius: 8px;">
+                            <strong>Grau Indicado:</strong> ±4.00 a ±8.00<br>
                             <strong>Espessura:</strong> 35% mais fina<br>
-                            <strong>Estética:</strong> Bordas muito reduzidas
+                            <strong>Estética:</strong> Bordas reduzidas
                         </div>
                     </div>
 
-                    <!-- 1.74 Hi-Max Ultrafina -->
-                    <div class="glass-card material-card text-center" style="padding: 22px 14px; border-radius: 16px; border: 1px solid var(--border-gray); background: rgba(20, 20, 26, 0.7);">
-                        <span style="font-size: 11px; color: var(--gold-light); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px;">Máxima Finura</span>
-                        <h4 style="font-family: var(--font-heading); font-size: 20px; color: var(--gold-light); margin-bottom: 8px;">Índice 1.74</h4>
-                        <span style="font-size: 12px; font-weight: 700; color: #fff; display: block; margin-bottom: 12px;">Hi-Max 1.74</span>
-                        <div style="font-size: 12px; color: var(--text-muted); line-height: 1.4; text-align: left; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px;">
-                            <strong>Grau Indicado:</strong> Alto (±6.00 a ±12.00+)<br>
+                    <!-- 1.74 Hi-Max Ultrafina MAIS FINAS E LEVES -->
+                    <div class="glass-card material-card text-center" style="padding: 20px 12px; border-radius: 16px; border: 1px solid var(--border-gray); background: rgba(20, 20, 26, 0.7);">
+                        <span style="font-size: 9.5px; color: var(--gold-light); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">MAIS FINAS E LEVES</span>
+                        <h4 style="font-family: var(--font-heading); font-size: 19px; color: var(--gold-light); margin-bottom: 6px;">Índice 1.74</h4>
+                        <span style="font-size: 11.5px; font-weight: 700; color: #fff; display: block; margin-bottom: 10px;">Hi-Max 1.74</span>
+                        <div style="font-size: 11.5px; color: var(--text-muted); line-height: 1.4; text-align: left; background: rgba(255,255,255,0.02); padding: 9px; border-radius: 8px;">
+                            <strong>Grau Indicado:</strong> ±6.00 a ±12.00+<br>
                             <strong>Espessura:</strong> Até 50% mais fina<br>
-                            <strong>Estética:</strong> Leveza e estética topo de linha
+                            <strong>Estética:</strong> Leveza máxima
+                        </div>
+                    </div>
+
+                    <!-- 1.76 Ultra Tecnologia ULTRA TECNOLOGIA com tag *Exclusivo em lentes acabadas. -->
+                    <div class="glass-card material-card text-center" style="padding: 20px 12px; border-radius: 16px; border: 1.5px solid var(--gold-primary); background: linear-gradient(135deg, rgba(30, 25, 18, 0.9) 0%, rgba(15, 15, 20, 0.95) 100%);">
+                        <span style="background: var(--gold-gradient); color: #000; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 10px; text-transform: uppercase; display: inline-block;">ULTRA TECNOLOGIA</span>
+                        <h4 style="font-family: var(--font-heading); font-size: 19px; color: var(--gold-light); margin-top: 4px; margin-bottom: 6px;">Índice 1.76</h4>
+                        <span style="font-size: 11.5px; font-weight: 700; color: #fff; display: block; margin-bottom: 6px;">Ultra Index 1.76</span>
+                        <div style="font-size: 11.5px; color: var(--text-muted); line-height: 1.35; text-align: left; background: rgba(197,168,92,0.06); padding: 8px; border-radius: 8px;">
+                            <strong>Grau Indicado:</strong> Altas Dioptrias<br>
+                            <strong>Estética:</strong> A mais fina do mundo<br>
+                            <span style="display: block; margin-top: 4px; color: var(--gold-light); font-size: 10px; font-weight: 700;">*Exclusivo em lentes acabadas.</span>
                         </div>
                     </div>
 
