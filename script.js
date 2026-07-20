@@ -1100,7 +1100,7 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
 
             btnSubmitAst.disabled = true;
             btnAstSpinner.style.display = 'inline-block';
-            btnSubmitAst.querySelector('.btn-text').textContent = 'Agendando Chamado...';
+            btnSubmitAst.querySelector('.btn-text').textContent = 'Enviando Solicitação...';
 
             const protocolCode = generateAssistanceProtocol();
 
@@ -1234,7 +1234,7 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
         };
 
         const techRawPhone = (assignedTech.whatsapp || '').replace(/\D/g, '');
-        const waMsg = encodeURIComponent(`Olá ${assignedTech.nome}! Gostaria de confirmar o agendamento do meu chamado Protocolo *${ticketData.protocolo}* (O.S.: ${ticketData.os_numero}) para o dia ${ticketData.data_atendimento} às ${ticketData.horario_atendimento}. (Cliente: ${ticketData.cliente_nome})`);
+        const waMsg = encodeURIComponent(`Olá ${assignedTech.nome}! Gostaria de confirmar a solicitação do meu agendamento técnico (Protocolo *${ticketData.protocolo}*, O.S.: ${ticketData.os_numero}) para o dia ${ticketData.data_atendimento} às ${ticketData.horario_atendimento}. (Cliente: ${ticketData.cliente_nome})`);
         btnSendAstWaSummary.href = `https://wa.me/55${techRawPhone}?text=${waMsg}`;
     }
 
