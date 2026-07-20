@@ -1355,6 +1355,28 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
         return local ? JSON.parse(local) : defaultDownloads;
     }
 
+    function formatDownloadUrl(rawUrl) {
+        if (!rawUrl || rawUrl === '#' || !rawUrl.trim()) return '#';
+        let url = rawUrl.trim();
+
+        // Tratamento para links do Google Drive
+        if (url.includes('drive.google.com')) {
+            const fileIdMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
+            if (fileIdMatch && fileIdMatch[1]) {
+                const fileId = fileIdMatch[1];
+                // Retorna link direto de visualização/download oficial do Google Drive
+                return `https://drive.google.com/file/d/${fileId}/view?usp=sharing`;
+            }
+        }
+
+        // Tratamento para links do Dropbox
+        if (url.includes('dropbox.com')) {
+            return url.replace('dl=0', 'dl=1');
+        }
+
+        return url;
+    }
+
     function renderDownloadsGrid(items) {
         if (!downloadsGrid) return;
         downloadsGrid.innerHTML = '';
@@ -1364,8 +1386,12 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
             card.className = 'glass-card download-card';
             card.style.cssText = `padding: 24px; border-radius: 16px; border: 1px solid var(--border-gray); background: rgba(20, 20, 26, 0.7); display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease;`;
 
-            const hasUrl = item.url_download && item.url_download !== '#' && item.url_download.trim() !== '';
-            const downloadLinkAttr = hasUrl ? `href="${item.url_download}" target="_blank" download` : `onclick="alert('Arquivo estará disponível para download em breve!')" style="cursor: pointer;"`;
+            const finalUrl = formatDownloadUrl(item.url_download);
+            const hasUrl = finalUrl !== '#';
+
+            const downloadLinkAttr = hasUrl 
+                ? `href="${finalUrl}" target="_blank" rel="noopener noreferrer"` 
+                : `onclick="alert('Cole o link do seu arquivo no Painel Master para ativar este botão!')" style="cursor: pointer;"`;
 
             card.innerHTML = `
                 <div>
