@@ -1541,27 +1541,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const defaultDownloadsAdmin = [
         {
-            id: 'dl-1',
-            titulo: 'Catálogo Oficial Personality 2026',
-            categoria: 'Catálogo Geral',
-            descricao: 'Apresentação completa das linhas de inteligência artificial, multifocais e antirreflexos.',
-            formato: 'PDF • 5.8 MB',
-            url_download: '#'
-        },
-        {
-            id: 'dl-2',
-            titulo: 'Tabela Comparativa de Dioptrias & Índices',
-            categoria: 'Tabela Técnica',
-            descricao: 'Guia completo com os índices de refração de 1.50 a 1.76, espessuras e diâmetros.',
-            formato: 'PDF • 2.1 MB',
-            url_download: '#'
-        },
-        {
-            id: 'dl-3',
-            titulo: 'Guia de Tratamentos Antirreflexo & Garantia',
-            categoria: 'Manual & Garantia',
-            descricao: 'Especificações das 22 camadas de proteção, certificado e recomendações de limpeza.',
-            formato: 'PDF • 1.5 MB',
+            id: 'dl-shine-mirror',
+            titulo: 'Apresentação & Ficha Técnica Shine Mirror',
+            categoria: 'Lançamento Exclusivo',
+            descricao: 'Especificações completas da inovadora lente fotossensível inteligente que se transforma em espelhada ao escurecer no sol.',
+            formato: 'PDF • Apresentação Oficial',
             url_download: '#'
         }
     ];
