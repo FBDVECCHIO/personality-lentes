@@ -192,8 +192,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const testData = {
-                name: "Teste Personality (E-mail)",
                 email: targetEmail.trim(),
+                to: targetEmail.trim(),
+                recipient: targetEmail.trim(),
+                name: "Teste Personality (E-mail)",
                 whatsapp: "(11) 99999-9999",
                 loja: "Ótica Licenciada Teste",
                 loja_endereco: "Av. Paulista, 1000 - São Paulo/SP",
@@ -205,8 +207,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 table: "leads_personality",
                 schema: "public",
                 record: {
-                    name: "Teste Personality (E-mail)",
                     email: targetEmail.trim(),
+                    to: targetEmail.trim(),
+                    name: "Teste Personality (E-mail)",
                     whatsapp: "(11) 99999-9999",
                     loja: "Ótica Licenciada Teste",
                     loja_endereco: "Av. Paulista, 1000 - São Paulo/SP",

@@ -532,10 +532,12 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
 
         const cleanUrl = webhookUrl.trim();
 
-        // Payload híbrido: inclui tanto os campos planos (name, email, etc) quanto o objeto 'record' do Supabase
+        // Payload híbrido completo (garante compatibilidade com qualquer mapeamento do Make)
         const payload = {
-            name: data.name,
             email: data.email,
+            to: data.email,
+            recipient: data.email,
+            name: data.name,
             whatsapp: data.whatsapp,
             loja: data.loja,
             loja_endereco: data.loja_endereco || '',
@@ -547,8 +549,9 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
             table: 'leads_personality',
             schema: 'public',
             record: {
-                name: data.name,
                 email: data.email,
+                to: data.email,
+                name: data.name,
                 whatsapp: data.whatsapp,
                 loja: data.loja,
                 loja_endereco: data.loja_endereco || '',
