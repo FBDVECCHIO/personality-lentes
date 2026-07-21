@@ -170,6 +170,72 @@ document.addEventListener('DOMContentLoaded', () => {
         testConnection(url, key, table, storesTable);
     });
 
+    const btnTestMakeWebhook = document.getElementById('btnTestMakeWebhook');
+    if (btnTestMakeWebhook) {
+        btnTestMakeWebhook.addEventListener('click', async () => {
+            const webhookUrl = makeWebhookUrlInput ? makeWebhookUrlInput.value.trim() : '';
+
+            if (!webhookUrl) {
+                alert('Por favor, informe a URL do Webhook do Make.com no campo acima.');
+                makeWebhookUrlInput.focus();
+                return;
+            }
+
+            btnTestMakeWebhook.disabled = true;
+            btnTestMakeWebhook.textContent = 'Enviando Teste...';
+
+            const testData = {
+                name: "Teste Personality (E-mail)",
+                email: "suporte@lentespersonality.com.br",
+                whatsapp: "(11) 99999-9999",
+                loja: "Ótica Licenciada Teste",
+                loja_endereco: "Av. Paulista, 1000 - São Paulo/SP",
+                loja_telefone: "(11) 3333-4444",
+                voucher: "TESTE-15-OFF",
+                message: "Teste de envio de e-mail automatizado pelo Make.com",
+                timestamp: new Date().toISOString(),
+                type: "INSERT",
+                table: "leads_personality",
+                schema: "public",
+                record: {
+                    name: "Teste Personality (E-mail)",
+                    email: "suporte@lentespersonality.com.br",
+                    whatsapp: "(11) 99999-9999",
+                    loja: "Ótica Licenciada Teste",
+                    loja_endereco: "Av. Paulista, 1000 - São Paulo/SP",
+                    loja_telefone: "(11) 3333-4444",
+                    voucher: "TESTE-15-OFF",
+                    message: "Teste de envio de e-mail automatizado pelo Make.com"
+                }
+            };
+
+            try {
+                await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testData)
+                });
+                alert('Disparo de teste enviado com sucesso para o Make.com!\n\nVerifique o seu cenário no Make.com para confirmar o recebimento e o envio do e-mail.');
+            } catch (err) {
+                console.warn('Tentando envio no-cors:', err);
+                try {
+                    await fetch(webhookUrl, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify(testData)
+                    });
+                    alert('Disparo de teste enviado via modo compatível!\n\nVerifique o histórico do cenário no Make.com.');
+                } catch (err2) {
+                    alert(`Falha ao disparar Webhook do Make: ${err2.message}`);
+                }
+            } finally {
+                btnTestMakeWebhook.disabled = false;
+                btnTestMakeWebhook.textContent = '🧪 Testar Disparo do Make';
+            }
+        });
+    }
+
     async function testConnection(url, key, table, storesTable) {
         connStatus.className = 'status-box loading';
         connStatus.querySelector('.status-text').textContent = 'Testando conexão com o banco Supabase...';

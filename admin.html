@@ -109,8 +109,11 @@
 
                         <div class="input-group">
                             <label for="makeWebhookUrl">URL do Webhook do Make.com (Disparo de E-mails/WhatsApp)</label>
-                            <input type="url" id="makeWebhookUrl" placeholder="Ex: https://hook.us2.make.com/xxxxxxxxxxxx">
-                            <p class="input-hint">Opcional. Se configurado, a página enviará os dados do lead diretamente do navegador para o Make, sem depender de gatilhos do Supabase.</p>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="url" id="makeWebhookUrl" placeholder="Ex: https://hook.us2.make.com/xxxxxxxxxxxx" style="flex: 1;">
+                                <button type="button" class="btn btn-outline-gold" id="btnTestMakeWebhook" style="white-space: nowrap; font-size: 12px; font-weight: 700;">🧪 Testar Disparo do Make</button>
+                            </div>
+                            <p class="input-hint">Envio direto do navegador para o Make.com. Funciona mesmo sem gatilhos no Supabase.</p>
                         </div>
 
                         <div class="status-box" id="sbConnectionStatus">
@@ -120,6 +123,19 @@
 
                         <button type="submit" class="btn btn-gold">Salvar Configurações</button>
                     </form>
+
+                    <!-- Guia Diagnóstico de E-mails do Make.com -->
+                    <div class="guide-box" style="margin-top: 24px; background: rgba(197, 168, 92, 0.05); padding: 20px; border-radius: 14px; border: 1px solid var(--border-gold);">
+                        <h4 style="font-family: var(--font-heading); color: var(--gold-light); font-size: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <span>📧</span> Como resolver falhas no envio de e-mails pelo Make.com:
+                        </h4>
+                        <ul style="font-size: 13px; color: var(--text-muted); line-height: 1.65; padding-left: 20px; margin: 0;">
+                            <li><strong>1. Testar e Redeterminar a Estrutura (Re-determine Data Structure):</strong> No Make.com, clique com o botão direito no módulo <em>Custom Webhook</em>, escolha <em>"Re-determine data structure"</em> e clique no botão <strong>🧪 Testar Disparo do Make</strong> acima.</li>
+                            <li><strong>2. Mapeamento dos Campos:</strong> No módulo de e-mail do Make (Gmail, Outlook ou SMTP), certifique-se de que o campo <strong>To (Para)</strong> esteja apontado para o campo <code>email</code>.</li>
+                            <li><strong>3. Conexão do Gmail / E-mail no Make:</strong> Se estiver usando o módulo do Gmail no Make, verifique se a conta não expirou. Caso ocorra erro de autorização no Make, acesse <em>Connections > Re-authorize</em> na sua conta de e-mail dentro do Make.</li>
+                            <li><strong>4. Ligar a Automação (ON):</strong> Lembre-se de ativar a chave do cenário no canto inferior esquerdo do Make.com para <strong>ON (Immediately)</strong>.</li>
+                        </ul>
+                    </div>
 
                     <div class="sql-instructions">
                         <h4>🛠️ Script SQL para criação das tabelas no Supabase:</h4>

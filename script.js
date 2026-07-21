@@ -528,31 +528,64 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
 
     async function triggerMakeWebhookFrontend(data) {
         const webhookUrl = localStorage.getItem('personality_make_webhook') || '';
-        if (!webhookUrl) return;
+        if (!webhookUrl || !webhookUrl.trim()) return;
+
+        const cleanUrl = webhookUrl.trim();
+
+        // Payload híbrido: inclui tanto os campos planos (name, email, etc) quanto o objeto 'record' do Supabase
+        const payload = {
+            name: data.name,
+            email: data.email,
+            whatsapp: data.whatsapp,
+            loja: data.loja,
+            loja_endereco: data.loja_endereco || '',
+            loja_telefone: data.loja_telefone || '',
+            voucher: data.voucher,
+            message: data.message || '',
+            timestamp: new Date().toISOString(),
+            type: 'INSERT',
+            table: 'leads_personality',
+            schema: 'public',
+            record: {
+                name: data.name,
+                email: data.email,
+                whatsapp: data.whatsapp,
+                loja: data.loja,
+                loja_endereco: data.loja_endereco || '',
+                loja_telefone: data.loja_telefone || '',
+                voucher: data.voucher,
+                message: data.message || ''
+            }
+        };
+
+        const jsonStr = JSON.stringify(payload);
 
         try {
-            await fetch(webhookUrl, {
+            await fetch(cleanUrl, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    type: 'INSERT',
-                    table: 'leads_personality',
-                    schema: 'public',
-                    record: data
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: jsonStr
             });
             console.log('Webhook do Make disparado com sucesso via frontend.');
         } catch (e) {
-            console.error('Erro ao disparar Webhook do Make:', e);
+            console.warn('Tentando envio alternativo sem CORS para Make:', e);
+            try {
+                await fetch(cleanUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: jsonStr
+                });
+            } catch (err2) {
+                console.error('Falha no disparo do Make:', err2);
+            }
         }
     }
 
     const resetSubmitButton = () => {
         btnSubmit.disabled = false;
         btnSpinner.style.display = 'none';
-        btnSubmit.querySelector('.btn-text').textContent = 'Garantir Meu Voucher (50% OFF)';
+        btnSubmit.querySelector('.btn-text').textContent = 'Garantir Meu Voucher (15% OFF)';
     };
 
     btnCopyVoucher.addEventListener('click', () => {
