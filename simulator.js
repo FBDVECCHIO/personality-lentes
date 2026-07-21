@@ -1,6 +1,6 @@
 /* ==========================================================================
-   PERSONALITY LENTES - DEMONSTRADOR DIGITAL ULTRA-REALISTA (SIMULATOR.JS)
-   Simulador em Armação de Óculos, Batalha de Lentes & Filtros Fotorrealistas 60 FPS
+   PERSONALITY LENTES - DEMONSTRADOR DIGITAL FOTORREALISTA EM 1ª PESSOA (POV)
+   Motor de Armação de Óculos em Primeira Pessoa com Filtros Óticos HD 60 FPS
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -217,48 +217,96 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // -------------------------------------------------------------
-    // 7. FUNÇÃO DE RENDERIZAÇÃO DA ARMAÇÃO DE ÓCULOS REALISTA
+    // 7. MOTOR DE VISÃO EM PRIMEIRA PESSOA (POV GLASSES ENGINE)
     // -------------------------------------------------------------
-    function drawGlassesFrame(ctx, w, h) {
-        ctx.save();
+    function drawGlassesPOV(ctx, w, h, bgImg, renderLeftLens, renderRightLens) {
+        ctx.clearRect(0, 0, w, h);
 
+        // 1. Fundo Geral da Cena (Visão Periférica Nua fora dos óculos)
+        ctx.save();
+        if (bgImg && bgImg.complete && bgImg.naturalWidth > 0) {
+            ctx.drawImage(bgImg, 0, 0, w, h);
+        } else {
+            ctx.fillStyle = '#111'; ctx.fillRect(0, 0, w, h);
+        }
+
+        // Camada de visão periférica levemente escurecida/desfocada fora dos óculos
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+        ctx.fillRect(0, 0, w, h);
+        ctx.restore();
+
+        // Parâmetros de Posição da Armação em 1ª Pessoa
         const rx = w * 0.28;
-        const ry = h * 0.5;
-        const rw = w * 0.19;
-        const rh = h * 0.34;
+        const ry = h * 0.48;
+        const rw = w * 0.21;
+        const rh = h * 0.36;
 
         const lx = w * 0.72;
-        const ly = h * 0.5;
+        const ly = h * 0.48;
 
-        // Ponte metálica entre as lentes
-        ctx.strokeStyle = 'rgba(212, 175, 55, 0.95)';
-        ctx.lineWidth = 6;
+        // 2. VISÃO DA LENTE ESQUERDA (DENTRO DO ARO)
+        ctx.save();
         ctx.beginPath();
-        ctx.moveTo(rx + rw * 0.8, ry - 10);
-        ctx.quadraticCurveTo(w * 0.5, ry - 35, lx - rw * 0.8, ly - 10);
-        ctx.stroke();
+        ctx.ellipse(rx, ry, rw, rh, 0, 0, Math.PI * 2);
+        ctx.clip();
+        renderLeftLens(ctx, rx, ry, rw, rh);
 
-        // Hastes laterais
-        ctx.lineWidth = 8;
+        // Brilho realista de reflexo de vidro na borda da lente
+        const gradL = ctx.createLinearGradient(rx - rw, ry - rh, rx + rw, ry + rh);
+        gradL.addColorStop(0, 'rgba(255, 255, 255, 0.18)');
+        gradL.addColorStop(0.3, 'rgba(255, 255, 255, 0.02)');
+        gradL.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = gradL;
+        ctx.fillRect(rx - rw, ry - rh, rw * 2, rh * 2);
+        ctx.restore();
+
+        // 3. VISÃO DA LENTE DIREITA (DENTRO DO ARO)
+        ctx.save();
         ctx.beginPath();
-        ctx.moveTo(rx - rw * 0.95, ry - 15);
-        ctx.lineTo(10, ry - 35);
-        ctx.moveTo(lx + rw * 0.95, ly - 15);
-        ctx.lineTo(w - 10, ly - 35);
-        ctx.stroke();
+        ctx.ellipse(lx, ly, rw, rh, 0, 0, Math.PI * 2);
+        ctx.clip();
+        renderRightLens(ctx, lx, ly, rw, rh);
 
-        // Aro Metálico Ouro Luxo - Lente Esquerda
+        // Brilho realista de reflexo de vidro na borda da lente
+        const gradR = ctx.createLinearGradient(lx - rw, ly - rh, lx + rw, ly + rh);
+        gradR.addColorStop(0, 'rgba(255, 255, 255, 0.18)');
+        gradR.addColorStop(0.3, 'rgba(255, 255, 255, 0.02)');
+        gradR.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = gradR;
+        ctx.fillRect(lx - rw, ly - rh, rw * 2, rh * 2);
+        ctx.restore();
+
+        // 4. DESENHO FOTORREALISTA DA ARMAÇÃO METÁLICA (1ª PESSOA)
+        ctx.save();
+
+        // Ponte Central
         ctx.strokeStyle = 'var(--gold-primary)';
-        ctx.lineWidth = 7;
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = 'rgba(212, 175, 55, 0.6)';
+        ctx.lineWidth = 8;
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = 'rgba(212, 175, 55, 0.8)';
+        ctx.beginPath();
+        ctx.moveTo(rx + rw * 0.75, ry - 15);
+        ctx.quadraticCurveTo(w * 0.5, ry - 40, lx - rw * 0.75, ly - 15);
+        ctx.stroke();
+
+        // Aro Esquerdo em Ouro Luxo
+        ctx.lineWidth = 9;
         ctx.beginPath();
         ctx.ellipse(rx, ry, rw, rh, 0, 0, Math.PI * 2);
         ctx.stroke();
 
-        // Aro Metálico Ouro Luxo - Lente Direita
+        // Aro Direito em Ouro Luxo
         ctx.beginPath();
         ctx.ellipse(lx, ly, rw, rh, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Hastes estendendo para as laterais do rosto
+        ctx.lineWidth = 10;
+        ctx.beginPath();
+        ctx.moveTo(rx - rw * 0.95, ry - 15);
+        ctx.lineTo(0, ry - 35);
+        ctx.moveTo(lx + rw * 0.95, ly - 15);
+        ctx.lineTo(w, ly - 35);
         ctx.stroke();
 
         ctx.shadowBlur = 0;
@@ -291,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tabId === 'tab-colors') drawColors();
     }
 
-    // --- MÓDULO 1: BATALHA DE PROGRESSIVOS EM ARMAÇÃO DE ÓCULOS ---
+    // --- MÓDULO 1: BATALHA DE PROGRESSIVOS (1ª PESSOA) ---
     function initProgressiveEngine() {
         const canvas = document.getElementById('canvasProgressive');
         const handle = document.getElementById('sliderHandleProgressive');
@@ -354,89 +402,53 @@ document.addEventListener('DOMContentLoaded', () => {
         const w = canvas.width = canvas.offsetWidth;
         const h = canvas.height = canvas.offsetHeight;
 
-        ctx.clearRect(0, 0, w, h);
-
         const img = images.officeScene;
-        if (img.complete && img.naturalWidth > 0) {
-            ctx.drawImage(img, 0, 0, w, h);
-        } else {
-            ctx.fillStyle = '#121218';
-            ctx.fillRect(0, 0, w, h);
-        }
-
         const splitX = w * state.progressive.sliderPos;
         const metaLeft = getLensMeta(state.progressive.lensLeft);
         const metaRight = getLensMeta(state.progressive.lensRight);
 
-        // LADO ESQUERDO (LENTE 1)
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(0, 0, splitX, h);
-        ctx.clip();
+        drawGlassesPOV(ctx, w, h, img, 
+            (c, rx, ry, rw, rh) => {
+                // Conteúdo Lente Esquerda
+                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+                if (metaLeft.isBad) {
+                    c.fillStyle = 'rgba(255, 85, 85, 0.28)'; c.fillRect(0, 0, w, h);
+                } else {
+                    c.fillStyle = 'rgba(212, 175, 55, 0.12)'; c.fillRect(0, 0, w, h);
+                }
+            },
+            (c, lx, ly, rw, rh) => {
+                // Conteúdo Lente Direita
+                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+                if (metaRight.isBad) {
+                    c.fillStyle = 'rgba(255, 85, 85, 0.32)'; c.fillRect(0, 0, w, h);
+                } else {
+                    c.fillStyle = 'rgba(212, 175, 55, 0.12)'; c.fillRect(0, 0, w, h);
+                }
+            }
+        );
 
-        if (metaLeft.isBad) {
-            ctx.fillStyle = 'rgba(255, 85, 85, 0.25)';
-            ctx.beginPath();
-            ctx.ellipse(w * 0.25, h * 0.5, w * 0.22, h * 0.42, 0, 0, Math.PI * 2);
-            ctx.fill();
-        } else {
-            ctx.fillStyle = 'rgba(212, 175, 55, 0.12)';
-            ctx.strokeStyle = metaLeft.border;
-            ctx.lineWidth = 2.5;
-            ctx.beginPath();
-            ctx.ellipse(w * 0.25, h * 0.5, w * 0.22, h * 0.42, 0, 0, Math.PI * 2);
-            ctx.stroke();
-        }
+        // Badges de Identificação das Lentes
+        ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
+        ctx.fillRect(15, 15, 290, 48);
+        ctx.strokeStyle = metaLeft.border; ctx.lineWidth = 1.5;
+        ctx.strokeRect(15, 15, 290, 48);
+        ctx.fillStyle = metaLeft.color; ctx.font = '700 12.5px Montserrat, sans-serif';
+        ctx.fillText(metaLeft.title, 25, 34);
+        ctx.fillStyle = '#fff'; ctx.font = '500 10.5px Montserrat, sans-serif';
+        ctx.fillText(metaLeft.sub, 25, 50);
 
         ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
-        ctx.fillRect(15, 15, 300, 50);
-        ctx.strokeStyle = metaLeft.border;
-        ctx.strokeRect(15, 15, 300, 50);
-        ctx.fillStyle = metaLeft.color;
-        ctx.font = '700 13px Montserrat, sans-serif';
-        ctx.fillText(metaLeft.title, 25, 35);
-        ctx.fillStyle = '#fff';
-        ctx.font = '500 11px Montserrat, sans-serif';
-        ctx.fillText(metaLeft.sub, 25, 52);
-        ctx.restore();
-
-        // LADO DIREITO (LENTE 2)
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(splitX, 0, w - splitX, h);
-        ctx.clip();
-
-        if (metaRight.isBad) {
-            ctx.fillStyle = 'rgba(255, 85, 85, 0.25)';
-            ctx.beginPath();
-            ctx.ellipse(w * 0.75, h * 0.5, w * 0.22, h * 0.42, 0, 0, Math.PI * 2);
-            ctx.fill();
-        } else {
-            ctx.fillStyle = 'rgba(212, 175, 55, 0.12)';
-            ctx.strokeStyle = metaRight.border;
-            ctx.lineWidth = 2.5;
-            ctx.beginPath();
-            ctx.ellipse(w * 0.75, h * 0.5, w * 0.22, h * 0.42, 0, 0, Math.PI * 2);
-            ctx.stroke();
-        }
-
-        ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
-        ctx.fillRect(splitX + 15, 15, 300, 50);
+        ctx.fillRect(w - 305, 15, 290, 48);
         ctx.strokeStyle = metaRight.border;
-        ctx.strokeRect(splitX + 15, 15, 300, 50);
-        ctx.fillStyle = metaRight.color;
-        ctx.font = '700 13px Montserrat, sans-serif';
-        ctx.fillText(metaRight.title, splitX + 25, 35);
-        ctx.fillStyle = '#fff';
-        ctx.font = '500 11px Montserrat, sans-serif';
-        ctx.fillText(metaRight.sub, splitX + 25, 52);
-        ctx.restore();
-
-        // Desenha a Armação de Óculos por cima
-        drawGlassesFrame(ctx, w, h);
+        ctx.strokeRect(w - 305, 15, 290, 48);
+        ctx.fillStyle = metaRight.color; ctx.font = '700 12.5px Montserrat, sans-serif';
+        ctx.fillText(metaRight.title, w - 295, 34);
+        ctx.fillStyle = '#fff'; ctx.font = '500 10.5px Montserrat, sans-serif';
+        ctx.fillText(metaRight.sub, w - 295, 50);
     }
 
-    // --- MÓDULO 2: OFFICE VS PERTO ---
+    // --- MÓDULO 2: OFFICE VS PERTO (1ª PESSOA) ---
     function initOfficeEngine() {
         document.querySelectorAll('[data-type="office"]').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -455,49 +467,35 @@ document.addEventListener('DOMContentLoaded', () => {
         const w = canvas.width = canvas.offsetWidth;
         const h = canvas.height = canvas.offsetHeight;
 
-        ctx.clearRect(0, 0, w, h);
-
         const img = images.officeScene;
-        if (img.complete && img.naturalWidth > 0) {
-            ctx.drawImage(img, 0, 0, w, h);
-        } else {
-            ctx.fillStyle = '#14141c';
-            ctx.fillRect(0, 0, w, h);
-        }
 
-        if (state.office.mode === 'perto-simples') {
-            ctx.fillStyle = 'rgba(8, 8, 12, 0.75)';
-            ctx.fillRect(0, 0, w, h);
+        drawGlassesPOV(ctx, w, h, img,
+            (c) => {
+                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+                if (state.office.mode === 'perto-simples') {
+                    c.fillStyle = 'rgba(8, 8, 12, 0.68)'; c.fillRect(0, 0, w, h);
+                } else {
+                    c.fillStyle = 'rgba(212, 175, 55, 0.08)'; c.fillRect(0, 0, w, h);
+                }
+            },
+            (c) => {
+                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+                if (state.office.mode === 'perto-simples') {
+                    c.fillStyle = 'rgba(8, 8, 12, 0.68)'; c.fillRect(0, 0, w, h);
+                } else {
+                    c.fillStyle = 'rgba(212, 175, 55, 0.08)'; c.fillRect(0, 0, w, h);
+                }
+            }
+        );
 
-            ctx.save();
-            ctx.beginPath();
-            ctx.ellipse(w * 0.5, h * 0.5, w * 0.28, h * 0.38, 0, 0, Math.PI * 2);
-            ctx.clip();
-            if (img.complete && img.naturalWidth > 0) ctx.drawImage(img, 0, 0, w, h);
-            ctx.fillStyle = 'rgba(255, 85, 85, 0.2)';
-            ctx.fillRect(0, 0, w, h);
-            ctx.restore();
-
-            ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
-            ctx.fillRect(20, 20, 380, 45);
-            ctx.fillStyle = '#ff8888';
-            ctx.font = '700 13px Montserrat, sans-serif';
-            ctx.fillText('❌ Lente de Perto Simples: Foco fixo em 40cm', 35, 47);
-        } else {
-            ctx.fillStyle = 'rgba(197, 168, 92, 0.08)';
-            ctx.fillRect(0, 0, w, h);
-
-            ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
-            ctx.fillRect(20, 20, 440, 45);
-            ctx.fillStyle = 'var(--gold-light)';
-            ctx.font = '700 13px Montserrat, sans-serif';
-            ctx.fillText('✨ Personality Office: Foco contínuo de 40cm até 4 metros!', 35, 47);
-        }
-
-        drawGlassesFrame(ctx, w, h);
+        ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
+        ctx.fillRect(20, 20, 440, 45);
+        ctx.fillStyle = state.office.mode === 'perto-simples' ? '#ff8888' : 'var(--gold-light)';
+        ctx.font = '700 13px Montserrat, sans-serif';
+        ctx.fillText(state.office.mode === 'perto-simples' ? '❌ Lente de Perto Simples: Foco restrito a 40cm' : '✨ Personality Office: Visão cristalina contínua de 40cm a 4 metros!', 35, 47);
     }
 
-    // --- MÓDULO 3: VS FREEFORM VS PRONTAS ---
+    // --- MÓDULO 3: VS FREEFORM VS PRONTAS (1ª PESSOA) ---
     function initFreeformEngine() {
         document.querySelectorAll('[data-type="freeform"]').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -516,42 +514,35 @@ document.addEventListener('DOMContentLoaded', () => {
         const w = canvas.width = canvas.offsetWidth;
         const h = canvas.height = canvas.offsetHeight;
 
-        ctx.clearRect(0, 0, w, h);
-
         const img = images.officeScene;
-        if (img.complete && img.naturalWidth > 0) {
-            ctx.drawImage(img, 0, 0, w, h);
-        } else {
-            ctx.fillStyle = '#0b0c10';
-            ctx.fillRect(0, 0, w, h);
-        }
 
-        if (state.freeform.mode === 'pronta-esferica') {
-            ctx.fillStyle = 'rgba(255, 85, 85, 0.35)';
-            ctx.beginPath();
-            ctx.ellipse(w * 0.5, h * 0.5, w * 0.28, h * 0.38, 0, 0, Math.PI * 2);
-            ctx.fill();
+        drawGlassesPOV(ctx, w, h, img,
+            (c) => {
+                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+                if (state.freeform.mode === 'pronta-esferica') {
+                    c.fillStyle = 'rgba(255, 85, 85, 0.28)'; c.fillRect(0, 0, w, h);
+                } else {
+                    c.fillStyle = 'rgba(212, 175, 55, 0.08)'; c.fillRect(0, 0, w, h);
+                }
+            },
+            (c) => {
+                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+                if (state.freeform.mode === 'pronta-esferica') {
+                    c.fillStyle = 'rgba(255, 85, 85, 0.28)'; c.fillRect(0, 0, w, h);
+                } else {
+                    c.fillStyle = 'rgba(212, 175, 55, 0.08)'; c.fillRect(0, 0, w, h);
+                }
+            }
+        );
 
-            ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
-            ctx.fillRect(20, 20, 450, 45);
-            ctx.fillStyle = '#ff8888';
-            ctx.font = '700 13px Montserrat, sans-serif';
-            ctx.fillText('❌ Lente Pronta Esférica: Distorção "Olho de Peixe" na borda', 35, 47);
-        } else {
-            ctx.fillStyle = 'rgba(197, 168, 92, 0.08)';
-            ctx.fillRect(0, 0, w, h);
-
-            ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
-            ctx.fillRect(20, 20, 450, 45);
-            ctx.fillStyle = 'var(--gold-light)';
-            ctx.font = '700 13px Montserrat, sans-serif';
-            ctx.fillText('✨ Personality VS Freeform Asférica: Visão nítida ponta a ponta', 35, 47);
-        }
-
-        drawGlassesFrame(ctx, w, h);
+        ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
+        ctx.fillRect(20, 20, 450, 45);
+        ctx.fillStyle = state.freeform.mode === 'pronta-esferica' ? '#ff8888' : 'var(--gold-light)';
+        ctx.font = '700 13px Montserrat, sans-serif';
+        ctx.fillText(state.freeform.mode === 'pronta-esferica' ? '❌ Lente Pronta Esférica: Distorção "Olho de Peixe" na borda' : '✨ Personality VS Freeform Asférica: Visão nítida ponta a ponta', 35, 47);
     }
 
-    // --- MÓDULO 4: COM VS SEM ANTIRREFLEXO ---
+    // --- MÓDULO 4: COM VS SEM ANTIRREFLEXO (1ª PESSOA) ---
     function initArDemoEngine() {
         const canvas = document.getElementById('canvasArDemo');
         const handle = document.getElementById('sliderHandleAr');
@@ -586,62 +577,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const w = canvas.width = canvas.offsetWidth;
         const h = canvas.height = canvas.offsetHeight;
 
-        ctx.clearRect(0, 0, w, h);
-
         const img = images.nightDriving;
-        if (img.complete && img.naturalWidth > 0) {
-            ctx.drawImage(img, 0, 0, w, h);
-        } else {
-            ctx.fillStyle = '#08080c';
-            ctx.fillRect(0, 0, w, h);
-        }
-
         const splitX = w * state.arDemo.sliderPos;
 
-        // Lado Esquerdo: Com AR
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(0, 0, splitX, h);
-        ctx.clip();
-
-        ctx.fillStyle = 'rgba(212, 175, 55, 0.08)';
-        ctx.fillRect(0, 0, splitX, h);
-
-        ctx.fillStyle = 'rgba(12, 12, 16, 0.85)';
-        ctx.fillRect(15, 15, 340, 45);
-        ctx.fillStyle = 'var(--gold-light)';
-        ctx.font = '700 13px Montserrat, sans-serif';
-        ctx.fillText('✨ Com Antirreflexo Gold: Sem Ofuscamento', 25, 42);
-        ctx.restore();
-
-        // Lado Direito: Sem AR
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(splitX, 0, w - splitX, h);
-        ctx.clip();
-
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-        ctx.fillRect(splitX, 0, w - splitX, h);
-
-        ctx.fillStyle = '#ffffff';
-        ctx.shadowBlur = 40;
-        ctx.shadowColor = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(splitX + 150, h * 0.45, 90, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
+        drawGlassesPOV(ctx, w, h, img,
+            (c) => {
+                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+                c.fillStyle = 'rgba(212, 175, 55, 0.08)'; c.fillRect(0, 0, w, h);
+            },
+            (c) => {
+                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+                c.fillStyle = 'rgba(255, 255, 255, 0.35)'; c.fillRect(0, 0, w, h);
+                c.fillStyle = '#ffffff'; c.shadowBlur = 40; c.shadowColor = '#fff';
+                c.beginPath(); c.arc(w * 0.72, h * 0.48, 70, 0, Math.PI * 2); c.fill(); c.shadowBlur = 0;
+            }
+        );
 
         ctx.fillStyle = 'rgba(12, 12, 16, 0.85)';
-        ctx.fillRect(splitX + 15, 15, 340, 45);
-        ctx.fillStyle = '#ff8888';
-        ctx.font = '700 13px Montserrat, sans-serif';
-        ctx.fillText('❌ Sem Antirreflexo: Reflexos Incômodos', splitX + 25, 42);
-        ctx.restore();
+        ctx.fillRect(15, 15, 310, 45);
+        ctx.fillStyle = 'var(--gold-light)'; ctx.font = '700 13px Montserrat, sans-serif';
+        ctx.fillText('✨ Lente Esquerda: Com Antirreflexo Gold', 25, 42);
 
-        drawGlassesFrame(ctx, w, h);
+        ctx.fillStyle = 'rgba(12, 12, 16, 0.85)';
+        ctx.fillRect(w - 325, 15, 310, 45);
+        ctx.fillStyle = '#ff8888'; ctx.font = '700 13px Montserrat, sans-serif';
+        ctx.fillText('❌ Lente Direita: Sem Antirreflexo', w - 315, 42);
     }
 
-    // --- MÓDULO 6: FOTOSSENSÍVEIS (TRANSITIONS) ---
+    // --- MÓDULO 6: FOTOSSENSÍVEIS (1ª PESSOA) ---
     function initPhotoEngine() {
         const rangeUv = document.getElementById('rangeUv');
         if (rangeUv) {
@@ -668,35 +631,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const w = canvas.width = canvas.offsetWidth;
         const h = canvas.height = canvas.offsetHeight;
 
-        ctx.clearRect(0, 0, w, h);
-
         const img = images.outdoorSun;
-        if (img.complete && img.naturalWidth > 0) {
-            ctx.drawImage(img, 0, 0, w, h);
-        } else {
-            ctx.fillStyle = '#1a1d24';
-            ctx.fillRect(0, 0, w, h);
-        }
-
         const opacity = (state.photo.uvLevel / 100) * 0.82;
-        ctx.fillStyle = `rgba(18, 18, 22, ${opacity})`;
 
-        const rx = w * 0.28; const ry = h * 0.5; const rw = w * 0.19; const rh = h * 0.34;
-        const lx = w * 0.72; const ly = h * 0.5;
-
-        ctx.beginPath(); ctx.ellipse(rx, ry, rw, rh, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.ellipse(lx, ly, rw, rh, 0, 0, Math.PI * 2); ctx.fill();
+        drawGlassesPOV(ctx, w, h, img,
+            (c) => {
+                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+                c.fillStyle = `rgba(18, 18, 22, ${opacity})`; c.fillRect(0, 0, w, h);
+            },
+            (c) => {
+                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+                c.fillStyle = `rgba(18, 18, 22, ${opacity})`; c.fillRect(0, 0, w, h);
+            }
+        );
 
         ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
-        ctx.fillRect(20, 20, 420, 45);
-        ctx.fillStyle = 'var(--gold-light)';
-        ctx.font = '700 13px Montserrat, sans-serif';
+        ctx.fillRect(20, 20, 440, 45);
+        ctx.fillStyle = 'var(--gold-light)'; ctx.font = '700 13px Montserrat, sans-serif';
         ctx.fillText(`☀️ ${state.photo.mode === 'gen-s' ? 'Transitions GEN S (Ativação Ultrarrápida)' : 'Transitions Xtractive (Ativação no Carro)'} - UV: ${state.photo.uvLevel}%`, 35, 47);
-
-        drawGlassesFrame(ctx, w, h);
     }
 
-    // --- MÓDULO 7: CALCULADORA DE ESPESSURA DE BORDA ---
+    // --- MÓDULO 7: CALCULADORA DE ESPESSURA DE BORDA (DESENHO VETORIAL 2D) ---
     function initThicknessEngine() {
         const rangeDiopter = document.getElementById('rangeDiopter');
         const valDiopter = document.getElementById('valDiopter');
@@ -759,7 +714,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- MÓDULO 8: LENTES POLARIZADAS ---
+    // --- MÓDULO 8: LENTES POLARIZADAS (1ª PESSOA) ---
     function initPolarizedEngine() {
         document.querySelectorAll('[data-type="polar"]').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -778,37 +733,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const w = canvas.width = canvas.offsetWidth;
         const h = canvas.height = canvas.offsetHeight;
 
-        ctx.clearRect(0, 0, w, h);
-
         const img = images.waterGlare;
-        if (img.complete && img.naturalWidth > 0) {
-            ctx.drawImage(img, 0, 0, w, h);
-        } else {
-            ctx.fillStyle = '#003366';
-            ctx.fillRect(0, 0, w, h);
-        }
 
-        if (state.polarized.mode === 'sem-polarizado') {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
-            ctx.fillRect(0, 0, w, h);
+        drawGlassesPOV(ctx, w, h, img,
+            (c) => {
+                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+                if (state.polarized.mode === 'sem-polarizado') {
+                    c.fillStyle = 'rgba(255, 255, 255, 0.55)'; c.fillRect(0, 0, w, h);
+                }
+            },
+            (c) => {
+                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+                if (state.polarized.mode === 'sem-polarizado') {
+                    c.fillStyle = 'rgba(255, 255, 255, 0.55)'; c.fillRect(0, 0, w, h);
+                }
+            }
+        );
 
-            ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
-            ctx.fillRect(20, 20, 420, 45);
-            ctx.fillStyle = '#ff8888';
-            ctx.font = '700 13px Montserrat, sans-serif';
-            ctx.fillText('❌ Sem Polarizado: Reflexo cegante esconde o fundo da água', 35, 47);
-        } else {
-            ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
-            ctx.fillRect(20, 20, 420, 45);
-            ctx.fillStyle = 'var(--gold-light)';
-            ctx.font = '700 13px Montserrat, sans-serif';
-            ctx.fillText('🌊 Com Polarizado Personality: Visão nítida sob a água', 35, 47);
-        }
-
-        drawGlassesFrame(ctx, w, h);
+        ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
+        ctx.fillRect(20, 20, 440, 45);
+        ctx.fillStyle = state.polarized.mode === 'sem-polarizado' ? '#ff8888' : 'var(--gold-light)';
+        ctx.font = '700 13px Montserrat, sans-serif';
+        ctx.fillText(state.polarized.mode === 'sem-polarizado' ? '❌ Sem Polarizado: Reflexo cegante na superfície da água' : '🌊 Com Polarizado Personality: Visão nítida dos peixes sob a água', 35, 47);
     }
 
-    // --- MÓDULO 9: CORES & SHINE MIRROR ---
+    // --- MÓDULO 9: CORES & SHINE MIRROR (1ª PESSOA) ---
     function initColorsEngine() {
         document.querySelectorAll('.sim-color-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -827,15 +776,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const w = canvas.width = canvas.offsetWidth;
         const h = canvas.height = canvas.offsetHeight;
 
-        ctx.clearRect(0, 0, w, h);
-
         const img = images.outdoorSun;
-        if (img.complete && img.naturalWidth > 0) {
-            ctx.drawImage(img, 0, 0, w, h);
-        } else {
-            ctx.fillStyle = '#111';
-            ctx.fillRect(0, 0, w, h);
-        }
 
         let colorStyle = 'rgba(80,80,80,0.6)';
         if (state.colors.color === 'marrom') colorStyle = 'rgba(120,70,30,0.65)';
@@ -843,12 +784,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (state.colors.color === 'gold-mirror') colorStyle = 'rgba(212,175,55,0.78)';
         if (state.colors.color === 'blue-mirror') colorStyle = 'rgba(0,150,255,0.78)';
 
-        const rx = w * 0.28; const ry = h * 0.5; const rw = w * 0.19; const rh = h * 0.34;
-        const lx = w * 0.72; const ly = h * 0.5;
-
-        ctx.fillStyle = colorStyle;
-        ctx.beginPath(); ctx.ellipse(rx, ry, rw, rh, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.ellipse(lx, ly, rw, rh, 0, 0, Math.PI * 2); ctx.fill();
+        drawGlassesPOV(ctx, w, h, img,
+            (c) => {
+                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+                c.fillStyle = colorStyle; c.fillRect(0, 0, w, h);
+            },
+            (c) => {
+                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+                c.fillStyle = colorStyle; c.fillRect(0, 0, w, h);
+            }
+        );
 
         ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
         ctx.fillRect(w * 0.25, 20, w * 0.5, 45);
@@ -857,8 +802,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.textAlign = 'center';
         ctx.fillText(`🎨 Tonalidade / Espelhado: ${state.colors.color.toUpperCase()}`, w / 2, 47);
         ctx.textAlign = 'left';
-
-        drawGlassesFrame(ctx, w, h);
     }
 
 });
