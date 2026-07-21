@@ -18,9 +18,10 @@
     <link rel="stylesheet" href="style.css">
     
     <style>
-        /* Estilos Exclusivos do Demonstrador Digital (Montserrat Font System) */
+        /* Estilos Exclusivos do Demonstrador Digital com Layout Profissional de Balcão */
         * {
             font-family: 'Montserrat', sans-serif !important;
+            box-sizing: border-box;
         }
 
         body {
@@ -87,7 +88,7 @@
         }
 
         .sim-chip {
-            background: rgba(197, 168, 92, 0.1);
+            background: rgba(197, 168, 92, 0.12);
             border: 1px solid var(--border-gold);
             color: var(--gold-light);
             font-size: 12px;
@@ -128,7 +129,7 @@
             color: var(--text-muted);
             padding: 10px 18px;
             border-radius: 12px;
-            font-size: 13px;
+            font-size: 12.5px;
             font-weight: 600;
             cursor: pointer;
             white-space: nowrap;
@@ -150,15 +151,27 @@
             box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
         }
 
-        /* Container do Visualizador Interativo */
+        /* Container do Visualizador Interativo em 2 Colunas */
         .sim-stage-container {
             padding: 24px;
-            max-width: 1300px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
+        .sim-grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 20px;
+        }
+
+        @media (max-width: 992px) {
+            .sim-grid-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .sim-module-card {
-            background: rgba(16, 16, 22, 0.7);
+            background: rgba(16, 16, 22, 0.75);
             border: 1px solid var(--border-gold);
             border-radius: 20px;
             padding: 24px;
@@ -169,11 +182,12 @@
         .sim-canvas-wrapper {
             position: relative;
             width: 100%;
-            height: 480px;
+            height: 520px;
             border-radius: 16px;
             overflow: hidden;
             background: #000;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            border: 1px solid rgba(197, 168, 92, 0.3);
         }
 
         canvas.sim-canvas {
@@ -189,7 +203,7 @@
             bottom: 0;
             width: 4px;
             background: var(--gold-primary);
-            box-shadow: 0 0 12px var(--gold-primary);
+            box-shadow: 0 0 16px var(--gold-primary);
             cursor: ew-resize;
             z-index: 10;
         }
@@ -199,8 +213,8 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 44px;
-            height: 44px;
+            width: 46px;
+            height: 46px;
             border-radius: 50%;
             background: var(--gold-primary);
             color: #000;
@@ -208,48 +222,43 @@
             align-items: center;
             justify-content: center;
             font-weight: 800;
-            font-size: 16px;
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.8);
+            font-size: 18px;
+            box-shadow: 0 0 24px rgba(212, 175, 55, 0.9);
         }
 
-        /* Painel de Controles do Módulo */
-        .sim-controls-panel {
-            margin-top: 20px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        /* Sidebar de Controles e Botões Laterais */
+        .sim-sidebar {
+            background: rgba(16, 16, 22, 0.85);
+            border: 1px solid var(--border-gold);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
             gap: 16px;
-            align-items: center;
+            backdrop-filter: blur(12px);
         }
 
-        .sim-control-group {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            padding: 16px;
-            border-radius: 14px;
-        }
-
-        .sim-control-label {
-            font-size: 12px;
-            color: var(--text-muted);
+        .sim-sidebar-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--gold-light);
             text-transform: uppercase;
             letter-spacing: 1px;
-            font-weight: 700;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
+            border-bottom: 1px solid var(--border-gray);
+            padding-bottom: 8px;
+            margin: 0;
         }
 
-        .sim-btn-toggle {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+        .sim-btn-side {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             color: #fff;
-            padding: 10px 16px;
-            border-radius: 10px;
-            font-size: 13px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            font-size: 12.5px;
             font-weight: 600;
             cursor: pointer;
             width: 100%;
-            margin-bottom: 8px;
             transition: all 0.2s ease;
             text-align: left;
             display: flex;
@@ -257,14 +266,31 @@
             justify-content: space-between;
         }
 
-        .sim-btn-toggle.active {
+        .sim-btn-side:hover {
+            border-color: var(--gold-primary);
+        }
+
+        .sim-btn-side.active {
             background: var(--gold-primary);
             color: #000;
             border-color: var(--gold-light);
-            font-weight: 700;
+            font-weight: 800;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
         }
 
-        /* Modal de Autenticação do Vendedor */
+        .sim-select-custom {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border-gold);
+            background: rgba(20, 20, 26, 0.9);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            outline: none;
+        }
+
+        /* Modal de Autenticação */
         .sim-modal-overlay {
             position: fixed;
             top: 0;
@@ -294,11 +320,11 @@
 </head>
 <body>
 
-    <!-- Modal de Autenticação de Acesso do Lojista/Vendedor -->
+    <!-- Modal de Autenticação do Vendedor -->
     <div class="sim-modal-overlay" id="simLoginModal" style="display: flex;">
         <div class="sim-login-box">
             <div style="font-size: 36px; margin-bottom: 12px;">✨</div>
-            <h2 style="font-family: 'Playfair Display', serif; color: #fff; font-size: 24px; margin-bottom: 6px;">Demonstrador Digital</h2>
+            <h2 style="font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 6px;">Demonstrador Digital</h2>
             <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;">Área exclusiva para Atendimento Guiado & Balcão das Óticas Licenciadas Personality.</p>
             
             <form id="simLoginForm">
@@ -328,7 +354,7 @@
     <!-- Aplicação Principal (Demonstrador) -->
     <div id="simAppContent" style="display: none;">
         
-        <!-- Header Superior da Aplicação -->
+        <!-- Header Superior -->
         <header class="sim-app-header">
             <div class="sim-brand">
                 <div>
@@ -352,7 +378,7 @@
             </div>
         </header>
 
-        <!-- Barra da Trilha Dinâmica de Escolhas do Cliente -->
+        <!-- Barra de Trilha Dinâmica de Escolhas -->
         <div class="sim-trail-bar">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <span style="font-size: 12px; font-weight: 700; color: var(--gold-light); text-transform: uppercase; letter-spacing: 0.5px;">
@@ -368,9 +394,9 @@
             </button>
         </div>
 
-        <!-- Navegação das Abas dos 10 Módulos de Demonstração -->
+        <!-- Navegação das Abas dos Módulos -->
         <nav class="sim-tabs-nav">
-            <button class="sim-tab-btn active" data-tab="tab-progressivos">📊 Progressivos & Marcas</button>
+            <button class="sim-tab-btn active" data-tab="tab-progressivos">⚔️ Batalha de Progressivos</button>
             <button class="sim-tab-btn" data-tab="tab-office">💼 Office vs. Perto</button>
             <button class="sim-tab-btn" data-tab="tab-freeform">🔬 VS Freeform vs. Prontas</button>
             <button class="sim-tab-btn" data-tab="tab-ar-demo">✨ Com vs. Sem Antirreflexo</button>
@@ -382,306 +408,343 @@
             <button class="sim-tab-btn" data-tab="tab-summary" style="border-color: var(--gold-primary); color: var(--gold-light);">📋 Ficha de Recomendação</button>
         </nav>
 
-        <!-- Área Principal de Estágio Interativo -->
+        <!-- Área Principal em Grid (Visualizador + Sidebar de Botões Laterais) -->
         <main class="sim-stage-container">
             
-            <!-- MÓDULO 1: PROGRESSIVOS & MARCAS -->
-            <div class="sim-module-card sim-tab-content" id="tab-progressivos">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
-                    <div>
-                        <h2 style="font-family: 'Playfair Display', serif; color: #fff; font-size: 22px; margin-bottom: 4px;">Comparativo de Campo Visual em Progressivos</h2>
-                        <p style="font-size: 13px; color: var(--text-muted);">Veja a diferença entre o corredor amplo da Personality Digital HD e o desfoque periférico de marcas convencionais.</p>
-                    </div>
-                    <button class="btn btn-outline-gold btn-sm btn-add-trail" data-category="Campo Visual" data-item="Personality Digital HD (Multifocal)">
-                        ➕ Adicionar à Escolha do Cliente
-                    </button>
-                </div>
+            <!-- MÓDULO 1: BATALHA DE PROGRESSIVOS -->
+            <div class="sim-tab-content" id="tab-progressivos">
+                <div class="sim-grid-layout">
+                    <div class="sim-module-card">
+                        <div style="margin-bottom: 16px;">
+                            <h2 style="font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 4px;">⚔️ Batalha de Progressivos em Tempo Real</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Compare o campo visual e as áreas de distorção entre 2 marcas/tecnologias escolhidas lado a lado.</p>
+                        </div>
 
-                <div class="sim-canvas-wrapper" id="wrapperProgressive">
-                    <canvas id="canvasProgressive" class="sim-canvas"></canvas>
-                    <div class="split-slider-handle" id="sliderHandleProgressive" style="left: 50%;">
-                        <div class="split-slider-button">↔</div>
-                    </div>
-                </div>
-
-                <div class="sim-controls-panel">
-                    <div class="sim-control-group">
-                        <div class="sim-control-label"><span>Selecione a Tecnologia de Lente</span></div>
-                        <button class="sim-btn-toggle active" data-type="progressive" data-val="personality-hd">
-                            <span>✨ Personality Digital HD</span>
-                            <small style="color: var(--gold-light);">Corredor +80% Amplo</small>
-                        </button>
-                        <button class="sim-btn-toggle" data-type="progressive" data-val="concorrente-comum">
-                            <span>❌ Multifocal Convencional Padrão</span>
-                            <small style="color: #ff8888;">Visão Túnel & Aberrações</small>
-                        </button>
-                    </div>
-
-                    <div class="sim-control-group">
-                        <div class="sim-control-label"><span>Ajuste da Zona de Foco</span></div>
-                        <div style="display: flex; gap: 8px;">
-                            <button class="btn btn-outline-gold btn-sm sim-focus-btn active" data-focus="far" style="flex:1;">🚗 Visão Longe</button>
-                            <button class="btn btn-outline-gold btn-sm sim-focus-btn" data-focus="mid" style="flex:1;">💻 Visão Intermediária</button>
-                            <button class="btn btn-outline-gold btn-sm sim-focus-btn" data-focus="near" style="flex:1;">📱 Visão Perto</button>
+                        <div class="sim-canvas-wrapper" id="wrapperProgressive">
+                            <canvas id="canvasProgressive" class="sim-canvas"></canvas>
+                            <div class="split-slider-handle" id="sliderHandleProgressive" style="left: 50%;">
+                                <div class="split-slider-button">↔</div>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Sidebar Lateral de Botões e Controles da Batalha -->
+                    <aside class="sim-sidebar">
+                        <h3 class="sim-sidebar-title">🕹️ Controles da Batalha</h3>
+
+                        <div>
+                            <label style="font-size: 11px; color: var(--gold-light); font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 6px;">👈 Lado Esquerdo (Lente 1)</label>
+                            <select id="selectLensLeft" class="sim-select-custom">
+                                <option value="personality-hd" selected>✨ Personality Digital HD (Campo Amplo)</option>
+                                <option value="personality-gold">⚡ Personality 1.61 Gold Digital</option>
+                                <option value="personality-ultra">👑 Personality 1.76 Ultra Digital</option>
+                                <option value="concorrente-basica">❌ Concorrente Básica (Campo Médio)</option>
+                                <option value="convencional-padrao">❌ Multifocal Convencional Padrão</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label style="font-size: 11px; color: #ff8888; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 6px;">👉 Lado Direito (Lente 2)</label>
+                            <select id="selectLensRight" class="sim-select-custom">
+                                <option value="convencional-padrao" selected>❌ Multifocal Convencional Padrão</option>
+                                <option value="concorrente-basica">❌ Concorrente Básica (Campo Médio)</option>
+                                <option value="personality-hd">✨ Personality Digital HD</option>
+                                <option value="personality-gold">⚡ Personality 1.61 Gold Digital</option>
+                                <option value="personality-ultra">👑 Personality 1.76 Ultra Digital</option>
+                            </select>
+                        </div>
+
+                        <button class="btn btn-gold btn-full btn-add-trail" data-category="Campo Visual" data-item="Personality Digital HD (Multifocal)" style="margin-top: 10px; font-weight: 700; font-size: 13px;">
+                            ➕ Recomendar Lente Vencedora
+                        </button>
+                    </aside>
                 </div>
             </div>
 
             <!-- MÓDULO 2: OFFICE VS PERTO -->
-            <div class="sim-module-card sim-tab-content" id="tab-office" style="display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
-                    <div>
-                        <h2 style="font-family: 'Playfair Display', serif; color: #fff; font-size: 22px; margin-bottom: 4px;">Lente Office (Ocupacional) vs. Lente de Perto Simples</h2>
-                        <p style="font-size: 13px; color: var(--text-muted);">A lente de perto simples limita a visão a 40cm. A Lente Office Personality oferece nitidez contínua do celular à tela do computador (até 4 metros).</p>
-                    </div>
-                    <button class="btn btn-outline-gold btn-sm btn-add-trail" data-category="Tipo de Lente" data-item="Personality Office (Ocupacional)">
-                        ➕ Adicionar à Escolha do Cliente
-                    </button>
-                </div>
+            <div class="sim-tab-content" id="tab-office" style="display: none;">
+                <div class="sim-grid-layout">
+                    <div class="sim-module-card">
+                        <div style="margin-bottom: 16px;">
+                            <h2 style="font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 4px;">💼 Lente Office Ocupacional vs. Perto Simples</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Demonstração da profundidade de campo (40cm a 4m) para computador e sala contra a visão de perto estática (40cm).</p>
+                        </div>
 
-                <div class="sim-canvas-wrapper" id="wrapperOffice">
-                    <canvas id="canvasOffice" class="sim-canvas"></canvas>
-                </div>
-
-                <div class="sim-controls-panel">
-                    <div class="sim-control-group">
-                        <div class="sim-control-label"><span>Modo de Lente Escolhido</span></div>
-                        <button class="sim-btn-toggle active" data-type="office" data-val="office-personality">
-                            <span>💼 Personality Office Ocupacional</span>
-                            <small style="color: var(--gold-light);">Profundidade: 40cm a 4 metros</small>
-                        </button>
-                        <button class="sim-btn-toggle" data-type="office" data-val="perto-simples">
-                            <span>👓 Lente de Perto Simples Comum</span>
-                            <small style="color: #ff8888;">Foco Estático: Apenas 40cm</small>
-                        </button>
+                        <div class="sim-canvas-wrapper" id="wrapperOffice">
+                            <canvas id="canvasOffice" class="sim-canvas"></canvas>
+                        </div>
                     </div>
+
+                    <aside class="sim-sidebar">
+                        <h3 class="sim-sidebar-title">🕹️ Opções de Visão</h3>
+                        <button class="sim-btn-side active" data-type="office" data-val="office-personality">
+                            <span>💼 Personality Office</span>
+                            <small style="color: var(--gold-light);">40cm a 4 metros</small>
+                        </button>
+                        <button class="sim-btn-side" data-type="office" data-val="perto-simples">
+                            <span>👓 Perto Simples Comum</span>
+                            <small style="color: #ff8888;">Apenas 40cm</small>
+                        </button>
+
+                        <button class="btn btn-gold btn-full btn-add-trail" data-category="Tipo de Lente" data-item="Personality Office (Ocupacional)" style="margin-top: auto; font-weight: 700;">
+                            ➕ Adicionar à Escolha do Cliente
+                        </button>
+                    </aside>
                 </div>
             </div>
 
             <!-- MÓDULO 3: VS FREEFORM VS PRONTAS -->
-            <div class="sim-module-card sim-tab-content" id="tab-freeform" style="display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
-                    <div>
-                        <h2 style="font-family: 'Playfair Display', serif; color: #fff; font-size: 22px; margin-bottom: 4px;">Visão Simples Freeform (Asférica) vs. Pronta Comum (Esférica)</h2>
-                        <p style="font-size: 13px; color: var(--text-muted);">As lentes prontas comuns distorcem a imagem nas bordas da armação (efeito 'olho de peixe'). A VS Freeform Asférica Personality entrega visão nítida de ponta a ponta.</p>
+            <div class="sim-tab-content" id="tab-freeform" style="display: none;">
+                <div class="sim-grid-layout">
+                    <div class="sim-module-card">
+                        <div style="margin-bottom: 16px;">
+                            <h2 style="font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 4px;">🔬 Visão Simples Freeform vs. Pronta Comum</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Efeito Asférico sem distorções de borda contra a lente Esférica convencional.</p>
+                        </div>
+
+                        <div class="sim-canvas-wrapper" id="wrapperFreeform">
+                            <canvas id="canvasFreeform" class="sim-canvas"></canvas>
+                        </div>
                     </div>
-                    <button class="btn btn-outline-gold btn-sm btn-add-trail" data-category="Tecnologia VS" data-item="Personality VS Freeform Asférica">
-                        ➕ Adicionar à Escolha do Cliente
-                    </button>
-                </div>
 
-                <div class="sim-canvas-wrapper" id="wrapperFreeform">
-                    <canvas id="canvasFreeform" class="sim-canvas"></canvas>
-                </div>
-
-                <div class="sim-controls-panel">
-                    <div class="sim-control-group">
-                        <button class="sim-btn-toggle active" data-type="freeform" data-val="freeform-asferica">
-                            <span>🔬 Personality VS Freeform (Asférica)</span>
+                    <aside class="sim-sidebar">
+                        <h3 class="sim-sidebar-title">🕹️ Tecnologia VS</h3>
+                        <button class="sim-btn-side active" data-type="freeform" data-val="freeform-asferica">
+                            <span>🔬 VS Freeform Asférica</span>
                             <small style="color: var(--gold-light);">Zero distorção de borda</small>
                         </button>
-                        <button class="sim-btn-toggle" data-type="freeform" data-val="pronta-esferica">
-                            <span>❌ Lente Pronta Comum (Esférica)</span>
-                            <small style="color: #ff8888;">Distorção periférica 'Olho de Peixe'</small>
+                        <button class="sim-btn-side" data-type="freeform" data-val="pronta-esferica">
+                            <span>❌ Pronta Comum Esférica</span>
+                            <small style="color: #ff8888;">Distorção 'Olho de Peixe'</small>
                         </button>
-                    </div>
+
+                        <button class="btn btn-gold btn-full btn-add-trail" data-category="Tecnologia VS" data-item="Personality VS Freeform Asférica" style="margin-top: auto; font-weight: 700;">
+                            ➕ Adicionar à Escolha do Cliente
+                        </button>
+                    </aside>
                 </div>
             </div>
 
             <!-- MÓDULO 4: COM VS SEM ANTIRREFLEXO -->
-            <div class="sim-module-card sim-tab-content" id="tab-ar-demo" style="display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
-                    <div>
-                        <h2 style="font-family: 'Playfair Display', serif; color: #fff; font-size: 22px; margin-bottom: 4px;">Demonstração de Antirreflexo (Com AR vs. Sem AR)</h2>
-                        <p style="font-size: 13px; color: var(--text-muted);">Arraste o divisor na tela para observar como o tratamento Antirreflexo elimina o ofuscamento dos faróis e lâmpadas.</p>
-                    </div>
-                    <button class="btn btn-outline-gold btn-sm btn-add-trail" data-category="Tratamento AR" data-item="Tratamento Antirreflexo Gold Premium">
-                        ➕ Adicionar à Escolha do Cliente
-                    </button>
-                </div>
+            <div class="sim-tab-content" id="tab-ar-demo" style="display: none;">
+                <div class="sim-grid-layout">
+                    <div class="sim-module-card">
+                        <div style="margin-bottom: 16px;">
+                            <h2 style="font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 4px;">✨ Demonstração de Antirreflexo Gold</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Arraste o divisor na fotografia noturna para ver a eliminação de faróis incômodos.</p>
+                        </div>
 
-                <div class="sim-canvas-wrapper" id="wrapperArDemo">
-                    <canvas id="canvasArDemo" class="sim-canvas"></canvas>
-                    <div class="split-slider-handle" id="sliderHandleAr" style="left: 50%;">
-                        <div class="split-slider-button">↔</div>
+                        <div class="sim-canvas-wrapper" id="wrapperArDemo">
+                            <canvas id="canvasArDemo" class="sim-canvas"></canvas>
+                            <div class="split-slider-handle" id="sliderHandleAr" style="left: 50%;">
+                                <div class="split-slider-button">↔</div>
+                            </div>
+                        </div>
                     </div>
+
+                    <aside class="sim-sidebar">
+                        <h3 class="sim-sidebar-title">🕹️ Tratamento Antirreflexo</h3>
+                        <button class="btn btn-gold btn-full btn-add-trail" data-category="Tratamento AR" data-item="Tratamento Antirreflexo Gold Premium" style="margin-top: auto; font-weight: 700;">
+                            ➕ Adicionar à Escolha do Cliente
+                        </button>
+                    </aside>
                 </div>
             </div>
 
             <!-- MÓDULO 5: BENEFÍCIOS DO AR -->
-            <div class="sim-module-card sim-tab-content" id="tab-ar-benefits" style="display: none;">
-                <h2 style="font-family: 'Playfair Display', serif; color: #fff; font-size: 22px; margin-bottom: 16px;">Os 5 Pilares de Proteção do Antirreflexo Personality</h2>
-                
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
-                    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-gold); padding: 20px; border-radius: 16px; text-align: center;">
-                        <div style="font-size: 32px; margin-bottom: 10px;">✨</div>
-                        <h3 style="color: var(--gold-light); font-size: 16px; margin-bottom: 6px;">Antirreflexo HD</h3>
-                        <p style="font-size: 12.5px; color: var(--text-muted);">Elimina 99% dos reflexos incômodos na lente.</p>
-                    </div>
+            <div class="sim-tab-content" id="tab-ar-benefits" style="display: none;">
+                <div class="sim-module-card">
+                    <h2 style="font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 16px;">Os 5 Pilares de Proteção do Antirreflexo Personality</h2>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-gold); padding: 20px; border-radius: 16px; text-align: center;">
+                            <div style="font-size: 32px; margin-bottom: 10px;">✨</div>
+                            <h3 style="color: var(--gold-light); font-size: 15px; margin-bottom: 6px;">Antirreflexo HD</h3>
+                            <p style="font-size: 12px; color: var(--text-muted);">Elimina 99% dos reflexos incômodos na lente.</p>
+                        </div>
 
-                    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-gold); padding: 20px; border-radius: 16px; text-align: center;">
-                        <div style="font-size: 32px; margin-bottom: 10px;">💧</div>
-                        <h3 style="color: var(--gold-light); font-size: 16px; margin-bottom: 6px;">Hidrofóbico</h3>
-                        <p style="font-size: 12.5px; color: var(--text-muted);">Repele água e sujeira. Limpeza super fácil.</p>
-                    </div>
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-gold); padding: 20px; border-radius: 16px; text-align: center;">
+                            <div style="font-size: 32px; margin-bottom: 10px;">💧</div>
+                            <h3 style="color: var(--gold-light); font-size: 15px; margin-bottom: 6px;">Hidrofóbico</h3>
+                            <p style="font-size: 12px; color: var(--text-muted);">Repele água e sujeira. Limpeza super fácil.</p>
+                        </div>
 
-                    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-gold); padding: 20px; border-radius: 16px; text-align: center;">
-                        <div style="font-size: 32px; margin-bottom: 10px;">🛡️</div>
-                        <h3 style="color: var(--gold-light); font-size: 16px; margin-bottom: 6px;">Resistência Antirrisco</h3>
-                        <p style="font-size: 12.5px; color: var(--text-muted);">Camada dura contra arranhões do dia a dia.</p>
-                    </div>
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-gold); padding: 20px; border-radius: 16px; text-align: center;">
+                            <div style="font-size: 32px; margin-bottom: 10px;">🛡️</div>
+                            <h3 style="color: var(--gold-light); font-size: 15px; margin-bottom: 6px;">Antirrisco Hard</h3>
+                            <p style="font-size: 12px; color: var(--text-muted);">Camada dura contra arranhões do dia a dia.</p>
+                        </div>
 
-                    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-gold); padding: 20px; border-radius: 16px; text-align: center;">
-                        <div style="font-size: 32px; margin-bottom: 10px;">⚡</div>
-                        <h3 style="color: var(--gold-light); font-size: 16px; margin-bottom: 6px;">Antiestático</h3>
-                        <p style="font-size: 12.5px; color: var(--text-muted);">Não atrai poeira nem microrresíduos.</p>
-                    </div>
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-gold); padding: 20px; border-radius: 16px; text-align: center;">
+                            <div style="font-size: 32px; margin-bottom: 10px;">⚡</div>
+                            <h3 style="color: var(--gold-light); font-size: 15px; margin-bottom: 6px;">Antiestático</h3>
+                            <p style="font-size: 12px; color: var(--text-muted);">Não atrai poeira nem microrresíduos.</p>
+                        </div>
 
-                    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-gold); padding: 20px; border-radius: 16px; text-align: center;">
-                        <div style="font-size: 32px; margin-bottom: 10px;">🔵</div>
-                        <h3 style="color: var(--gold-light); font-size: 16px; margin-bottom: 6px;">Fórmula Blue Control</h3>
-                        <p style="font-size: 12.5px; color: var(--text-muted);">Bloqueia a luz azul nociva dos celulares.</p>
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-gold); padding: 20px; border-radius: 16px; text-align: center;">
+                            <div style="font-size: 32px; margin-bottom: 10px;">🔵</div>
+                            <h3 style="color: var(--gold-light); font-size: 15px; margin-bottom: 6px;">Blue Control</h3>
+                            <p style="font-size: 12px; color: var(--text-muted);">Bloqueia a luz azul nociva dos celulares.</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- MÓDULO 6: FOTOSSENSÍVEIS (TRANSITIONS) -->
-            <div class="sim-module-card sim-tab-content" id="tab-photo" style="display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
-                    <div>
-                        <h2 style="font-family: 'Playfair Display', serif; color: #fff; font-size: 22px; margin-bottom: 4px;">Demonstração de Lentes Fotossensíveis (Transitions)</h2>
-                        <p style="font-size: 13px; color: var(--text-muted);">Compare o escurecimento ultrarrápido da <strong>Transitions GEN S</strong> contra a <strong>Transitions Xtractive</strong> (que escurece também dentro do carro).</p>
-                    </div>
-                    <button class="btn btn-outline-gold btn-sm btn-add-trail" data-category="Tecnologia Sol" data-item="Lente Fotossensível Transitions">
-                        ➕ Adicionar à Escolha do Cliente
-                    </button>
-                </div>
+            <!-- MÓDULO 6: FOTOSSENSÍVEIS -->
+            <div class="sim-tab-content" id="tab-photo" style="display: none;">
+                <div class="sim-grid-layout">
+                    <div class="sim-module-card">
+                        <div style="margin-bottom: 16px;">
+                            <h2 style="font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 4px;">☀️ Lentes Fotossensíveis (Transitions)</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Arraste o slider de UV para simular o escurecimento no sol e no veículo.</p>
+                        </div>
 
-                <div class="sim-canvas-wrapper" id="wrapperPhoto">
-                    <canvas id="canvasPhoto" class="sim-canvas"></canvas>
-                </div>
-
-                <div class="sim-controls-panel">
-                    <div class="sim-control-group">
-                        <div class="sim-control-label"><span>Simulação de Intensidade de Luz Sol / UV</span></div>
-                        <input type="range" id="rangeUv" min="0" max="100" value="0" style="width: 100%; accent-color: var(--gold-primary);">
-                        <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 6px;">
-                            <span>🏠 Ambiente Interno (100% Transparente)</span>
-                            <span>☀️ Sol Forte (Escuro Profundo)</span>
+                        <div class="sim-canvas-wrapper" id="wrapperPhoto">
+                            <canvas id="canvasPhoto" class="sim-canvas"></canvas>
                         </div>
                     </div>
 
-                    <div class="sim-control-group">
-                        <button class="sim-btn-toggle active" data-type="photo" data-val="gen-s">
+                    <aside class="sim-sidebar">
+                        <h3 class="sim-sidebar-title">🕹️ Intensidade de Sol / UV</h3>
+                        
+                        <div>
+                            <input type="range" id="rangeUv" min="0" max="100" value="0" style="width: 100%; accent-color: var(--gold-primary);">
+                            <div style="display: flex; justify-content: space-between; font-size: 10.5px; color: var(--text-muted); margin-top: 4px;">
+                                <span>🏠 Interno</span>
+                                <span>☀️ Sol Forte</span>
+                            </div>
+                        </div>
+
+                        <h3 class="sim-sidebar-title" style="margin-top: 10px;">Tecnologia Transitions</h3>
+                        <button class="sim-btn-side active" data-type="photo" data-val="gen-s">
                             <span>⚡ Transitions GEN S</span>
-                            <small style="color: var(--gold-light);">Ativação ultrarrápida no sol</small>
+                            <small style="color: var(--gold-light);">Ativação ultrarrápida</small>
                         </button>
-                        <button class="sim-btn-toggle" data-type="photo" data-val="xtractive">
+                        <button class="sim-btn-side" data-type="photo" data-val="xtractive">
                             <span>🚗 Transitions Xtractive</span>
-                            <small style="color: var(--gold-light);">Escurece também dentro do carro</small>
+                            <small style="color: var(--gold-light);">Ativação no carro</small>
                         </button>
-                    </div>
+
+                        <button class="btn btn-gold btn-full btn-add-trail" data-category="Tecnologia Sol" data-item="Lente Fotossensível Transitions" style="margin-top: auto; font-weight: 700;">
+                            ➕ Adicionar à Escolha do Cliente
+                        </button>
+                    </aside>
                 </div>
             </div>
 
-            <!-- MÓDULO 7: CALCULADORA DE ESPESSURA DE BORDA -->
-            <div class="sim-module-card sim-tab-content" id="tab-thickness" style="display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
-                    <div>
-                        <h2 style="font-family: 'Playfair Display', serif; color: #fff; font-size: 22px; margin-bottom: 4px;">Calculadora e Comparativo de Espessura de Lente por Grau</h2>
-                        <p style="font-size: 13px; color: var(--text-muted);">Desenho vetorial proporcional em tempo real comparando a borda nos índices 1.50, 1.61 Coringa, 1.67/1.74 Finas e a 1.76 Ultra.</p>
+            <!-- MÓDULO 7: CALCULADORA DE ESPESSURA -->
+            <div class="sim-tab-content" id="tab-thickness" style="display: none;">
+                <div class="sim-grid-layout">
+                    <div class="sim-module-card">
+                        <div style="margin-bottom: 16px;">
+                            <h2 style="font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 4px;">📐 Calculadora de Espessura por Grau</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Desenho vetorial de borda proporcional em tempo real de 1.50 a 1.76 Ultra.</p>
+                        </div>
+
+                        <div class="sim-canvas-wrapper" id="wrapperThickness" style="height: 380px; background: rgba(10,10,14,0.9);">
+                            <canvas id="canvasThickness" class="sim-canvas"></canvas>
+                        </div>
                     </div>
-                    <button class="btn btn-outline-gold btn-sm btn-add-trail" data-category="Índice de Refração" data-item="Lente 1.61 Coringa / 1.76 Ultra">
-                        ➕ Adicionar à Escolha do Cliente
-                    </button>
-                </div>
 
-                <div class="sim-canvas-wrapper" id="wrapperThickness" style="height: 380px; background: rgba(10,10,14,0.9);">
-                    <canvas id="canvasThickness" class="sim-canvas"></canvas>
-                </div>
-
-                <div class="sim-controls-panel">
-                    <div class="sim-control-group">
-                        <div class="sim-control-label"><span>Grau da Receita (Dioptria)</span> <span id="valDiopter" style="color: var(--gold-light); font-weight: 700;">-5.00 D</span></div>
+                    <aside class="sim-sidebar">
+                        <h3 class="sim-sidebar-title">🕹️ Grau da Receita (Dioptria)</h3>
+                        
+                        <div style="text-align: center; margin-bottom: 10px;">
+                            <span id="valDiopter" style="font-size: 22px; font-weight: 800; color: var(--gold-light);">-5.00 D</span>
+                        </div>
+                        
                         <input type="range" id="rangeDiopter" min="-10" max="-1" step="0.25" value="-5.00" style="width: 100%; accent-color: var(--gold-primary);">
-                    </div>
+
+                        <button class="btn btn-gold btn-full btn-add-trail" data-category="Índice de Refração" data-item="Lente 1.61 Coringa / 1.76 Ultra" style="margin-top: auto; font-weight: 700;">
+                            ➕ Adicionar à Escolha do Cliente
+                        </button>
+                    </aside>
                 </div>
             </div>
 
             <!-- MÓDULO 8: LENTES POLARIZADAS -->
-            <div class="sim-module-card sim-tab-content" id="tab-polarized" style="display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
-                    <div>
-                        <h2 style="font-family: 'Playfair Display', serif; color: #fff; font-size: 22px; margin-bottom: 4px;">Demonstração de Lentes Polarizadas</h2>
-                        <p style="font-size: 13px; color: var(--text-muted);">Eliminação instantânea dos reflexos cegantes da luz do sol sobre a água e o asfalto molhado.</p>
+            <div class="sim-tab-content" id="tab-polarized" style="display: none;">
+                <div class="sim-grid-layout">
+                    <div class="sim-module-card">
+                        <div style="margin-bottom: 16px;">
+                            <h2 style="font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 4px;">🌊 Lentes Polarizadas</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Remoção instantânea de reflexos na água e no asfalto.</p>
+                        </div>
+
+                        <div class="sim-canvas-wrapper" id="wrapperPolarized">
+                            <canvas id="canvasPolarized" class="sim-canvas"></canvas>
+                        </div>
                     </div>
-                    <button class="btn btn-outline-gold btn-sm btn-add-trail" data-category="Tratamento Solar" data-item="Filtro Polarizado Anti-Ofuscamento">
-                        ➕ Adicionar à Escolha do Cliente
-                    </button>
-                </div>
 
-                <div class="sim-canvas-wrapper" id="wrapperPolarized">
-                    <canvas id="canvasPolarized" class="sim-canvas"></canvas>
-                </div>
+                    <aside class="sim-sidebar">
+                        <h3 class="sim-sidebar-title">🕹️ Filtro Polarizado</h3>
+                        <button class="sim-btn-side active" data-type="polar" data-val="com-polarizado">
+                            <span>🌊 Com Polarizado</span>
+                            <small style="color: var(--gold-light);">Reflexos removidos</small>
+                        </button>
+                        <button class="sim-btn-side" data-type="polar" data-val="sem-polarizado">
+                            <span>❌ Sem Polarizado</span>
+                            <small style="color: #ff8888;">Ofuscamento excessivo</small>
+                        </button>
 
-                <div class="sim-controls-panel">
-                    <button class="sim-btn-toggle active" data-type="polar" data-val="com-polarizado">
-                        <span>🌊 Com Filtro Polarizado Personality</span>
-                        <small style="color: var(--gold-light);">Reflexos cegantes removidos</small>
-                    </button>
-                    <button class="sim-btn-toggle" data-type="polar" data-val="sem-polarizado">
-                        <span>❌ Sem Polarizado (Lente Solar Comum)</span>
-                        <small style="color: #ff8888;">Ofuscamento excessivo na água</small>
-                    </button>
+                        <button class="btn btn-gold btn-full btn-add-trail" data-category="Tratamento Solar" data-item="Filtro Polarizado Anti-Ofuscamento" style="margin-top: auto; font-weight: 700;">
+                            ➕ Adicionar à Escolha do Cliente
+                        </button>
+                    </aside>
                 </div>
             </div>
 
             <!-- MÓDULO 9: CORES & SHINE MIRROR -->
-            <div class="sim-module-card sim-tab-content" id="tab-colors" style="display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
-                    <div>
-                        <h2 style="font-family: 'Playfair Display', serif; color: #fff; font-size: 22px; margin-bottom: 4px;">Tonalidades Solares & Espelhados Shine Mirror</h2>
-                        <p style="font-size: 13px; color: var(--text-muted);">Escolha entre as cores clássicas (Cinza, Marrom, G15) ou o espelhado luxuoso **Shine Mirror**.</p>
+            <div class="sim-tab-content" id="tab-colors" style="display: none;">
+                <div class="sim-grid-layout">
+                    <div class="sim-module-card">
+                        <div style="margin-bottom: 16px;">
+                            <h2 style="font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 4px;">🎨 Tonalidades & Shine Mirror</h2>
+                            <p style="font-size: 13px; color: var(--text-muted);">Selecione a cor ou acabamento espelhado desejado.</p>
+                        </div>
+
+                        <div class="sim-canvas-wrapper" id="wrapperColors">
+                            <canvas id="canvasColors" class="sim-canvas"></canvas>
+                        </div>
                     </div>
-                    <button class="btn btn-outline-gold btn-sm btn-add-trail" data-category="Acabamento Solar" data-item="Tratamento Shine Mirror Espelhado">
-                        ➕ Adicionar à Escolha do Cliente
-                    </button>
-                </div>
 
-                <div class="sim-canvas-wrapper" id="wrapperColors">
-                    <canvas id="canvasColors" class="sim-canvas"></canvas>
-                </div>
+                    <aside class="sim-sidebar">
+                        <h3 class="sim-sidebar-title">🕹️ Cores & Espelhados</h3>
+                        <button class="sim-btn-side sim-color-btn active" data-color="cinza">Cinza Clássico</button>
+                        <button class="sim-btn-side sim-color-btn" data-color="marrom">Marrom Warm</button>
+                        <button class="sim-btn-side sim-color-btn" data-color="g15">G15 (Verde)</button>
+                        <button class="sim-btn-side sim-color-btn" data-color="gold-mirror">✨ Shine Gold</button>
+                        <button class="sim-btn-side sim-color-btn" data-color="blue-mirror">💎 Shine Blue</button>
 
-                <div class="sim-controls-panel" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));">
-                    <button class="btn btn-outline-gold btn-sm sim-color-btn active" data-color="cinza">Cinza Clássico</button>
-                    <button class="btn btn-outline-gold btn-sm sim-color-btn" data-color="marrom">Marrom Warm</button>
-                    <button class="btn btn-outline-gold btn-sm sim-color-btn" data-color="g15">G15 (Verde)</button>
-                    <button class="btn btn-outline-gold btn-sm sim-color-btn" data-color="gold-mirror">✨ Shine Gold</button>
-                    <button class="btn btn-outline-gold btn-sm sim-color-btn" data-color="blue-mirror">💎 Shine Blue</button>
+                        <button class="btn btn-gold btn-full btn-add-trail" data-category="Acabamento Solar" data-item="Tratamento Shine Mirror Espelhado" style="margin-top: auto; font-weight: 700;">
+                            ➕ Adicionar à Escolha do Cliente
+                        </button>
+                    </aside>
                 </div>
             </div>
 
             <!-- MÓDULO 10: FICHA DE RECOMENDAÇÃO DO CLIENTE -->
-            <div class="sim-module-card sim-tab-content" id="tab-summary" style="display: none;">
-                <div style="text-align: center; margin-bottom: 24px;">
-                    <div style="font-size: 40px; margin-bottom: 8px;">📋</div>
-                    <h2 style="font-family: 'Playfair Display', serif; color: #fff; font-size: 26px;">Ficha de Recomendação de Lentes Personality</h2>
-                    <p style="font-size: 14px; color: var(--text-muted);">Resumo pronto do atendimento para fechamento de venda no balcão.</p>
-                </div>
-
-                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-gold); padding: 24px; border-radius: 16px; max-width: 600px; margin: 0 auto;">
-                    <h3 style="color: var(--gold-light); font-size: 16px; margin-bottom: 16px; border-bottom: 1px solid var(--border-gray); padding-bottom: 8px;">
-                        🎯 Configuração Selecionada para o Cliente:
-                    </h3>
-
-                    <div id="simFinalSummaryList" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
-                        <!-- Inserido dinamicamente via JS -->
+            <div class="sim-tab-content" id="tab-summary" style="display: none;">
+                <div class="sim-module-card">
+                    <div style="text-align: center; margin-bottom: 24px;">
+                        <div style="font-size: 40px; margin-bottom: 8px;">📋</div>
+                        <h2 style="font-size: 26px; font-weight: 800; color: #fff;">Ficha de Recomendação de Lentes Personality</h2>
+                        <p style="font-size: 14px; color: var(--text-muted);">Resumo pronto do atendimento para fechamento de venda no balcão.</p>
                     </div>
 
-                    <button class="btn btn-gold btn-full" onclick="window.print()" style="font-weight: 700;">
-                        🖨️ Imprimir Ficha de Recomendação
-                    </button>
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-gold); padding: 24px; border-radius: 16px; max-width: 600px; margin: 0 auto;">
+                        <h3 style="color: var(--gold-light); font-size: 16px; margin-bottom: 16px; border-bottom: 1px solid var(--border-gray); padding-bottom: 8px;">
+                            🎯 Configuração Selecionada para o Cliente:
+                        </h3>
+
+                        <div id="simFinalSummaryList" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
+                            <!-- Inserido dinamicamente via JS -->
+                        </div>
+
+                        <button class="btn btn-gold btn-full" onclick="window.print()" style="font-weight: 700;">
+                            🖨️ Imprimir Ficha de Recomendação
+                        </button>
+                    </div>
                 </div>
             </div>
 

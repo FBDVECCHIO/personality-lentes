@@ -1,6 +1,6 @@
 /* ==========================================================================
    PERSONALITY LENTES - DEMONSTRADOR DIGITAL ULTRA-REALISTA (SIMULATOR.JS)
-   Engine Gráfica com Fotografia HD Real, Filtros Óticos & Gestos Touch
+   Batalha de Progressivos, Sidebar de Botões & Filtros Fotorrealistas 60 FPS
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
     images.waterGlare.src = 'images/sim_water_glare.png';
     images.outdoorSun.src = 'images/sim_outdoor_sun.png';
 
-    // Redesenha os canvas assim que as imagens forem carregadas
     Object.values(images).forEach(img => {
         img.onload = () => {
             if (state.authenticated) renderActiveCanvas(state.activeTab);
@@ -36,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
         trail: [],
         activeTab: 'tab-progressivos',
         
-        progressive: { mode: 'personality-hd', focus: 'far', sliderPos: 0.5 },
+        progressive: { lensLeft: 'personality-hd', lensRight: 'convencional-padrao', sliderPos: 0.5 },
         office: { mode: 'office-personality' },
         freeform: { mode: 'freeform-asferica' },
         arDemo: { sliderPos: 0.5 },
@@ -218,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // -------------------------------------------------------------
-    // 7. RENDERIZADORES FOTORREALISTAS (CANVAS ENGINES)
+    // 7. RENDERIZADORES FOTORREALISTAS & BATALHA DE PROGRESSIVOS
     // -------------------------------------------------------------
 
     function initAllCanvasEngines() {
@@ -243,11 +242,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tabId === 'tab-colors') drawColors();
     }
 
-    // --- MÓDULO 1: PROGRESSIVOS & MARCAS (FOTORREALISTA) ---
+    // --- MÓDULO 1: BATALHA DE PROGRESSIVOS ---
     function initProgressiveEngine() {
         const canvas = document.getElementById('canvasProgressive');
         const handle = document.getElementById('sliderHandleProgressive');
         const wrapper = document.getElementById('wrapperProgressive');
+        const selectLeft = document.getElementById('selectLensLeft');
+        const selectRight = document.getElementById('selectLensRight');
+
         if (!canvas) return;
 
         let isDragging = false;
@@ -268,16 +270,32 @@ document.addEventListener('DOMContentLoaded', () => {
         window.addEventListener('touchmove', (e) => { if (isDragging) updateSliderPos(e.touches[0].clientX); });
         window.addEventListener('touchend', () => { isDragging = false; });
 
-        document.querySelectorAll('[data-type="progressive"]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('[data-type="progressive"]').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                state.progressive.mode = btn.getAttribute('data-val');
+        if (selectLeft) {
+            selectLeft.addEventListener('change', (e) => {
+                state.progressive.lensLeft = e.target.value;
                 drawProgressive();
             });
-        });
+        }
+
+        if (selectRight) {
+            selectRight.addEventListener('change', (e) => {
+                state.progressive.lensRight = e.target.value;
+                drawProgressive();
+            });
+        }
 
         drawProgressive();
+    }
+
+    function getLensMeta(key) {
+        const map = {
+            'personality-hd': { title: '✨ Personality Digital HD', sub: 'Corredor Amplo +80% • Zero Distorção', color: 'var(--gold-light)', border: 'var(--gold-primary)', isBad: false },
+            'personality-gold': { title: '⚡ Personality 1.61 Gold Digital', sub: 'Lente Coringa • Antirreflexo Premium', color: 'var(--gold-light)', border: 'var(--gold-primary)', isBad: false },
+            'personality-ultra': { title: '👑 Personality 1.76 Ultra Digital', sub: 'Linha Ultra Tecnologia • Ultrafina', color: '#9bf6ff', border: '#9bf6ff', isBad: false },
+            'concorrente-basica': { title: '❌ Concorrente Básica (Campo Médio)', sub: 'Aberrações Médias nas Laterais', color: '#ffaa66', border: '#ffaa66', isBad: true },
+            'convencional-padrao': { title: '❌ Multifocal Convencional Padrão', sub: 'Visão Túnel Restrita & Distorções', color: '#ff8888', border: '#ff5555', isBad: true }
+        };
+        return map[key] || map['personality-hd'];
     }
 
     function drawProgressive() {
@@ -298,63 +316,75 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const splitX = w * state.progressive.sliderPos;
+        const metaLeft = getLensMeta(state.progressive.lensLeft);
+        const metaRight = getLensMeta(state.progressive.lensRight);
 
-        // Lado Esquerdo: Personality Digital HD (Visão Nítida Ampla)
+        // LADO ESQUERDO (LENTE 1)
         ctx.save();
         ctx.beginPath();
         ctx.rect(0, 0, splitX, h);
         ctx.clip();
-        
-        ctx.fillStyle = 'rgba(212, 175, 55, 0.12)';
-        ctx.strokeStyle = 'var(--gold-primary)';
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.ellipse(w * 0.25, h * 0.5, w * 0.22, h * 0.42, 0, 0, Math.PI * 2);
-        ctx.stroke();
 
-        // Badge de Marca
-        ctx.fillStyle = 'rgba(12, 12, 16, 0.85)';
-        ctx.fillRect(15, 15, 260, 50);
-        ctx.strokeStyle = 'var(--gold-primary)';
-        ctx.strokeRect(15, 15, 260, 50);
-        ctx.fillStyle = 'var(--gold-light)';
+        if (metaLeft.isBad) {
+            ctx.fillStyle = 'rgba(255, 85, 85, 0.22)';
+            ctx.beginPath();
+            ctx.ellipse(w * 0.25, h * 0.5, w * 0.2, h * 0.4, 0, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            ctx.fillStyle = 'rgba(212, 175, 55, 0.12)';
+            ctx.strokeStyle = metaLeft.border;
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.ellipse(w * 0.25, h * 0.5, w * 0.22, h * 0.42, 0, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
+        ctx.fillRect(15, 15, 300, 50);
+        ctx.strokeStyle = metaLeft.border;
+        ctx.strokeRect(15, 15, 300, 50);
+        ctx.fillStyle = metaLeft.color;
         ctx.font = '700 13px Montserrat, sans-serif';
-        ctx.fillText('✨ Personality Digital HD', 25, 35);
+        ctx.fillText(metaLeft.title, 25, 35);
         ctx.fillStyle = '#fff';
         ctx.font = '500 11px Montserrat, sans-serif';
-        ctx.fillText('Corredor +80% Amplo • Visão Nítida', 25, 52);
+        ctx.fillText(metaLeft.sub, 25, 52);
         ctx.restore();
 
-        // Lado Direito: Multifocal Convencional Padrão (Desfocado nas bordas)
+        // LADO DIREITO (LENTE 2)
         ctx.save();
         ctx.beginPath();
         ctx.rect(splitX, 0, w - splitX, h);
         ctx.clip();
 
-        // Overlay de aberração periférica
-        ctx.fillStyle = 'rgba(20, 20, 26, 0.45)';
-        ctx.fillRect(splitX, 0, w - splitX, h);
+        if (metaRight.isBad) {
+            ctx.fillStyle = 'rgba(255, 85, 85, 0.25)';
+            ctx.beginPath();
+            ctx.ellipse(w * 0.75, h * 0.5, w * 0.2, h * 0.4, 0, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            ctx.fillStyle = 'rgba(212, 175, 55, 0.12)';
+            ctx.strokeStyle = metaRight.border;
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.ellipse(w * 0.75, h * 0.5, w * 0.22, h * 0.42, 0, 0, Math.PI * 2);
+            ctx.stroke();
+        }
 
-        ctx.fillStyle = 'rgba(255, 85, 85, 0.25)';
-        ctx.beginPath();
-        ctx.ellipse(w * 0.75, h * 0.5, w * 0.22, h * 0.42, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = 'rgba(12, 12, 16, 0.85)';
-        ctx.fillRect(splitX + 15, 15, 260, 50);
-        ctx.strokeStyle = '#ff5555';
-        ctx.strokeRect(splitX + 15, 15, 260, 50);
-        ctx.fillStyle = '#ff8888';
+        ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
+        ctx.fillRect(splitX + 15, 15, 300, 50);
+        ctx.strokeStyle = metaRight.border;
+        ctx.strokeRect(splitX + 15, 15, 300, 50);
+        ctx.fillStyle = metaRight.color;
         ctx.font = '700 13px Montserrat, sans-serif';
-        ctx.fillText('❌ Convencional Padrão', splitX + 25, 35);
+        ctx.fillText(metaRight.title, splitX + 25, 35);
         ctx.fillStyle = '#fff';
         ctx.font = '500 11px Montserrat, sans-serif';
-        ctx.fillText('Aberrações laterais & Efeito Túnel', splitX + 25, 52);
-
+        ctx.fillText(metaRight.sub, splitX + 25, 52);
         ctx.restore();
     }
 
-    // --- MÓDULO 2: OFFICE VS PERTO (FOTORREALISTA) ---
+    // --- MÓDULO 2: OFFICE VS PERTO ---
     function initOfficeEngine() {
         document.querySelectorAll('[data-type="office"]').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -384,10 +414,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (state.office.mode === 'perto-simples') {
-            ctx.fillStyle = 'rgba(8, 8, 12, 0.72)';
+            ctx.fillStyle = 'rgba(8, 8, 12, 0.75)';
             ctx.fillRect(0, 0, w, h);
 
-            // Mantém apenas área de 40cm em foco
             ctx.save();
             ctx.beginPath();
             ctx.ellipse(w * 0.5, h * 0.7, 180, 100, 0, 0, Math.PI * 2);
@@ -473,7 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- MÓDULO 4: COM VS SEM ANTIRREFLEXO (FOTORREALISTA) ---
+    // --- MÓDULO 4: COM VS SEM ANTIRREFLEXO ---
     function initArDemoEngine() {
         const canvas = document.getElementById('canvasArDemo');
         const handle = document.getElementById('sliderHandleAr');
@@ -520,13 +549,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const splitX = w * state.arDemo.sliderPos;
 
-        // Lado Esquerdo: Com Antirreflexo Personality (Visão cristalina)
+        // Lado Esquerdo: Com AR
         ctx.save();
         ctx.beginPath();
         ctx.rect(0, 0, splitX, h);
         ctx.clip();
 
-        // Brilho suave dourado AR Gold
         ctx.fillStyle = 'rgba(212, 175, 55, 0.08)';
         ctx.fillRect(0, 0, splitX, h);
 
@@ -537,13 +565,12 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillText('✨ Com Antirreflexo Gold: Sem Ofuscamento', 25, 42);
         ctx.restore();
 
-        // Lado Direito: Sem Antirreflexo (Ofuscamento pesado de farol)
+        // Lado Direito: Sem AR
         ctx.save();
         ctx.beginPath();
         ctx.rect(splitX, 0, w - splitX, h);
         ctx.clip();
 
-        // Camada de reflexo branco ofuscante
         ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
         ctx.fillRect(splitX, 0, w - splitX, h);
 
@@ -559,11 +586,11 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillRect(splitX + 15, 15, 340, 45);
         ctx.fillStyle = '#ff8888';
         ctx.font = '700 13px Montserrat, sans-serif';
-        ctx.fillText('❌ Sem Antirreflexo: Reflexos e Faróis Incômodos', splitX + 25, 42);
+        ctx.fillText('❌ Sem Antirreflexo: Reflexos Incômodos', splitX + 25, 42);
         ctx.restore();
     }
 
-    // --- MÓDULO 6: FOTOSSENSÍVEIS (TRANSITIONS FOTORREALISTA) ---
+    // --- MÓDULO 6: FOTOSSENSÍVEIS (TRANSITIONS) ---
     function initPhotoEngine() {
         const rangeUv = document.getElementById('rangeUv');
         if (rangeUv) {
@@ -600,7 +627,6 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.fillRect(0, 0, w, h);
         }
 
-        // Lente de Óculos em Formato Realista
         const opacity = (state.photo.uvLevel / 100) * 0.82;
         ctx.fillStyle = `rgba(18, 18, 22, ${opacity})`;
         ctx.strokeStyle = 'var(--gold-primary)';
@@ -614,7 +640,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.ellipse(w * 0.65, h * 0.5, w * 0.18, h * 0.32, 0, 0, Math.PI * 2);
         ctx.fill(); ctx.stroke();
 
-        // Ponte dos Óculos
         ctx.beginPath();
         ctx.moveTo(w * 0.45, h * 0.45);
         ctx.lineTo(w * 0.55, h * 0.45);
@@ -690,7 +715,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- MÓDULO 8: LENTES POLARIZADAS (FOTORREALISTA) ---
+    // --- MÓDULO 8: LENTES POLARIZADAS ---
     function initPolarizedEngine() {
         document.querySelectorAll('[data-type="polar"]').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -720,7 +745,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (state.polarized.mode === 'sem-polarizado') {
-            // Reflexo branco ofuscante sobre a água
             ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
             ctx.fillRect(0, 0, w, h);
 
@@ -730,7 +754,6 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.font = '700 13px Montserrat, sans-serif';
             ctx.fillText('❌ Sem Polarizado: Reflexo cegante esconde o fundo da água', 35, 47);
         } else {
-            // Filtro Polarizado Personality
             ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
             ctx.fillRect(20, 20, 420, 45);
             ctx.fillStyle = 'var(--gold-light)';
@@ -739,7 +762,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- MÓDULO 9: CORES & SHINE MIRROR (FOTORREALISTA) ---
+    // --- MÓDULO 9: CORES & SHINE MIRROR ---
     function initColorsEngine() {
         document.querySelectorAll('.sim-color-btn').forEach(btn => {
             btn.addEventListener('click', () => {
