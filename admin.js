@@ -184,9 +184,16 @@ document.addEventListener('DOMContentLoaded', () => {
             btnTestMakeWebhook.disabled = true;
             btnTestMakeWebhook.textContent = 'Enviando Teste...';
 
+            const targetEmail = prompt('Digite o seu e-mail pessoal para receber o e-mail de teste no seu celular:', '');
+            if (!targetEmail || !targetEmail.includes('@')) {
+                btnTestMakeWebhook.disabled = false;
+                btnTestMakeWebhook.textContent = '🧪 Testar Disparo do Make';
+                return;
+            }
+
             const testData = {
                 name: "Teste Personality (E-mail)",
-                email: "suporte@lentespersonality.com.br",
+                email: targetEmail.trim(),
                 whatsapp: "(11) 99999-9999",
                 loja: "Ótica Licenciada Teste",
                 loja_endereco: "Av. Paulista, 1000 - São Paulo/SP",
@@ -199,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 schema: "public",
                 record: {
                     name: "Teste Personality (E-mail)",
-                    email: "suporte@lentespersonality.com.br",
+                    email: targetEmail.trim(),
                     whatsapp: "(11) 99999-9999",
                     loja: "Ótica Licenciada Teste",
                     loja_endereco: "Av. Paulista, 1000 - São Paulo/SP",
