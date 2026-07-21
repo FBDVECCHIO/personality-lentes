@@ -294,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillStyle = '#1c1c24';
         ctx.fillRect(w * 0.35, h * 0.6, w * 0.3, h * 0.4);
         ctx.fillStyle = 'var(--gold-light)';
-        ctx.font = '13px Inter, sans-serif';
+        ctx.font = '13px Montserrat, sans-serif';
         ctx.fillText('📱 GPS & Celular (Perto)', w * 0.37, h * 0.75);
 
         // Aplica o Efeito de Campo Visual (Split Screen)
@@ -314,10 +314,10 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.stroke();
 
         ctx.fillStyle = '#fff';
-        ctx.font = '700 14px Inter, sans-serif';
+        ctx.font = '700 14px Montserrat, sans-serif';
         ctx.fillText('✨ Personality Digital HD', 20, 30);
         ctx.fillStyle = 'rgba(255,255,255,0.7)';
-        ctx.font = '12px Inter, sans-serif';
+        ctx.font = '12px Montserrat, sans-serif';
         ctx.fillText('Corredor ultralargo sem distorção lateral', 20, 50);
         ctx.restore();
 
@@ -332,10 +332,10 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillRect(splitX, 0, w - splitX, h);
 
         ctx.fillStyle = '#ff8888';
-        ctx.font = '700 14px Inter, sans-serif';
+        ctx.font = '700 14px Montserrat, sans-serif';
         ctx.fillText('❌ Convencional Padrão', splitX + 20, 30);
         ctx.fillStyle = 'rgba(255,255,255,0.7)';
-        ctx.font = '12px Inter, sans-serif';
+        ctx.font = '12px Montserrat, sans-serif';
         ctx.fillText('Aberrações laterais e efeito túnel', splitX + 20, 50);
 
         ctx.restore();
@@ -370,13 +370,14 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillStyle = '#222533';
         ctx.fillRect(w * 0.1, h * 0.2, w * 0.35, h * 0.5);
         ctx.fillStyle = '#fff';
-        ctx.font = '13px Inter, sans-serif';
+        ctx.font = '13px Montserrat, sans-serif';
         ctx.fillText('💻 Monitor (1 metro)', w * 0.12, h * 0.45);
 
         // Pessoas/Escritório (Longe - 3 metros)
         ctx.fillStyle = '#2a2d3e';
         ctx.fillRect(w * 0.55, h * 0.2, w * 0.35, h * 0.5);
         ctx.fillStyle = '#fff';
+        ctx.font = '13px Montserrat, sans-serif';
         ctx.fillText('👥 Sala de Reunião (3 metros)', w * 0.57, h * 0.45);
 
         if (state.office.mode === 'perto-simples') {
@@ -384,7 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.fillStyle = 'rgba(8, 8, 10, 0.75)';
             ctx.fillRect(0, 0, w, h);
             ctx.fillStyle = '#ff5555';
-            ctx.font = '700 16px Inter, sans-serif';
+            ctx.font = '700 16px Montserrat, sans-serif';
             ctx.fillText('❌ Lente de Perto Simples: Desfoca tudo além de 40cm!', w * 0.2, h * 0.9);
         } else {
             ctx.fillStyle = 'rgba(197, 168, 92, 0.15)';
@@ -392,7 +393,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.lineWidth = 2;
             ctx.strokeRect(w * 0.05, h * 0.1, w * 0.9, h * 0.75);
             ctx.fillStyle = 'var(--gold-light)';
-            ctx.font = '700 16px Inter, sans-serif';
+            ctx.font = '700 16px Montserrat, sans-serif';
             ctx.fillText('✨ Personality Office: Visão cristalina contínua de 40cm a 4 metros!', w * 0.18, h * 0.9);
         }
     }
@@ -438,7 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.fill();
 
             ctx.fillStyle = '#ff8888';
-            ctx.font = '700 15px Inter, sans-serif';
+            ctx.font = '700 15px Montserrat, sans-serif';
             ctx.fillText('❌ Lente Pronta Esférica: Distorção periférica nas bordas da armação', w * 0.15, h * 0.9);
         } else {
             ctx.strokeStyle = 'var(--gold-primary)';
@@ -446,7 +447,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.strokeRect(w * 0.1, h * 0.1, w * 0.8, h * 0.8);
 
             ctx.fillStyle = 'var(--gold-light)';
-            ctx.font = '700 15px Inter, sans-serif';
+            ctx.font = '700 15px Montserrat, sans-serif';
             ctx.fillText('✨ Personality VS Freeform Asférica: Geometria limpa e nítida até a borda', w * 0.12, h * 0.9);
         }
     }
@@ -497,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillStyle = '#ffd700';
         ctx.beginPath(); ctx.arc(w * 0.25, h * 0.4, 25, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = 'var(--gold-light)';
-        ctx.font = '700 15px Inter, sans-serif';
+        ctx.font = '700 15px Montserrat, sans-serif';
         ctx.fillText('✨ Com Antirreflexo Personality: Visão 100% Cristalina', 20, 30);
         ctx.restore();
 
@@ -510,7 +511,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillStyle = 'rgba(255,255,255,0.45)';
         ctx.beginPath(); ctx.arc(w * 0.75, h * 0.4, 60, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#ff8888';
-        ctx.font = '700 15px Inter, sans-serif';
+        ctx.font = '700 15px Montserrat, sans-serif';
         ctx.fillText('❌ Sem Antirreflexo: Ofuscamento e reflexos incômodos', splitX + 20, 30);
         ctx.restore();
     }
@@ -557,7 +558,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.stroke();
 
         ctx.fillStyle = '#fff';
-        ctx.font = '700 15px Inter, sans-serif';
+        ctx.font = '700 15px Montserrat, sans-serif';
         ctx.fillText(`Tecnologia: ${state.photo.mode === 'gen-s' ? 'Transitions GEN S' : 'Transitions Xtractive'} (UV: ${state.photo.uvLevel}%)`, w * 0.25, 40);
     }
 
@@ -616,11 +617,11 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.stroke();
 
             ctx.fillStyle = '#fff';
-            ctx.font = '700 13px Inter, sans-serif';
+            ctx.font = '700 13px Montserrat, sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText(idxObj.name, x, h - 30);
             ctx.fillStyle = idxObj.color;
-            ctx.font = '12px Inter, sans-serif';
+            ctx.font = '12px Montserrat, sans-serif';
             ctx.fillText(`${(edgeThick / 5).toFixed(1)} mm`, x, h - 12);
         });
     }
@@ -649,7 +650,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillRect(0, 0, w, h);
 
         ctx.fillStyle = '#fff';
-        ctx.font = '700 16px Inter, sans-serif';
+        ctx.font = '700 16px Montserrat, sans-serif';
         ctx.fillText(state.polarized.mode === 'com-polarizado' ? '🌊 Filtro Polarizado Personality: Água cristalina sem reflexos' : '❌ Sem Polarizado: Reflexo cegante sobre a água', 30, 40);
     }
 
@@ -687,7 +688,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fill();
 
         ctx.fillStyle = '#fff';
-        ctx.font = '700 15px Inter, sans-serif';
+        ctx.font = '700 15px Montserrat, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(`Tonalidade / Acabamento: ${state.colors.color.toUpperCase()}`, w / 2, 40);
     }
