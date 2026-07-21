@@ -1,12 +1,34 @@
 /* ==========================================================================
-   PERSONALITY LENTES - DEMONSTRADOR DIGITAL DE LENTES (SIMULATOR.JS)
-   Engine Gráfica 60 FPS, Gestos Touch, Trilha de Escolhas & Calculadoras
+   PERSONALITY LENTES - DEMONSTRADOR DIGITAL ULTRA-REALISTA (SIMULATOR.JS)
+   Engine Gráfica com Fotografia HD Real, Filtros Óticos & Gestos Touch
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
 
     // -------------------------------------------------------------
-    // 1. ESTADO GLOBAL DA APLICAÇÃO E TRILHA DE ESCOLHAS
+    // 1. CARREGAMENTO DE IMAGENS FOTORREALISTAS HD
+    // -------------------------------------------------------------
+    const images = {
+        nightDriving: new Image(),
+        officeScene: new Image(),
+        waterGlare: new Image(),
+        outdoorSun: new Image()
+    };
+
+    images.nightDriving.src = 'images/sim_night_driving.png';
+    images.officeScene.src = 'images/sim_office_scene.png';
+    images.waterGlare.src = 'images/sim_water_glare.png';
+    images.outdoorSun.src = 'images/sim_outdoor_sun.png';
+
+    // Redesenha os canvas assim que as imagens forem carregadas
+    Object.values(images).forEach(img => {
+        img.onload = () => {
+            if (state.authenticated) renderActiveCanvas(state.activeTab);
+        };
+    });
+
+    // -------------------------------------------------------------
+    // 2. ESTADO GLOBAL DA APLICAÇÃO
     // -------------------------------------------------------------
     const state = {
         authenticated: false,
@@ -14,7 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
         trail: [],
         activeTab: 'tab-progressivos',
         
-        // Parâmetros dos Módulos
         progressive: { mode: 'personality-hd', focus: 'far', sliderPos: 0.5 },
         office: { mode: 'office-personality' },
         freeform: { mode: 'freeform-asferica' },
@@ -26,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // -------------------------------------------------------------
-    // 2. ELEMENTOS DO DOM
+    // 3. ELEMENTOS DO DOM
     // -------------------------------------------------------------
     const simLoginModal = document.getElementById('simLoginModal');
     const simLoginForm = document.getElementById('simLoginForm');
@@ -44,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const simFinalSummaryList = document.getElementById('simFinalSummaryList');
 
     // -------------------------------------------------------------
-    // 3. AUTENTICAÇÃO E NÍVEIS DE ACESSO
+    // 4. AUTENTICAÇÃO E SESSÃO
     // -------------------------------------------------------------
     const checkAuthSession = () => {
         const store = sessionStorage.getItem('personality_session_store');
@@ -60,8 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
         simLoginModal.style.display = 'none';
         simAppContent.style.display = 'block';
 
-        // Inicializa a renderização de todas as engines nos canvas
         initAllCanvasEngines();
+        setTimeout(() => renderActiveCanvas(state.activeTab), 100);
     };
 
     if (simLoginForm) {
@@ -89,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAuthSession();
 
     // -------------------------------------------------------------
-    // 4. NAVEGAÇÃO ENTRE ABAS
+    // 5. NAVEGAÇÃO ENTRE ABAS
     // -------------------------------------------------------------
     const tabBtns = document.querySelectorAll('.sim-tab-btn');
     const tabContents = document.querySelectorAll('.sim-tab-content');
@@ -106,7 +127,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const activeContent = document.getElementById(targetTab);
             if (activeContent) activeContent.style.display = 'block';
 
-            // Redesenha os canvas do módulo ativo
             renderActiveCanvas(targetTab);
         });
     });
@@ -119,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // -------------------------------------------------------------
-    // 5. GERENCIADOR DA TRILHA DE ESCOLHAS DO CLIENTE
+    // 6. TRILHA DE ESCOLHAS DO CLIENTE
     // -------------------------------------------------------------
     const btnAddTrails = document.querySelectorAll('.btn-add-trail');
     btnAddTrails.forEach(btn => {
@@ -140,7 +160,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function addToTrail(category, item) {
-        // Evita duplicatas da mesma categoria
         state.trail = state.trail.filter(t => t.category !== category);
         state.trail.push({ category, item });
         renderTrailChips();
@@ -160,7 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (simFinalSummaryList) simFinalSummaryList.innerHTML = '';
 
         state.trail.forEach((t, idx) => {
-            // Chip na barra superior
             const chip = document.createElement('div');
             chip.className = 'sim-chip';
             chip.innerHTML = `
@@ -169,7 +187,6 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             simTrailChipsContainer.appendChild(chip);
 
-            // Item na Ficha de Recomendação
             if (simFinalSummaryList) {
                 const itemBox = document.createElement('div');
                 itemBox.style.cssText = `background: rgba(255,255,255,0.04); border: 1px solid var(--border-gold); padding: 12px 16px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;`;
@@ -184,7 +201,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Eventos para remover chips
         document.querySelectorAll('.sim-chip-remove').forEach(removeBtn => {
             removeBtn.addEventListener('click', (e) => {
                 const idx = parseInt(e.target.getAttribute('data-idx'));
@@ -202,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // -------------------------------------------------------------
-    // 6. ENGINES GRÁFICAS DOS CANVAS DOS 10 MÓDULOS
+    // 7. RENDERIZADORES FOTORREALISTAS (CANVAS ENGINES)
     // -------------------------------------------------------------
 
     function initAllCanvasEngines() {
@@ -227,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tabId === 'tab-colors') drawColors();
     }
 
-    // --- MÓDULO 1: PROGRESSIVOS & MARCAS ---
+    // --- MÓDULO 1: PROGRESSIVOS & MARCAS (FOTORREALISTA) ---
     function initProgressiveEngine() {
         const canvas = document.getElementById('canvasProgressive');
         const handle = document.getElementById('sliderHandleProgressive');
@@ -235,7 +251,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!canvas) return;
 
         let isDragging = false;
-
         const updateSliderPos = (clientX) => {
             const rect = wrapper.getBoundingClientRect();
             let pos = (clientX - rect.left) / rect.width;
@@ -274,74 +289,72 @@ document.addEventListener('DOMContentLoaded', () => {
 
         ctx.clearRect(0, 0, w, h);
 
-        // Fundo simulado (Painel do Carro + Estrada)
-        ctx.fillStyle = '#121218';
-        ctx.fillRect(0, 0, w, h);
+        const img = images.officeScene;
+        if (img.complete && img.naturalWidth > 0) {
+            ctx.drawImage(img, 0, 0, w, h);
+        } else {
+            ctx.fillStyle = '#121218';
+            ctx.fillRect(0, 0, w, h);
+        }
 
-        // Desenha a paisagem
-        ctx.fillStyle = '#1b2234';
-        ctx.fillRect(0, 0, w, h * 0.5); // Céu noturno
-
-        ctx.fillStyle = '#0f141f';
-        ctx.beginPath();
-        ctx.moveTo(w * 0.3, h * 0.5);
-        ctx.lineTo(w * 0.7, h * 0.5);
-        ctx.lineTo(w, h);
-        ctx.lineTo(0, h);
-        ctx.fill(); // Estrada
-
-        // Painel/Celular de Perto
-        ctx.fillStyle = '#1c1c24';
-        ctx.fillRect(w * 0.35, h * 0.6, w * 0.3, h * 0.4);
-        ctx.fillStyle = 'var(--gold-light)';
-        ctx.font = '13px Montserrat, sans-serif';
-        ctx.fillText('📱 GPS & Celular (Perto)', w * 0.37, h * 0.75);
-
-        // Aplica o Efeito de Campo Visual (Split Screen)
         const splitX = w * state.progressive.sliderPos;
 
-        // Lado Esquerdo: Personality Digital HD (Limpo)
+        // Lado Esquerdo: Personality Digital HD (Visão Nítida Ampla)
         ctx.save();
         ctx.beginPath();
         ctx.rect(0, 0, splitX, h);
         ctx.clip();
         
-        ctx.fillStyle = 'rgba(212, 175, 55, 0.15)';
+        ctx.fillStyle = 'rgba(212, 175, 55, 0.12)';
         ctx.strokeStyle = 'var(--gold-primary)';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
         ctx.ellipse(w * 0.25, h * 0.5, w * 0.22, h * 0.42, 0, 0, Math.PI * 2);
         ctx.stroke();
 
+        // Badge de Marca
+        ctx.fillStyle = 'rgba(12, 12, 16, 0.85)';
+        ctx.fillRect(15, 15, 260, 50);
+        ctx.strokeStyle = 'var(--gold-primary)';
+        ctx.strokeRect(15, 15, 260, 50);
+        ctx.fillStyle = 'var(--gold-light)';
+        ctx.font = '700 13px Montserrat, sans-serif';
+        ctx.fillText('✨ Personality Digital HD', 25, 35);
         ctx.fillStyle = '#fff';
-        ctx.font = '700 14px Montserrat, sans-serif';
-        ctx.fillText('✨ Personality Digital HD', 20, 30);
-        ctx.fillStyle = 'rgba(255,255,255,0.7)';
-        ctx.font = '12px Montserrat, sans-serif';
-        ctx.fillText('Corredor ultralargo sem distorção lateral', 20, 50);
+        ctx.font = '500 11px Montserrat, sans-serif';
+        ctx.fillText('Corredor +80% Amplo • Visão Nítida', 25, 52);
         ctx.restore();
 
-        // Lado Direito: Multifocal Convencional Padrão (Desfocado nas pontas)
+        // Lado Direito: Multifocal Convencional Padrão (Desfocado nas bordas)
         ctx.save();
         ctx.beginPath();
         ctx.rect(splitX, 0, w - splitX, h);
         ctx.clip();
 
-        // Camada de desfoque lateral (Aberrações)
-        ctx.fillStyle = 'rgba(255, 85, 85, 0.25)';
+        // Overlay de aberração periférica
+        ctx.fillStyle = 'rgba(20, 20, 26, 0.45)';
         ctx.fillRect(splitX, 0, w - splitX, h);
 
+        ctx.fillStyle = 'rgba(255, 85, 85, 0.25)';
+        ctx.beginPath();
+        ctx.ellipse(w * 0.75, h * 0.5, w * 0.22, h * 0.42, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = 'rgba(12, 12, 16, 0.85)';
+        ctx.fillRect(splitX + 15, 15, 260, 50);
+        ctx.strokeStyle = '#ff5555';
+        ctx.strokeRect(splitX + 15, 15, 260, 50);
         ctx.fillStyle = '#ff8888';
-        ctx.font = '700 14px Montserrat, sans-serif';
-        ctx.fillText('❌ Convencional Padrão', splitX + 20, 30);
-        ctx.fillStyle = 'rgba(255,255,255,0.7)';
-        ctx.font = '12px Montserrat, sans-serif';
-        ctx.fillText('Aberrações laterais e efeito túnel', splitX + 20, 50);
+        ctx.font = '700 13px Montserrat, sans-serif';
+        ctx.fillText('❌ Convencional Padrão', splitX + 25, 35);
+        ctx.fillStyle = '#fff';
+        ctx.font = '500 11px Montserrat, sans-serif';
+        ctx.fillText('Aberrações laterais & Efeito Túnel', splitX + 25, 52);
 
         ctx.restore();
     }
 
-    // --- MÓDULO 2: OFFICE VS PERTO ---
+    // --- MÓDULO 2: OFFICE VS PERTO (FOTORREALISTA) ---
     function initOfficeEngine() {
         document.querySelectorAll('[data-type="office"]').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -362,39 +375,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
         ctx.clearRect(0, 0, w, h);
 
-        // Fundo Escritório (Computador a 1m + Colega a 3m)
-        ctx.fillStyle = '#14141c';
-        ctx.fillRect(0, 0, w, h);
-
-        // Tela de Computador (Intermediário - 1 metro)
-        ctx.fillStyle = '#222533';
-        ctx.fillRect(w * 0.1, h * 0.2, w * 0.35, h * 0.5);
-        ctx.fillStyle = '#fff';
-        ctx.font = '13px Montserrat, sans-serif';
-        ctx.fillText('💻 Monitor (1 metro)', w * 0.12, h * 0.45);
-
-        // Pessoas/Escritório (Longe - 3 metros)
-        ctx.fillStyle = '#2a2d3e';
-        ctx.fillRect(w * 0.55, h * 0.2, w * 0.35, h * 0.5);
-        ctx.fillStyle = '#fff';
-        ctx.font = '13px Montserrat, sans-serif';
-        ctx.fillText('👥 Sala de Reunião (3 metros)', w * 0.57, h * 0.45);
+        const img = images.officeScene;
+        if (img.complete && img.naturalWidth > 0) {
+            ctx.drawImage(img, 0, 0, w, h);
+        } else {
+            ctx.fillStyle = '#14141c';
+            ctx.fillRect(0, 0, w, h);
+        }
 
         if (state.office.mode === 'perto-simples') {
-            // Desfoca a tela do computador e o ambiente distante
-            ctx.fillStyle = 'rgba(8, 8, 10, 0.75)';
+            ctx.fillStyle = 'rgba(8, 8, 12, 0.72)';
             ctx.fillRect(0, 0, w, h);
-            ctx.fillStyle = '#ff5555';
-            ctx.font = '700 16px Montserrat, sans-serif';
-            ctx.fillText('❌ Lente de Perto Simples: Desfoca tudo além de 40cm!', w * 0.2, h * 0.9);
+
+            // Mantém apenas área de 40cm em foco
+            ctx.save();
+            ctx.beginPath();
+            ctx.ellipse(w * 0.5, h * 0.7, 180, 100, 0, 0, Math.PI * 2);
+            ctx.clip();
+            if (img.complete && img.naturalWidth > 0) ctx.drawImage(img, 0, 0, w, h);
+            ctx.strokeStyle = '#ff5555';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            ctx.restore();
+
+            ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
+            ctx.fillRect(20, 20, 380, 45);
+            ctx.fillStyle = '#ff8888';
+            ctx.font = '700 13px Montserrat, sans-serif';
+            ctx.fillText('❌ Lente de Perto Simples: Foco fixo em 40cm', 35, 47);
         } else {
-            ctx.fillStyle = 'rgba(197, 168, 92, 0.15)';
+            ctx.fillStyle = 'rgba(197, 168, 92, 0.08)';
+            ctx.fillRect(0, 0, w, h);
             ctx.strokeStyle = 'var(--gold-primary)';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(w * 0.05, h * 0.1, w * 0.9, h * 0.75);
+            ctx.lineWidth = 3;
+            ctx.strokeRect(10, 10, w - 20, h - 20);
+
+            ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
+            ctx.fillRect(20, 20, 440, 45);
             ctx.fillStyle = 'var(--gold-light)';
-            ctx.font = '700 16px Montserrat, sans-serif';
-            ctx.fillText('✨ Personality Office: Visão cristalina contínua de 40cm a 4 metros!', w * 0.18, h * 0.9);
+            ctx.font = '700 13px Montserrat, sans-serif';
+            ctx.fillText('✨ Personality Office: Foco contínuo de 40cm até 4 metros!', 35, 47);
         }
     }
 
@@ -419,40 +439,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
         ctx.clearRect(0, 0, w, h);
 
-        // Grade de Teste de Visão (Grid)
-        ctx.fillStyle = '#0b0c10';
-        ctx.fillRect(0, 0, w, h);
-
-        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-        ctx.lineWidth = 1;
-        for (let x = 0; x < w; x += 30) {
-            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
-        }
-        for (let y = 0; y < h; y += 30) {
-            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+        const img = images.officeScene;
+        if (img.complete && img.naturalWidth > 0) {
+            ctx.drawImage(img, 0, 0, w, h);
+        } else {
+            ctx.fillStyle = '#0b0c10';
+            ctx.fillRect(0, 0, w, h);
         }
 
         if (state.freeform.mode === 'pronta-esferica') {
-            ctx.fillStyle = 'rgba(255, 85, 85, 0.2)';
+            ctx.fillStyle = 'rgba(255, 85, 85, 0.35)';
             ctx.beginPath();
-            ctx.arc(w / 2, h / 2, h * 0.4, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.arc(w / 2, h / 2, h * 0.42, 0, Math.PI * 2);
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#ff5555';
+            ctx.stroke();
 
+            ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
+            ctx.fillRect(20, 20, 450, 45);
             ctx.fillStyle = '#ff8888';
-            ctx.font = '700 15px Montserrat, sans-serif';
-            ctx.fillText('❌ Lente Pronta Esférica: Distorção periférica nas bordas da armação', w * 0.15, h * 0.9);
+            ctx.font = '700 13px Montserrat, sans-serif';
+            ctx.fillText('❌ Lente Pronta Esférica: Distorção "Olho de Peixe" na borda', 35, 47);
         } else {
             ctx.strokeStyle = 'var(--gold-primary)';
             ctx.lineWidth = 3;
-            ctx.strokeRect(w * 0.1, h * 0.1, w * 0.8, h * 0.8);
+            ctx.strokeRect(15, 15, w - 30, h - 30);
 
+            ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
+            ctx.fillRect(20, 20, 450, 45);
             ctx.fillStyle = 'var(--gold-light)';
-            ctx.font = '700 15px Montserrat, sans-serif';
-            ctx.fillText('✨ Personality VS Freeform Asférica: Geometria limpa e nítida até a borda', w * 0.12, h * 0.9);
+            ctx.font = '700 13px Montserrat, sans-serif';
+            ctx.fillText('✨ Personality VS Freeform Asférica: Visão nítida ponta a ponta', 35, 47);
         }
     }
 
-    // --- MÓDULO 4: COM VS SEM ANTIRREFLEXO ---
+    // --- MÓDULO 4: COM VS SEM ANTIRREFLEXO (FOTORREALISTA) ---
     function initArDemoEngine() {
         const canvas = document.getElementById('canvasArDemo');
         const handle = document.getElementById('sliderHandleAr');
@@ -473,6 +494,10 @@ document.addEventListener('DOMContentLoaded', () => {
         window.addEventListener('mousemove', (e) => { if (isDragging) updatePos(e.clientX); });
         window.addEventListener('mouseup', () => { isDragging = false; });
 
+        wrapper.addEventListener('touchstart', (e) => { isDragging = true; updatePos(e.touches[0].clientX); });
+        window.addEventListener('touchmove', (e) => { if (isDragging) updatePos(e.touches[0].clientX); });
+        window.addEventListener('touchend', () => { isDragging = false; });
+
         drawArDemo();
     }
 
@@ -484,39 +509,61 @@ document.addEventListener('DOMContentLoaded', () => {
         const h = canvas.height = canvas.offsetHeight;
 
         ctx.clearRect(0, 0, w, h);
-        ctx.fillStyle = '#08080c';
-        ctx.fillRect(0, 0, w, h);
+
+        const img = images.nightDriving;
+        if (img.complete && img.naturalWidth > 0) {
+            ctx.drawImage(img, 0, 0, w, h);
+        } else {
+            ctx.fillStyle = '#08080c';
+            ctx.fillRect(0, 0, w, h);
+        }
 
         const splitX = w * state.arDemo.sliderPos;
 
-        // Lado Com Antirreflexo Gold
+        // Lado Esquerdo: Com Antirreflexo Personality (Visão cristalina)
         ctx.save();
         ctx.beginPath();
         ctx.rect(0, 0, splitX, h);
         ctx.clip();
 
-        ctx.fillStyle = '#ffd700';
-        ctx.beginPath(); ctx.arc(w * 0.25, h * 0.4, 25, 0, Math.PI * 2); ctx.fill();
+        // Brilho suave dourado AR Gold
+        ctx.fillStyle = 'rgba(212, 175, 55, 0.08)';
+        ctx.fillRect(0, 0, splitX, h);
+
+        ctx.fillStyle = 'rgba(12, 12, 16, 0.85)';
+        ctx.fillRect(15, 15, 340, 45);
         ctx.fillStyle = 'var(--gold-light)';
-        ctx.font = '700 15px Montserrat, sans-serif';
-        ctx.fillText('✨ Com Antirreflexo Personality: Visão 100% Cristalina', 20, 30);
+        ctx.font = '700 13px Montserrat, sans-serif';
+        ctx.fillText('✨ Com Antirreflexo Gold: Sem Ofuscamento', 25, 42);
         ctx.restore();
 
-        // Lado Sem Antirreflexo
+        // Lado Direito: Sem Antirreflexo (Ofuscamento pesado de farol)
         ctx.save();
         ctx.beginPath();
         ctx.rect(splitX, 0, w - splitX, h);
         ctx.clip();
 
-        ctx.fillStyle = 'rgba(255,255,255,0.45)';
-        ctx.beginPath(); ctx.arc(w * 0.75, h * 0.4, 60, 0, Math.PI * 2); ctx.fill();
+        // Camada de reflexo branco ofuscante
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.fillRect(splitX, 0, w - splitX, h);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowBlur = 40;
+        ctx.shadowColor = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(splitX + 150, h * 0.45, 90, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        ctx.fillStyle = 'rgba(12, 12, 16, 0.85)';
+        ctx.fillRect(splitX + 15, 15, 340, 45);
         ctx.fillStyle = '#ff8888';
-        ctx.font = '700 15px Montserrat, sans-serif';
-        ctx.fillText('❌ Sem Antirreflexo: Ofuscamento e reflexos incômodos', splitX + 20, 30);
+        ctx.font = '700 13px Montserrat, sans-serif';
+        ctx.fillText('❌ Sem Antirreflexo: Reflexos e Faróis Incômodos', splitX + 25, 42);
         ctx.restore();
     }
 
-    // --- MÓDULO 6: FOTOSSENSÍVEIS (TRANSITIONS) ---
+    // --- MÓDULO 6: FOTOSSENSÍVEIS (TRANSITIONS FOTORREALISTA) ---
     function initPhotoEngine() {
         const rangeUv = document.getElementById('rangeUv');
         if (rangeUv) {
@@ -544,22 +591,40 @@ document.addEventListener('DOMContentLoaded', () => {
         const h = canvas.height = canvas.offsetHeight;
 
         ctx.clearRect(0, 0, w, h);
-        ctx.fillStyle = '#1a1d24';
-        ctx.fillRect(0, 0, w, h);
 
-        // Lente no Centro
-        const opacity = (state.photo.uvLevel / 100) * 0.85;
-        ctx.fillStyle = `rgba(20, 20, 25, ${opacity})`;
+        const img = images.outdoorSun;
+        if (img.complete && img.naturalWidth > 0) {
+            ctx.drawImage(img, 0, 0, w, h);
+        } else {
+            ctx.fillStyle = '#1a1d24';
+            ctx.fillRect(0, 0, w, h);
+        }
+
+        // Lente de Óculos em Formato Realista
+        const opacity = (state.photo.uvLevel / 100) * 0.82;
+        ctx.fillStyle = `rgba(18, 18, 22, ${opacity})`;
         ctx.strokeStyle = 'var(--gold-primary)';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 3.5;
+
         ctx.beginPath();
-        ctx.ellipse(w / 2, h / 2, w * 0.25, h * 0.35, 0, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.ellipse(w * 0.35, h * 0.5, w * 0.18, h * 0.32, 0, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+
+        ctx.beginPath();
+        ctx.ellipse(w * 0.65, h * 0.5, w * 0.18, h * 0.32, 0, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+
+        // Ponte dos Óculos
+        ctx.beginPath();
+        ctx.moveTo(w * 0.45, h * 0.45);
+        ctx.lineTo(w * 0.55, h * 0.45);
         ctx.stroke();
 
-        ctx.fillStyle = '#fff';
-        ctx.font = '700 15px Montserrat, sans-serif';
-        ctx.fillText(`Tecnologia: ${state.photo.mode === 'gen-s' ? 'Transitions GEN S' : 'Transitions Xtractive'} (UV: ${state.photo.uvLevel}%)`, w * 0.25, 40);
+        ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
+        ctx.fillRect(20, 20, 420, 45);
+        ctx.fillStyle = 'var(--gold-light)';
+        ctx.font = '700 13px Montserrat, sans-serif';
+        ctx.fillText(`☀️ ${state.photo.mode === 'gen-s' ? 'Transitions GEN S (Ativação Ultrarrápida)' : 'Transitions Xtractive (Ativação no Carro)'} - UV: ${state.photo.uvLevel}%`, 35, 47);
     }
 
     // --- MÓDULO 7: CALCULADORA DE ESPESSURA DE BORDA ---
@@ -602,16 +667,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const x = slotW * i + slotW / 2;
             const y = h / 2;
 
-            // Desenha perfil da borda cortada
             ctx.fillStyle = 'rgba(255,255,255,0.05)';
             ctx.strokeStyle = idxObj.color;
             ctx.lineWidth = 2;
 
             ctx.beginPath();
-            ctx.moveTo(x - 35, y - edgeThick / 2);
-            ctx.lineTo(x + 35, y - edgeThick / 2);
-            ctx.lineTo(x + 35, y + edgeThick / 2);
-            ctx.lineTo(x - 35, y + edgeThick / 2);
+            ctx.moveTo(x - 40, y - edgeThick / 2);
+            ctx.lineTo(x + 40, y - edgeThick / 2);
+            ctx.lineTo(x + 40, y + edgeThick / 2);
+            ctx.lineTo(x - 40, y + edgeThick / 2);
             ctx.closePath();
             ctx.fill();
             ctx.stroke();
@@ -626,7 +690,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- MÓDULOS 8 & 9: POLARIZADO & CORES ---
+    // --- MÓDULO 8: LENTES POLARIZADAS (FOTORREALISTA) ---
     function initPolarizedEngine() {
         document.querySelectorAll('[data-type="polar"]').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -646,14 +710,36 @@ document.addEventListener('DOMContentLoaded', () => {
         const h = canvas.height = canvas.offsetHeight;
 
         ctx.clearRect(0, 0, w, h);
-        ctx.fillStyle = state.polarized.mode === 'com-polarizado' ? '#003366' : '#6699cc';
-        ctx.fillRect(0, 0, w, h);
 
-        ctx.fillStyle = '#fff';
-        ctx.font = '700 16px Montserrat, sans-serif';
-        ctx.fillText(state.polarized.mode === 'com-polarizado' ? '🌊 Filtro Polarizado Personality: Água cristalina sem reflexos' : '❌ Sem Polarizado: Reflexo cegante sobre a água', 30, 40);
+        const img = images.waterGlare;
+        if (img.complete && img.naturalWidth > 0) {
+            ctx.drawImage(img, 0, 0, w, h);
+        } else {
+            ctx.fillStyle = '#003366';
+            ctx.fillRect(0, 0, w, h);
+        }
+
+        if (state.polarized.mode === 'sem-polarizado') {
+            // Reflexo branco ofuscante sobre a água
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+            ctx.fillRect(0, 0, w, h);
+
+            ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
+            ctx.fillRect(20, 20, 420, 45);
+            ctx.fillStyle = '#ff8888';
+            ctx.font = '700 13px Montserrat, sans-serif';
+            ctx.fillText('❌ Sem Polarizado: Reflexo cegante esconde o fundo da água', 35, 47);
+        } else {
+            // Filtro Polarizado Personality
+            ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
+            ctx.fillRect(20, 20, 420, 45);
+            ctx.fillStyle = 'var(--gold-light)';
+            ctx.font = '700 13px Montserrat, sans-serif';
+            ctx.fillText('🌊 Com Polarizado Personality: Visão nítida sob a água', 35, 47);
+        }
     }
 
+    // --- MÓDULO 9: CORES & SHINE MIRROR (FOTORREALISTA) ---
     function initColorsEngine() {
         document.querySelectorAll('.sim-color-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -673,24 +759,37 @@ document.addEventListener('DOMContentLoaded', () => {
         const h = canvas.height = canvas.offsetHeight;
 
         ctx.clearRect(0, 0, w, h);
-        ctx.fillStyle = '#111';
-        ctx.fillRect(0, 0, w, h);
+
+        const img = images.outdoorSun;
+        if (img.complete && img.naturalWidth > 0) {
+            ctx.drawImage(img, 0, 0, w, h);
+        } else {
+            ctx.fillStyle = '#111';
+            ctx.fillRect(0, 0, w, h);
+        }
 
         let colorStyle = 'rgba(80,80,80,0.6)';
         if (state.colors.color === 'marrom') colorStyle = 'rgba(120,70,30,0.65)';
         if (state.colors.color === 'g15') colorStyle = 'rgba(30,90,50,0.65)';
-        if (state.colors.color === 'gold-mirror') colorStyle = 'rgba(212,175,55,0.75)';
-        if (state.colors.color === 'blue-mirror') colorStyle = 'rgba(0,150,255,0.75)';
+        if (state.colors.color === 'gold-mirror') colorStyle = 'rgba(212,175,55,0.78)';
+        if (state.colors.color === 'blue-mirror') colorStyle = 'rgba(0,150,255,0.78)';
 
         ctx.fillStyle = colorStyle;
         ctx.beginPath();
-        ctx.arc(w / 2, h / 2, h * 0.35, 0, Math.PI * 2);
+        ctx.ellipse(w * 0.35, h * 0.5, w * 0.18, h * 0.32, 0, 0, Math.PI * 2);
         ctx.fill();
 
+        ctx.beginPath();
+        ctx.ellipse(w * 0.65, h * 0.5, w * 0.18, h * 0.32, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
+        ctx.fillRect(w * 0.25, 20, w * 0.5, 45);
         ctx.fillStyle = '#fff';
-        ctx.font = '700 15px Montserrat, sans-serif';
+        ctx.font = '700 13px Montserrat, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(`Tonalidade / Acabamento: ${state.colors.color.toUpperCase()}`, w / 2, 40);
+        ctx.fillText(`🎨 Tonalidade / Espelhado: ${state.colors.color.toUpperCase()}`, w / 2, 47);
+        ctx.textAlign = 'left';
     }
 
 });
