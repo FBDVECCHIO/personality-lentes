@@ -1,6 +1,6 @@
 /* ==========================================================================
    PERSONALITY LENTES - DEMONSTRADOR DIGITAL ULTRA-REALISTA (SIMULATOR.JS)
-   Batalha de Progressivos, Sidebar de Botões & Filtros Fotorrealistas 60 FPS
+   Simulador em Armação de Óculos, Batalha de Lentes & Filtros Fotorrealistas 60 FPS
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -217,7 +217,56 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // -------------------------------------------------------------
-    // 7. RENDERIZADORES FOTORREALISTAS & BATALHA DE PROGRESSIVOS
+    // 7. FUNÇÃO DE RENDERIZAÇÃO DA ARMAÇÃO DE ÓCULOS REALISTA
+    // -------------------------------------------------------------
+    function drawGlassesFrame(ctx, w, h) {
+        ctx.save();
+
+        const rx = w * 0.28;
+        const ry = h * 0.5;
+        const rw = w * 0.19;
+        const rh = h * 0.34;
+
+        const lx = w * 0.72;
+        const ly = h * 0.5;
+
+        // Ponte metálica entre as lentes
+        ctx.strokeStyle = 'rgba(212, 175, 55, 0.95)';
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.moveTo(rx + rw * 0.8, ry - 10);
+        ctx.quadraticCurveTo(w * 0.5, ry - 35, lx - rw * 0.8, ly - 10);
+        ctx.stroke();
+
+        // Hastes laterais
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(rx - rw * 0.95, ry - 15);
+        ctx.lineTo(10, ry - 35);
+        ctx.moveTo(lx + rw * 0.95, ly - 15);
+        ctx.lineTo(w - 10, ly - 35);
+        ctx.stroke();
+
+        // Aro Metálico Ouro Luxo - Lente Esquerda
+        ctx.strokeStyle = 'var(--gold-primary)';
+        ctx.lineWidth = 7;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = 'rgba(212, 175, 55, 0.6)';
+        ctx.beginPath();
+        ctx.ellipse(rx, ry, rw, rh, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Aro Metálico Ouro Luxo - Lente Direita
+        ctx.beginPath();
+        ctx.ellipse(lx, ly, rw, rh, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.shadowBlur = 0;
+        ctx.restore();
+    }
+
+    // -------------------------------------------------------------
+    // 8. RENDERIZADORES FOTORREALISTAS (CANVAS ENGINES)
     // -------------------------------------------------------------
 
     function initAllCanvasEngines() {
@@ -242,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tabId === 'tab-colors') drawColors();
     }
 
-    // --- MÓDULO 1: BATALHA DE PROGRESSIVOS ---
+    // --- MÓDULO 1: BATALHA DE PROGRESSIVOS EM ARMAÇÃO DE ÓCULOS ---
     function initProgressiveEngine() {
         const canvas = document.getElementById('canvasProgressive');
         const handle = document.getElementById('sliderHandleProgressive');
@@ -326,9 +375,9 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.clip();
 
         if (metaLeft.isBad) {
-            ctx.fillStyle = 'rgba(255, 85, 85, 0.22)';
+            ctx.fillStyle = 'rgba(255, 85, 85, 0.25)';
             ctx.beginPath();
-            ctx.ellipse(w * 0.25, h * 0.5, w * 0.2, h * 0.4, 0, 0, Math.PI * 2);
+            ctx.ellipse(w * 0.25, h * 0.5, w * 0.22, h * 0.42, 0, 0, Math.PI * 2);
             ctx.fill();
         } else {
             ctx.fillStyle = 'rgba(212, 175, 55, 0.12)';
@@ -360,7 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (metaRight.isBad) {
             ctx.fillStyle = 'rgba(255, 85, 85, 0.25)';
             ctx.beginPath();
-            ctx.ellipse(w * 0.75, h * 0.5, w * 0.2, h * 0.4, 0, 0, Math.PI * 2);
+            ctx.ellipse(w * 0.75, h * 0.5, w * 0.22, h * 0.42, 0, 0, Math.PI * 2);
             ctx.fill();
         } else {
             ctx.fillStyle = 'rgba(212, 175, 55, 0.12)';
@@ -382,6 +431,9 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.font = '500 11px Montserrat, sans-serif';
         ctx.fillText(metaRight.sub, splitX + 25, 52);
         ctx.restore();
+
+        // Desenha a Armação de Óculos por cima
+        drawGlassesFrame(ctx, w, h);
     }
 
     // --- MÓDULO 2: OFFICE VS PERTO ---
@@ -419,12 +471,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             ctx.save();
             ctx.beginPath();
-            ctx.ellipse(w * 0.5, h * 0.7, 180, 100, 0, 0, Math.PI * 2);
+            ctx.ellipse(w * 0.5, h * 0.5, w * 0.28, h * 0.38, 0, 0, Math.PI * 2);
             ctx.clip();
             if (img.complete && img.naturalWidth > 0) ctx.drawImage(img, 0, 0, w, h);
-            ctx.strokeStyle = '#ff5555';
-            ctx.lineWidth = 3;
-            ctx.stroke();
+            ctx.fillStyle = 'rgba(255, 85, 85, 0.2)';
+            ctx.fillRect(0, 0, w, h);
             ctx.restore();
 
             ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
@@ -435,9 +486,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             ctx.fillStyle = 'rgba(197, 168, 92, 0.08)';
             ctx.fillRect(0, 0, w, h);
-            ctx.strokeStyle = 'var(--gold-primary)';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(10, 10, w - 20, h - 20);
 
             ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
             ctx.fillRect(20, 20, 440, 45);
@@ -445,6 +493,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.font = '700 13px Montserrat, sans-serif';
             ctx.fillText('✨ Personality Office: Foco contínuo de 40cm até 4 metros!', 35, 47);
         }
+
+        drawGlassesFrame(ctx, w, h);
     }
 
     // --- MÓDULO 3: VS FREEFORM VS PRONTAS ---
@@ -479,10 +529,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (state.freeform.mode === 'pronta-esferica') {
             ctx.fillStyle = 'rgba(255, 85, 85, 0.35)';
             ctx.beginPath();
-            ctx.arc(w / 2, h / 2, h * 0.42, 0, Math.PI * 2);
-            ctx.lineWidth = 4;
-            ctx.strokeStyle = '#ff5555';
-            ctx.stroke();
+            ctx.ellipse(w * 0.5, h * 0.5, w * 0.28, h * 0.38, 0, 0, Math.PI * 2);
+            ctx.fill();
 
             ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
             ctx.fillRect(20, 20, 450, 45);
@@ -490,9 +538,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.font = '700 13px Montserrat, sans-serif';
             ctx.fillText('❌ Lente Pronta Esférica: Distorção "Olho de Peixe" na borda', 35, 47);
         } else {
-            ctx.strokeStyle = 'var(--gold-primary)';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(15, 15, w - 30, h - 30);
+            ctx.fillStyle = 'rgba(197, 168, 92, 0.08)';
+            ctx.fillRect(0, 0, w, h);
 
             ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
             ctx.fillRect(20, 20, 450, 45);
@@ -500,6 +547,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.font = '700 13px Montserrat, sans-serif';
             ctx.fillText('✨ Personality VS Freeform Asférica: Visão nítida ponta a ponta', 35, 47);
         }
+
+        drawGlassesFrame(ctx, w, h);
     }
 
     // --- MÓDULO 4: COM VS SEM ANTIRREFLEXO ---
@@ -588,6 +637,8 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.font = '700 13px Montserrat, sans-serif';
         ctx.fillText('❌ Sem Antirreflexo: Reflexos Incômodos', splitX + 25, 42);
         ctx.restore();
+
+        drawGlassesFrame(ctx, w, h);
     }
 
     // --- MÓDULO 6: FOTOSSENSÍVEIS (TRANSITIONS) ---
@@ -629,27 +680,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const opacity = (state.photo.uvLevel / 100) * 0.82;
         ctx.fillStyle = `rgba(18, 18, 22, ${opacity})`;
-        ctx.strokeStyle = 'var(--gold-primary)';
-        ctx.lineWidth = 3.5;
 
-        ctx.beginPath();
-        ctx.ellipse(w * 0.35, h * 0.5, w * 0.18, h * 0.32, 0, 0, Math.PI * 2);
-        ctx.fill(); ctx.stroke();
+        const rx = w * 0.28; const ry = h * 0.5; const rw = w * 0.19; const rh = h * 0.34;
+        const lx = w * 0.72; const ly = h * 0.5;
 
-        ctx.beginPath();
-        ctx.ellipse(w * 0.65, h * 0.5, w * 0.18, h * 0.32, 0, 0, Math.PI * 2);
-        ctx.fill(); ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(w * 0.45, h * 0.45);
-        ctx.lineTo(w * 0.55, h * 0.45);
-        ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(rx, ry, rw, rh, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(lx, ly, rw, rh, 0, 0, Math.PI * 2); ctx.fill();
 
         ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
         ctx.fillRect(20, 20, 420, 45);
         ctx.fillStyle = 'var(--gold-light)';
         ctx.font = '700 13px Montserrat, sans-serif';
         ctx.fillText(`☀️ ${state.photo.mode === 'gen-s' ? 'Transitions GEN S (Ativação Ultrarrápida)' : 'Transitions Xtractive (Ativação no Carro)'} - UV: ${state.photo.uvLevel}%`, 35, 47);
+
+        drawGlassesFrame(ctx, w, h);
     }
 
     // --- MÓDULO 7: CALCULADORA DE ESPESSURA DE BORDA ---
@@ -760,6 +804,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.font = '700 13px Montserrat, sans-serif';
             ctx.fillText('🌊 Com Polarizado Personality: Visão nítida sob a água', 35, 47);
         }
+
+        drawGlassesFrame(ctx, w, h);
     }
 
     // --- MÓDULO 9: CORES & SHINE MIRROR ---
@@ -797,14 +843,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (state.colors.color === 'gold-mirror') colorStyle = 'rgba(212,175,55,0.78)';
         if (state.colors.color === 'blue-mirror') colorStyle = 'rgba(0,150,255,0.78)';
 
-        ctx.fillStyle = colorStyle;
-        ctx.beginPath();
-        ctx.ellipse(w * 0.35, h * 0.5, w * 0.18, h * 0.32, 0, 0, Math.PI * 2);
-        ctx.fill();
+        const rx = w * 0.28; const ry = h * 0.5; const rw = w * 0.19; const rh = h * 0.34;
+        const lx = w * 0.72; const ly = h * 0.5;
 
-        ctx.beginPath();
-        ctx.ellipse(w * 0.65, h * 0.5, w * 0.18, h * 0.32, 0, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillStyle = colorStyle;
+        ctx.beginPath(); ctx.ellipse(rx, ry, rw, rh, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(lx, ly, rw, rh, 0, 0, Math.PI * 2); ctx.fill();
 
         ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
         ctx.fillRect(w * 0.25, 20, w * 0.5, 45);
@@ -813,6 +857,8 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.textAlign = 'center';
         ctx.fillText(`🎨 Tonalidade / Espelhado: ${state.colors.color.toUpperCase()}`, w / 2, 47);
         ctx.textAlign = 'left';
+
+        drawGlassesFrame(ctx, w, h);
     }
 
 });
