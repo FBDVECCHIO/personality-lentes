@@ -599,11 +599,38 @@ document.addEventListener('DOMContentLoaded', () => {
         // 1. Fundo Geral da Cena (Visão Periférica Nua fora dos óculos com leve desfoque)
         ctx.save();
         if (isCamActive) {
-            offscreenCtx.drawImage(simVideoFeed, 0, 0, w, h);
+            const vidW = simVideoFeed.videoWidth || 1280;
+            const vidH = simVideoFeed.videoHeight || 720;
+            const aspectVid = vidW / vidH;
+            const aspectCanvas = w / h;
+            let sx = 0, sy = 0, sw = vidW, sh = vidH;
+
+            if (aspectCanvas > aspectVid) {
+                sh = vidW / aspectCanvas;
+                sy = (vidH - sh) / 2;
+            } else {
+                sw = vidH * aspectCanvas;
+                sx = (vidW - sw) / 2;
+            }
+            offscreenCtx.drawImage(simVideoFeed, sx, sy, sw, sh, 0, 0, w, h);
         } else if (bgImg && bgImg.complete && bgImg.naturalWidth > 0) {
-            offscreenCtx.drawImage(bgImg, 0, 0, w, h);
+            const imgW = bgImg.naturalWidth;
+            const imgH = bgImg.naturalHeight;
+            const aspectImg = imgW / imgH;
+            const aspectCanvas = w / h;
+            let sx = 0, sy = 0, sw = imgW, sh = imgH;
+
+            if (aspectCanvas > aspectImg) {
+                sh = imgW / aspectCanvas;
+                sy = (imgH - sh) / 2;
+            } else {
+                sw = imgH * aspectCanvas;
+                sx = (imgW - sw) / 2;
+            }
+            offscreenCtx.drawImage(bgImg, sx, sy, sw, sh, 0, 0, w, h);
         } else {
-            offscreenCtx.fillStyle = '#111'; offscreenCtx.fillRect(0, 0, w, h);
+            offscreenCtx.fillStyle = '#0a0a0f';
+            offscreenCtx.fillRect(0, 0, w, h);
         }
 
         ctx.drawImage(offscreenCanvas, 0, 0, w, h);
