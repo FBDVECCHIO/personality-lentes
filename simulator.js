@@ -642,12 +642,12 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.restore();
 
         const rx = w * 0.28;
-        const ry = h * 0.48;
+        const ry = h * 0.38;
         const rw = w * 0.21;
         const rh = h * 0.36;
 
         const lx = w * 0.72;
-        const ly = h * 0.48;
+        const ly = h * 0.38;
 
         if (rw <= 0 || rh <= 0) return;
 
@@ -1319,9 +1319,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Coordenadas centrais das duas lentes
         const rx = w * 0.28;
-        const ry = h * 0.48;
+        const ry = h * 0.38;
         const lx = w * 0.72;
-        const ly = h * 0.48;
+        const ly = h * 0.38;
 
         // Proporções exatas especificadas pelo usuário: 5850x4557 pixels
         const imgW = 5850;
