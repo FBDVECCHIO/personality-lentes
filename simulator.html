@@ -490,6 +490,13 @@
                         </select>
                     </div>
 
+                    <div style="margin-top: 10px; margin-bottom: 10px;">
+                        <button id="btnToggleCamera" class="sim-btn-side" style="border-color: var(--gold-primary); background: rgba(212,175,55,0.05);">
+                            <span>📹 Câmera Realidade Aumentada</span>
+                            <small id="cameraStatus" style="color: var(--gold-light); font-weight:700;">OFF</small>
+                        </button>
+                    </div>
+
                     <button class="btn btn-gold btn-full btn-add-trail" data-category="Campo Visual" data-item="Personality Digital HD (Multifocal)" style="margin-top: auto; font-weight: 700; font-size: 12px; padding: 12px;">
                         ➕ Recomendar Lente
                     </button>
@@ -728,6 +735,9 @@
 
         </main>
     </div>
+
+    <!-- Tag de vídeo oculta para captura de Realidade Aumentada (Câmera do Balcão) -->
+    <video id="simVideoFeed" autoplay playsinline muted style="display: none;"></video>
 
     <!-- Scripts da Aplicação -->
     <script src="script.js"></script>

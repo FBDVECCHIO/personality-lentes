@@ -1,6 +1,6 @@
 /* ==========================================================================
    PERSONALITY LENTES - DEMONSTRADOR DIGITAL FOTORREALISTA EM 1ª PESSOA (POV)
-   Motor de Armação de Óculos em Primeira Pessoa com Filtros Óticos HD 60 FPS
+   Motor de Câmera em Tempo Real (Realidade Aumentada) & Filtros Óticos 60 FPS
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -34,6 +34,8 @@ document.addEventListener('DOMContentLoaded', () => {
         storeName: 'Modo Demonstração',
         trail: [],
         activeTab: 'tab-progressivos',
+        cameraActive: false,
+        videoStream: null,
         
         progressive: { lensLeft: 'personality-hd', lensRight: 'convencional-padrao', sliderPos: 0.5 },
         office: { mode: 'office-personality' },
@@ -63,6 +65,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnViewTrailSummary = document.getElementById('btnViewTrailSummary');
     const simFinalSummaryList = document.getElementById('simFinalSummaryList');
 
+    const simVideoFeed = document.getElementById('simVideoFeed');
+    const btnToggleCamera = document.getElementById('btnToggleCamera');
+    const cameraStatus = document.getElementById('cameraStatus');
+
     // -------------------------------------------------------------
     // 4. AUTENTICAÇÃO E SESSÃO
     // -------------------------------------------------------------
@@ -81,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
         simAppContent.style.display = 'block';
 
         initAllCanvasEngines();
-        setTimeout(() => renderActiveCanvas(state.activeTab), 100);
+        startRenderLoop();
     };
 
     if (simLoginForm) {
@@ -109,7 +115,86 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAuthSession();
 
     // -------------------------------------------------------------
-    // 5. NAVEGAÇÃO ENTRE ABAS
+    // 5. INTEGRAÇÃO DA CÂMERA (REALIDADE AUMENTADA)
+    // -------------------------------------------------------------
+    if (btnToggleCamera) {
+        btnToggleCamera.addEventListener('click', async () => {
+            if (state.cameraActive) {
+                stopCamera();
+            } else {
+                await startCamera();
+            }
+        });
+    }
+
+    async function startCamera() {
+        try {
+            const constraints = {
+                video: {
+                    facingMode: { ideal: "environment" }, // Prioriza a câmera traseira do tablet
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                },
+                audio: false
+            };
+
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            state.videoStream = stream;
+            if (simVideoFeed) {
+                simVideoFeed.srcObject = stream;
+                simVideoFeed.play();
+            }
+
+            state.cameraActive = true;
+            if (cameraStatus) {
+                cameraStatus.textContent = 'ON';
+                cameraStatus.style.color = 'var(--success)';
+            }
+            if (btnToggleCamera) {
+                btnToggleCamera.style.background = 'rgba(40, 199, 111, 0.15)';
+                btnToggleCamera.style.borderColor = 'var(--success)';
+            }
+        } catch (err) {
+            console.error("Erro ao acessar a câmera: ", err);
+            alert("Não foi possível acessar a câmera do aparelho. Verifique as permissões de privacidade.");
+            state.cameraActive = false;
+        }
+    }
+
+    function stopCamera() {
+        if (state.videoStream) {
+            state.videoStream.getTracks().forEach(track => track.stop());
+            state.videoStream = null;
+        }
+        if (simVideoFeed) {
+            simVideoFeed.srcObject = null;
+        }
+
+        state.cameraActive = false;
+        if (cameraStatus) {
+            cameraStatus.textContent = 'OFF';
+            cameraStatus.style.color = 'var(--gold-light)';
+        }
+        if (btnToggleCamera) {
+            btnToggleCamera.style.background = 'rgba(212,175,55,0.05)';
+            btnToggleCamera.style.borderColor = 'var(--gold-primary)';
+        }
+        renderActiveCanvas(state.activeTab);
+    }
+
+    // Loop contínuo de renderização a 60 FPS (necessário para a câmera ao vivo)
+    function startRenderLoop() {
+        const loop = () => {
+            if (state.authenticated) {
+                renderActiveCanvas(state.activeTab);
+            }
+            requestAnimationFrame(loop);
+        };
+        requestAnimationFrame(loop);
+    }
+
+    // -------------------------------------------------------------
+    // 6. NAVEGAÇÃO ENTRE ABAS
     // -------------------------------------------------------------
     const tabBtns = document.querySelectorAll('.sim-tab-btn');
     const tabContents = document.querySelectorAll('.sim-tab-content');
@@ -138,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // -------------------------------------------------------------
-    // 6. TRILHA DE ESCOLHAS DO CLIENTE
+    // 7. TRILHA DE ESCOLHAS DO CLIENTE
     // -------------------------------------------------------------
     const btnAddTrails = document.querySelectorAll('.btn-add-trail');
     btnAddTrails.forEach(btn => {
@@ -170,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
         trailCountSpan.textContent = state.trail.length;
 
         if (state.trail.length === 0) {
-            simTrailChipsContainer.innerHTML = `<span style="font-size: 12px; color: var(--text-muted);">Nenhuma opção marcada ainda. Selecione conforme o atendimento.</span>`;
+            simTrailChipsContainer.innerHTML = `<span style="font-size: 11px; color: var(--text-muted);">Nenhuma opção marcada ainda. Selecione conforme o atendimento.</span>`;
             if (simFinalSummaryList) simFinalSummaryList.innerHTML = `<p style="color: var(--text-muted); font-size: 13px;">Nenhuma escolha registrada na trilha ainda.</p>`;
             return;
         }
@@ -217,20 +302,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // -------------------------------------------------------------
-    // 7. MOTOR DE VISÃO EM PRIMEIRA PESSOA (POV GLASSES ENGINE)
+    // 8. MOTOR DE VISÃO EM PRIMEIRA PESSOA (POV GLASSES ENGINE)
     // -------------------------------------------------------------
     function drawGlassesPOV(ctx, w, h, bgImg, renderLeftLens, renderRightLens) {
         ctx.clearRect(0, 0, w, h);
 
+        const isCamActive = state.cameraActive && simVideoFeed && simVideoFeed.readyState >= 2;
+
         // 1. Fundo Geral da Cena (Visão Periférica Nua fora dos óculos)
         ctx.save();
-        if (bgImg && bgImg.complete && bgImg.naturalWidth > 0) {
+        if (isCamActive) {
+            ctx.drawImage(simVideoFeed, 0, 0, w, h);
+        } else if (bgImg && bgImg.complete && bgImg.naturalWidth > 0) {
             ctx.drawImage(bgImg, 0, 0, w, h);
         } else {
             ctx.fillStyle = '#111'; ctx.fillRect(0, 0, w, h);
         }
 
-        // Camada de visão periférica levemente escurecida/desfocada fora dos óculos
+        // Camada de visão periférica levemente escurecida fora dos óculos
         ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
         ctx.fillRect(0, 0, w, h);
         ctx.restore();
@@ -249,7 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.beginPath();
         ctx.ellipse(rx, ry, rw, rh, 0, 0, Math.PI * 2);
         ctx.clip();
-        renderLeftLens(ctx, rx, ry, rw, rh);
+        renderLeftLens(ctx, rx, ry, rw, rh, isCamActive);
 
         // Brilho realista de reflexo de vidro na borda da lente
         const gradL = ctx.createLinearGradient(rx - rw, ry - rh, rx + rw, ry + rh);
@@ -265,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.beginPath();
         ctx.ellipse(lx, ly, rw, rh, 0, 0, Math.PI * 2);
         ctx.clip();
-        renderRightLens(ctx, lx, ly, rw, rh);
+        renderRightLens(ctx, lx, ly, rw, rh, isCamActive);
 
         // Brilho realista de reflexo de vidro na borda da lente
         const gradR = ctx.createLinearGradient(lx - rw, ly - rh, lx + rw, ly + rh);
@@ -314,7 +403,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // -------------------------------------------------------------
-    // 8. RENDERIZADORES FOTORREALISTAS (CANVAS ENGINES)
+    // 9. RENDERIZADORES DOS MÓDULOS DE SIMULAÇÃO
     // -------------------------------------------------------------
 
     function initAllCanvasEngines() {
@@ -339,7 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tabId === 'tab-colors') drawColors();
     }
 
-    // --- MÓDULO 1: BATALHA DE PROGRESSIVOS (1ª PESSOA) ---
+    // --- MÓDULO 1: BATALHA DE PROGRESSIVOS (1ª PESSOA COM REALIDADE AUMENTADA) ---
     function initProgressiveEngine() {
         const canvas = document.getElementById('canvasProgressive');
         const handle = document.getElementById('sliderHandleProgressive');
@@ -380,8 +469,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 drawProgressive();
             });
         }
-
-        drawProgressive();
     }
 
     function getLensMeta(key) {
@@ -408,18 +495,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const metaRight = getLensMeta(state.progressive.lensRight);
 
         drawGlassesPOV(ctx, w, h, img, 
-            (c, rx, ry, rw, rh) => {
-                // Conteúdo Lente Esquerda
-                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+            (c, rx, ry, rw, rh, isCam) => {
+                if (isCam) {
+                    c.drawImage(simVideoFeed, 0, 0, w, h);
+                } else if (img.complete && img.naturalWidth > 0) {
+                    c.drawImage(img, 0, 0, w, h);
+                }
                 if (metaLeft.isBad) {
                     c.fillStyle = 'rgba(255, 85, 85, 0.28)'; c.fillRect(0, 0, w, h);
                 } else {
                     c.fillStyle = 'rgba(212, 175, 55, 0.12)'; c.fillRect(0, 0, w, h);
                 }
             },
-            (c, lx, ly, rw, rh) => {
-                // Conteúdo Lente Direita
-                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+            (c, lx, ly, rw, rh, isCam) => {
+                if (isCam) {
+                    c.drawImage(simVideoFeed, 0, 0, w, h);
+                } else if (img.complete && img.naturalWidth > 0) {
+                    c.drawImage(img, 0, 0, w, h);
+                }
                 if (metaRight.isBad) {
                     c.fillStyle = 'rgba(255, 85, 85, 0.32)'; c.fillRect(0, 0, w, h);
                 } else {
@@ -448,7 +541,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillText(metaRight.sub, w - 295, 50);
     }
 
-    // --- MÓDULO 2: OFFICE VS PERTO (1ª PESSOA) ---
+    // --- MÓDULO 2: OFFICE VS PERTO ---
     function initOfficeEngine() {
         document.querySelectorAll('[data-type="office"]').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -470,16 +563,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const img = images.officeScene;
 
         drawGlassesPOV(ctx, w, h, img,
-            (c) => {
-                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+            (c, rx, ry, rw, rh, isCam) => {
+                if (isCam) c.drawImage(simVideoFeed, 0, 0, w, h);
+                else if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
                 if (state.office.mode === 'perto-simples') {
                     c.fillStyle = 'rgba(8, 8, 12, 0.68)'; c.fillRect(0, 0, w, h);
                 } else {
                     c.fillStyle = 'rgba(212, 175, 55, 0.08)'; c.fillRect(0, 0, w, h);
                 }
             },
-            (c) => {
-                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+            (c, lx, ly, rw, rh, isCam) => {
+                if (isCam) c.drawImage(simVideoFeed, 0, 0, w, h);
+                else if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
                 if (state.office.mode === 'perto-simples') {
                     c.fillStyle = 'rgba(8, 8, 12, 0.68)'; c.fillRect(0, 0, w, h);
                 } else {
@@ -495,7 +590,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillText(state.office.mode === 'perto-simples' ? '❌ Lente de Perto Simples: Foco restrito a 40cm' : '✨ Personality Office: Visão cristalina contínua de 40cm a 4 metros!', 35, 47);
     }
 
-    // --- MÓDULO 3: VS FREEFORM VS PRONTAS (1ª PESSOA) ---
+    // --- MÓDULO 3: VS FREEFORM VS PRONTAS ---
     function initFreeformEngine() {
         document.querySelectorAll('[data-type="freeform"]').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -517,16 +612,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const img = images.officeScene;
 
         drawGlassesPOV(ctx, w, h, img,
-            (c) => {
-                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+            (c, rx, ry, rw, rh, isCam) => {
+                if (isCam) c.drawImage(simVideoFeed, 0, 0, w, h);
+                else if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
                 if (state.freeform.mode === 'pronta-esferica') {
                     c.fillStyle = 'rgba(255, 85, 85, 0.28)'; c.fillRect(0, 0, w, h);
                 } else {
                     c.fillStyle = 'rgba(212, 175, 55, 0.08)'; c.fillRect(0, 0, w, h);
                 }
             },
-            (c) => {
-                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+            (c, lx, ly, rw, rh, isCam) => {
+                if (isCam) c.drawImage(simVideoFeed, 0, 0, w, h);
+                else if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
                 if (state.freeform.mode === 'pronta-esferica') {
                     c.fillStyle = 'rgba(255, 85, 85, 0.28)'; c.fillRect(0, 0, w, h);
                 } else {
@@ -542,7 +639,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillText(state.freeform.mode === 'pronta-esferica' ? '❌ Lente Pronta Esférica: Distorção "Olho de Peixe" na borda' : '✨ Personality VS Freeform Asférica: Visão nítida ponta a ponta', 35, 47);
     }
 
-    // --- MÓDULO 4: COM VS SEM ANTIRREFLEXO (1ª PESSOA) ---
+    // --- MÓDULO 4: COM VS SEM ANTIRREFLEXO ---
     function initArDemoEngine() {
         const canvas = document.getElementById('canvasArDemo');
         const handle = document.getElementById('sliderHandleAr');
@@ -566,8 +663,6 @@ document.addEventListener('DOMContentLoaded', () => {
         wrapper.addEventListener('touchstart', (e) => { isDragging = true; updatePos(e.touches[0].clientX); });
         window.addEventListener('touchmove', (e) => { if (isDragging) updatePos(e.touches[0].clientX); });
         window.addEventListener('touchend', () => { isDragging = false; });
-
-        drawArDemo();
     }
 
     function drawArDemo() {
@@ -581,12 +676,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const splitX = w * state.arDemo.sliderPos;
 
         drawGlassesPOV(ctx, w, h, img,
-            (c) => {
-                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+            (c, rx, ry, rw, rh, isCam) => {
+                if (isCam) c.drawImage(simVideoFeed, 0, 0, w, h);
+                else if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
                 c.fillStyle = 'rgba(212, 175, 55, 0.08)'; c.fillRect(0, 0, w, h);
             },
-            (c) => {
-                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+            (c, lx, ly, rw, rh, isCam) => {
+                if (isCam) c.drawImage(simVideoFeed, 0, 0, w, h);
+                else if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
                 c.fillStyle = 'rgba(255, 255, 255, 0.35)'; c.fillRect(0, 0, w, h);
                 c.fillStyle = '#ffffff'; c.shadowBlur = 40; c.shadowColor = '#fff';
                 c.beginPath(); c.arc(w * 0.72, h * 0.48, 70, 0, Math.PI * 2); c.fill(); c.shadowBlur = 0;
@@ -604,7 +701,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillText('❌ Lente Direita: Sem Antirreflexo', w - 315, 42);
     }
 
-    // --- MÓDULO 6: FOTOSSENSÍVEIS (1ª PESSOA) ---
+    // --- MÓDULO 6: FOTOSSENSÍVEIS (TRANSITIONS) ---
     function initPhotoEngine() {
         const rangeUv = document.getElementById('rangeUv');
         if (rangeUv) {
@@ -635,12 +732,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const opacity = (state.photo.uvLevel / 100) * 0.82;
 
         drawGlassesPOV(ctx, w, h, img,
-            (c) => {
-                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+            (c, rx, ry, rw, rh, isCam) => {
+                if (isCam) c.drawImage(simVideoFeed, 0, 0, w, h);
+                else if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
                 c.fillStyle = `rgba(18, 18, 22, ${opacity})`; c.fillRect(0, 0, w, h);
             },
-            (c) => {
-                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+            (c, lx, ly, rw, rh, isCam) => {
+                if (isCam) c.drawImage(simVideoFeed, 0, 0, w, h);
+                else if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
                 c.fillStyle = `rgba(18, 18, 22, ${opacity})`; c.fillRect(0, 0, w, h);
             }
         );
@@ -651,7 +750,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillText(`☀️ ${state.photo.mode === 'gen-s' ? 'Transitions GEN S (Ativação Ultrarrápida)' : 'Transitions Xtractive (Ativação no Carro)'} - UV: ${state.photo.uvLevel}%`, 35, 47);
     }
 
-    // --- MÓDULO 7: CALCULADORA DE ESPESSURA DE BORDA (DESENHO VETORIAL 2D) ---
+    // --- MÓDULO 7: CALCULADORA DE ESPESSURA DE BORDA ---
     function initThicknessEngine() {
         const rangeDiopter = document.getElementById('rangeDiopter');
         const valDiopter = document.getElementById('valDiopter');
@@ -714,7 +813,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- MÓDULO 8: LENTES POLARIZADAS (1ª PESSOA) ---
+    // --- MÓDULO 8: LENTES POLARIZADAS ---
     function initPolarizedEngine() {
         document.querySelectorAll('[data-type="polar"]').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -736,14 +835,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const img = images.waterGlare;
 
         drawGlassesPOV(ctx, w, h, img,
-            (c) => {
-                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+            (c, rx, ry, rw, rh, isCam) => {
+                if (isCam) c.drawImage(simVideoFeed, 0, 0, w, h);
+                else if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
                 if (state.polarized.mode === 'sem-polarizado') {
                     c.fillStyle = 'rgba(255, 255, 255, 0.55)'; c.fillRect(0, 0, w, h);
                 }
             },
-            (c) => {
-                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+            (c, lx, ly, rw, rh, isCam) => {
+                if (isCam) c.drawImage(simVideoFeed, 0, 0, w, h);
+                else if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
                 if (state.polarized.mode === 'sem-polarizado') {
                     c.fillStyle = 'rgba(255, 255, 255, 0.55)'; c.fillRect(0, 0, w, h);
                 }
@@ -757,7 +858,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillText(state.polarized.mode === 'sem-polarizado' ? '❌ Sem Polarizado: Reflexo cegante na superfície da água' : '🌊 Com Polarizado Personality: Visão nítida dos peixes sob a água', 35, 47);
     }
 
-    // --- MÓDULO 9: CORES & SHINE MIRROR (1ª PESSOA) ---
+    // --- MÓDULO 9: CORES & SHINE MIRROR ---
     function initColorsEngine() {
         document.querySelectorAll('.sim-color-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -785,12 +886,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (state.colors.color === 'blue-mirror') colorStyle = 'rgba(0,150,255,0.78)';
 
         drawGlassesPOV(ctx, w, h, img,
-            (c) => {
-                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+            (c, rx, ry, rw, rh, isCam) => {
+                if (isCam) c.drawImage(simVideoFeed, 0, 0, w, h);
+                else if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
                 c.fillStyle = colorStyle; c.fillRect(0, 0, w, h);
             },
-            (c) => {
-                if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+            (c, lx, ly, rw, rh, isCam) => {
+                if (isCam) c.drawImage(simVideoFeed, 0, 0, w, h);
+                else if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
                 c.fillStyle = colorStyle; c.fillRect(0, 0, w, h);
             }
         );
