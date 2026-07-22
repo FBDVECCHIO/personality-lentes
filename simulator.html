@@ -677,38 +677,42 @@
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
             border: 1.5px solid rgba(255, 255, 255, 0.12);
-            border-radius: 12px;
-            padding: 10px 16px;
+            border-radius: 10px;
+            padding: 6px 12px;
             color: #fff;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.15);
             pointer-events: none;
             transition: all 0.3s ease;
             text-align: left;
+            white-space: nowrap;
         }
 
         .sim-canvas-badge strong {
             color: var(--gold-light);
             display: block;
-            font-size: 10px;
+            font-size: 9px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 2px;
+            white-space: nowrap;
         }
 
         .sim-canvas-badge span {
             color: #fff;
-            font-size: 12.5px;
+            font-size: 11px;
             font-weight: 800;
+            white-space: nowrap;
         }
 
         .sim-canvas-badge small {
             display: block;
             color: rgba(255, 255, 255, 0.65);
-            font-size: 9.5px;
+            font-size: 9px;
             margin-top: 2px;
             font-weight: 500;
+            white-space: nowrap;
         }
 
         /* Classes de Posicionamento Centralizado nas Lentes ou Tela Única */
@@ -793,13 +797,19 @@
             <button class="sim-tab-btn" data-tab="tab-summary"></button>
         </nav>
 
+        <!-- Tela Cheia (Fullscreen) no Canto Superior Esquerdo -->
+        <button id="btnFullscreen" class="sim-float-btn" style="top: 20px; left: 20px; position: fixed; z-index: 160; display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 50%; background: rgba(10, 10, 15, 0.35); border: 1.5px solid rgba(255, 255, 255, 0.15); color: #fff; cursor: pointer; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); transition: all 0.3s ease;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="icon" style="color: #fff; width: 20px; height: 20px;">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+            </svg>
+        </button>
+
         <!-- Câmera AR no Canto Superior Direito (Redondo Glassmorphic) -->
-        <button id="btnFloatCamera" class="sim-float-btn" style="top: 20px; right: 20px; position: fixed; z-index: 160; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; background: rgba(10, 10, 15, 0.35); border: 1.5px solid rgba(255, 255, 255, 0.15); color: #fff; cursor: pointer; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); transition: all 0.3s ease;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="icon" style="color: #fff; width: 22px; height: 22px; margin-bottom: 2px;">
+        <button id="btnFloatCamera" class="sim-float-btn" style="top: 20px; right: 20px; position: fixed; z-index: 160; display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 50%; background: rgba(10, 10, 15, 0.35); border: 1.5px solid rgba(255, 255, 255, 0.15); color: #fff; cursor: pointer; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); transition: all 0.3s ease;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="icon" style="color: #fff; width: 22px; height: 22px;">
                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
                 <circle cx="12" cy="13" r="4"></circle>
             </svg>
-            <span style="font-size: 8px; font-weight: 800; text-transform: uppercase; margin-top: 2px; letter-spacing: 0.5px;">Câmera</span>
         </button>
 
         <!-- PAINEL DOCK INFERIOR (UX Premium Horizontal - Zeiss Style) -->

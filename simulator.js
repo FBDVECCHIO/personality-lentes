@@ -280,6 +280,38 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // 1.2. Tela Cheia (Canto Superior Esquerdo)
+        const btnFullscreen = document.getElementById('btnFullscreen');
+        if (btnFullscreen) {
+            btnFullscreen.addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.error(`Erro ao ativar Tela Cheia: ${err.message}`);
+                    });
+                } else {
+                    document.exitFullscreen();
+                }
+            });
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            if (btnFullscreen) {
+                if (document.fullscreenElement) {
+                    btnFullscreen.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #fff; width: 20px; height: 20px;">
+                            <path d="M4 14h6v6m10-6h-6v6M4 10h6V4m10 6h-6V4"></path>
+                        </svg>
+                    `;
+                } else {
+                    btnFullscreen.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #fff; width: 20px; height: 20px;">
+                            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                        </svg>
+                    `;
+                }
+            }
+        });
+
         // 2. Abrir Menu de Módulos (Canto Inferior Esquerdo - Popup Vertical que sobe)
         const simModulesPopupMenu = document.getElementById('simModulesPopupMenu');
         if (btnFloatMenu && simModulesPopupMenu) {
