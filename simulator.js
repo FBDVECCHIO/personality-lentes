@@ -1272,7 +1272,7 @@ document.addEventListener('DOMContentLoaded', () => {
         offscreenCanvas.width = w;
         offscreenCanvas.height = h;
 
-        // 1. Fundo Geral da Cena (Visão Periférica)
+        // 1. Fundo Geral da Cena (Visão Periférica) - MANTIDO BRILHANTE (Sem escurecimento geral)
         ctx.save();
         if (isCamActive) {
             const vidW = simVideoFeed.videoWidth || 1280;
@@ -1310,28 +1310,38 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         ctx.drawImage(offscreenCanvas, 0, 0, w, h);
-
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-        ctx.fillRect(0, 0, w, h);
         ctx.restore();
 
-        // Proporções para as lentes
+        // Coordenadas básicas para as lentes
         const rx = w * 0.28;
         const ry = h * 0.48;
         const rw = w * 0.20;
-        const rh = h * 0.34;
+
+        // Calcula a proporção original da imagem para evitar distorção vertical
+        const imgW = images.lenteImg.naturalWidth || 500;
+        const imgH = images.lenteImg.naturalHeight || 500;
+        const aspect = imgW / imgH;
+
+        const drawW = rw * 2;
+        const drawH = drawW / aspect; // Calcula a altura exata com base na largura e proporção original
+        const actualRh = drawH / 2;
 
         const lx = w * 0.72;
         const ly = h * 0.48;
 
         const isPolarized = state.polarized.mode !== 'sem-polarizado';
 
-        // 2. VISÃO DA LENTE ESQUERDA (DENTRO DA IMAGEM LENS/FRAME)
+        // 2. VISÃO INTERNA DA LENTE ESQUERDA (DENTRO DA IMAGEM LENS/FRAME)
         ctx.save();
         ctx.beginPath();
-        ctx.ellipse(rx, ry, rw * 0.9, rh * 0.9, 0, 0, Math.PI * 2);
+        // A elipse de recorte acompanha perfeitamente a proporção original calculada da imagem
+        ctx.ellipse(rx, ry, rw * 0.88, actualRh * 0.88, 0, 0, Math.PI * 2);
         ctx.clip();
         ctx.drawImage(offscreenCanvas, 0, 0, w, h);
+
+        // Aplica o escurecimento do filtro solar DENTRO da lente
+        ctx.fillStyle = 'rgba(20, 16, 12, 0.45)';
+        ctx.fillRect(rx - rw, ry - actualRh, rw * 2, drawH);
 
         if (!isPolarized) {
             ctx.save();
@@ -1340,17 +1350,21 @@ document.addEventListener('DOMContentLoaded', () => {
             glare.addColorStop(0.5, 'rgba(255, 255, 255, 0.48)');
             glare.addColorStop(1, 'rgba(255, 255, 255, 0)');
             ctx.fillStyle = glare;
-            ctx.fillRect(rx - rw, ry - rh, rw * 2, rh * 2);
+            ctx.fillRect(rx - rw, ry - actualRh, rw * 2, drawH);
             ctx.restore();
         }
         ctx.restore();
 
-        // 3. VISÃO DA LENTE DIREITA (DENTRO DA IMAGEM LENS/FRAME ESPELHADA)
+        // 3. VISÃO INTERNA DA LENTE DIREITA (DENTRO DA IMAGEM LENS/FRAME ESPELHADA)
         ctx.save();
         ctx.beginPath();
-        ctx.ellipse(lx, ly, rw * 0.9, rh * 0.9, 0, 0, Math.PI * 2);
+        ctx.ellipse(lx, ly, rw * 0.88, actualRh * 0.88, 0, 0, Math.PI * 2);
         ctx.clip();
         ctx.drawImage(offscreenCanvas, 0, 0, w, h);
+
+        // Aplica o escurecimento do filtro solar DENTRO da lente
+        ctx.fillStyle = 'rgba(20, 16, 12, 0.45)';
+        ctx.fillRect(lx - rw, ly - actualRh, rw * 2, drawH);
 
         if (!isPolarized) {
             ctx.save();
@@ -1359,23 +1373,23 @@ document.addEventListener('DOMContentLoaded', () => {
             glare.addColorStop(0.5, 'rgba(255, 255, 255, 0.48)');
             glare.addColorStop(1, 'rgba(255, 255, 255, 0)');
             ctx.fillStyle = glare;
-            ctx.fillRect(lx - rw, ly - rh, rw * 2, rh * 2);
+            ctx.fillRect(lx - rw, ly - actualRh, rw * 2, drawH);
             ctx.restore();
         }
         ctx.restore();
 
         // 4. DESENHO DA IMAGEM LENTE.PNG SOBRE AS DUAS ÁREAS
-        // Lente Esquerda (Proporcional)
+        // Lente Esquerda (Proporcional à largura e sem distorção)
         if (images.lenteImg && images.lenteImg.complete && images.lenteImg.naturalWidth > 0) {
-            ctx.drawImage(images.lenteImg, rx - rw, ry - rh, rw * 2, rh * 2);
+            ctx.drawImage(images.lenteImg, rx - rw, ry - actualRh, rw * 2, drawH);
         }
 
-        // Lente Direita (Flipped/Invertida horizontalmente)
+        // Lente Direita (Espelhada horizontalmente, Proporcional e sem distorção)
         if (images.lenteImg && images.lenteImg.complete && images.lenteImg.naturalWidth > 0) {
             ctx.save();
             ctx.translate(lx, ly);
             ctx.scale(-1, 1);
-            ctx.drawImage(images.lenteImg, -rw, -rh, rw * 2, rh * 2);
+            ctx.drawImage(images.lenteImg, -rw, -actualRh, rw * 2, drawH);
             ctx.restore();
         }
 
