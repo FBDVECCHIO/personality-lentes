@@ -52,8 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
     images.officeScene.src = 'images/sim_office_scene.png';
     images.waterGlare.src = 'images/sim_water_glare.png';
     images.outdoorSun.src = 'images/sim_outdoor_sun.png';
-    images.lenteImg.src = 'images/LENTE.png?v=3.27';
-    images.lenteChromaKey.src = 'images/LENTE_Chroma_Key.png?v=3.27';
+    images.lenteImg.src = 'images/LENTE.png?v=3.28';
+    images.lenteChromaKey.src = 'images/LENTE_Chroma_Key.png?v=3.28';
 
     // Offscreen canvas auxiliar para renderizar efeitos de desfoque ótico (Blur)
     const offscreenCanvas = document.createElement('canvas');
@@ -1353,34 +1353,21 @@ document.addEventListener('DOMContentLoaded', () => {
         maskCanvas.height = h;
         maskCtx.clearRect(0, 0, w, h);
         
-        // Desenha a cena brilhante (nítida/sem escurecer) em todo o maskCanvas
-        maskCtx.drawImage(offscreenCanvas, 0, 0, w, h);
-        
-        // Aplica o brilho de sol/reflexo (glare) apenas na lente direita (Não Polarizada)
-        const glare = maskCtx.createRadialGradient(lx, ly, 10, lx, ly, rw * 0.95);
-        glare.addColorStop(0, 'rgba(255, 255, 255, 0.78)');
-        glare.addColorStop(0.5, 'rgba(255, 255, 255, 0.48)');
-        glare.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        maskCtx.fillStyle = glare;
-        maskCtx.fillRect(lx - rw, ly - actualRh, rw * 2, drawH);
-        
-        // Define o modo de recorte para manter apenas a área onde desenharmos as silhuetas de lentes
-        maskCtx.globalCompositeOperation = 'destination-in';
-        
         const hasMask = images.lenteChromaKey && images.lenteChromaKey.complete && images.lenteChromaKey.naturalWidth > 0;
         
+        // Passo A: Desenha as silhuetas de lentes primeiro (criando a região combinada sólida)
         if (hasMask) {
-            // Desenha a silhueta da lente esquerda (Polarizada)
+            // Silhueta da lente esquerda (Polarizada)
             maskCtx.drawImage(images.lenteChromaKey, rx - rw, ry - actualRh, rw * 2, drawH);
             
-            // Desenha a silhueta da lente direita (Não Polarizada) espelhada
+            // Silhueta da lente direita (Não Polarizada) espelhada
             maskCtx.save();
             maskCtx.translate(lx, ly);
             maskCtx.scale(-1, 1);
             maskCtx.drawImage(images.lenteChromaKey, -rw, -actualRh, rw * 2, drawH);
             maskCtx.restore();
         } else {
-            // Recorte por elipse como fallback caso a máscara ainda esteja carregando
+            // Elipses como fallback caso as imagens de máscara estejam carregando
             maskCtx.fillStyle = '#fff';
             maskCtx.beginPath();
             maskCtx.ellipse(rx, ry, rw * 0.88, actualRh * 0.88, 0, 0, Math.PI * 2);
@@ -1388,7 +1375,20 @@ document.addEventListener('DOMContentLoaded', () => {
             maskCtx.fill();
         }
         
-        // Restaura a operação padrão de desenho
+        // Passo B: Projetar a cena brilhante (nítida) APENAS dentro das silhuetas sólidas desenhadas
+        maskCtx.globalCompositeOperation = 'source-in';
+        maskCtx.drawImage(offscreenCanvas, 0, 0, w, h);
+        
+        // Passo C: Aplicar o brilho de sol (glare) na lente direita (Não Polarizada) mantendo-se dentro de seu limite
+        maskCtx.globalCompositeOperation = 'source-atop';
+        const glare = maskCtx.createRadialGradient(lx, ly, 10, lx, ly, rw * 0.95);
+        glare.addColorStop(0, 'rgba(255, 255, 255, 0.78)');
+        glare.addColorStop(0.5, 'rgba(255, 255, 255, 0.48)');
+        glare.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        maskCtx.fillStyle = glare;
+        maskCtx.fillRect(lx - rw, ly - actualRh, rw * 2, drawH);
+        
+        // Restaura a operação padrão de desenho do maskCanvas
         maskCtx.globalCompositeOperation = 'source-over';
         
         // 3. DESENHO NO CANVAS PRINCIPAL
