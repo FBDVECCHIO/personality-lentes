@@ -6,32 +6,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // -------------------------------------------------------------
-    // 1. CARREGAMENTO DE IMAGENS FOTORREALISTAS HD
-    // -------------------------------------------------------------
-    const images = {
-        nightDriving: new Image(),
-        officeScene: new Image(),
-        waterGlare: new Image(),
-        outdoorSun: new Image()
-    };
-
-    images.nightDriving.src = 'images/sim_night_driving.png';
-    images.officeScene.src = 'images/sim_office_scene.png';
-    images.waterGlare.src = 'images/sim_water_glare.png';
-    images.outdoorSun.src = 'images/sim_outdoor_sun.png';
-
-    Object.values(images).forEach(img => {
-        img.onload = () => {
-            if (state.authenticated) renderActiveCanvas(state.activeTab);
-        };
-    });
-
-    // Offscreen canvas auxiliar para renderizar efeitos de desfoque ótico (Blur)
-    const offscreenCanvas = document.createElement('canvas');
-    const offscreenCtx = offscreenCanvas.getContext('2d');
-
-    // -------------------------------------------------------------
-    // 2. ESTADO GLOBAL DA APLICAÇÃO
+    // 1. ESTADO GLOBAL DA APLICAÇÃO (Definido no topo para evitar ReferenceError)
     // -------------------------------------------------------------
     const state = {
         authenticated: false,
@@ -50,6 +25,34 @@ document.addEventListener('DOMContentLoaded', () => {
         polarized: { mode: 'com-polarizado' },
         colors: { color: 'cinza' }
     };
+
+    // -------------------------------------------------------------
+    // 2. CARREGAMENTO DE IMAGENS FOTORREALISTAS HD
+    // -------------------------------------------------------------
+    const images = {
+        nightDriving: new Image(),
+        officeScene: new Image(),
+        waterGlare: new Image(),
+        outdoorSun: new Image()
+    };
+
+    // Configura os handlers onload antes de setar o src (boa prática)
+    Object.values(images).forEach(img => {
+        img.onload = () => {
+            if (state && state.authenticated) {
+                renderActiveCanvas(state.activeTab);
+            }
+        };
+    });
+
+    images.nightDriving.src = 'images/sim_night_driving.png';
+    images.officeScene.src = 'images/sim_office_scene.png';
+    images.waterGlare.src = 'images/sim_water_glare.png';
+    images.outdoorSun.src = 'images/sim_outdoor_sun.png';
+
+    // Offscreen canvas auxiliar para renderizar efeitos de desfoque ótico (Blur)
+    const offscreenCanvas = document.createElement('canvas');
+    const offscreenCtx = offscreenCanvas.getContext('2d');
 
     // -------------------------------------------------------------
     // 3. ELEMENTOS DO DOM
@@ -466,7 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tabId === 'tab-colors') drawColors();
     }
 
-    // --- MÓDULO 1: BATALHA DE PROGRESSIVOS (COM HEATMAP DE DISTORÇÃO) ---
+    // --- MÓDULO 1: BATALHA DE PROGRESSIVOS ---
     function initProgressiveEngine() {
         const canvas = document.getElementById('canvasProgressive');
         const handle = document.getElementById('sliderHandleProgressive');
@@ -611,6 +614,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- MÓDULO 2: OFFICE VS PERTO ---
+    function initOfficeEngine() {
+        document.querySelectorAll('[data-type="office"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('[data-type="office"]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.office.mode = btn.getAttribute('data-val');
+                drawOffice();
+            });
+        });
+    }
+
     function drawOffice() {
         const canvas = document.getElementById('canvasOffice');
         if (!canvas) return;
@@ -667,6 +681,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- MÓDULO 3: VS FREEFORM VS PRONTAS ---
+    function initFreeformEngine() {
+        document.querySelectorAll('[data-type="freeform"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('[data-type="freeform"]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.freeform.mode = btn.getAttribute('data-val');
+                drawFreeform();
+            });
+        });
+    }
+
     function drawFreeform() {
         const canvas = document.getElementById('canvasFreeform');
         if (!canvas) return;
@@ -1060,6 +1085,48 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.textAlign = 'center';
         ctx.fillText(`🎨 Tonalidade / Espelhado: ${state.colors.color.toUpperCase()}`, w / 2, 47);
         ctx.textAlign = 'left';
+    }
+
+    // -------------------------------------------------------------
+    // 11. INICIALIZAÇÃO DO AR ENGINE MÓDULO ANTIRREFLEXO (SOLUÇÃO DE CLICK)
+    // -------------------------------------------------------------
+    function initArDemoEngine() {
+        const canvas = document.getElementById('canvasArDemo');
+        const handle = document.getElementById('sliderHandleAr');
+        const wrapper = document.getElementById('wrapperArDemo');
+        if (!canvas) return;
+
+        let isDragging = false;
+        const updatePos = (clientX) => {
+            if (!wrapper) return;
+            const rect = wrapper.getBoundingClientRect();
+            let pos = (clientX - rect.left) / rect.width;
+            pos = Math.max(0.05, Math.min(0.95, pos));
+            state.arDemo.sliderPos = pos;
+            if (handle) handle.style.left = `${pos * 100}%`;
+            drawArDemo();
+        };
+
+        if (wrapper) {
+            wrapper.addEventListener('mousedown', (e) => { isDragging = true; updatePos(e.clientX); });
+            window.addEventListener('mousemove', (e) => { if (isDragging) updatePos(e.clientX); });
+            window.addEventListener('mouseup', () => { isDragging = false; });
+
+            wrapper.addEventListener('touchstart', (e) => { isDragging = true; updatePos(e.touches[0].clientX); });
+            window.addEventListener('touchmove', (e) => { if (isDragging) updatePos(e.touches[0].clientX); });
+            window.addEventListener('touchend', () => { isDragging = false; });
+        }
+    }
+
+    function initAllCanvasEngines() {
+        initProgressiveEngine();
+        initOfficeEngine();
+        initFreeformEngine();
+        initArDemoEngine();
+        initPhotoEngine();
+        initThicknessEngine();
+        initPolarizedEngine();
+        initColorsEngine();
     }
 
     // Listener de Redimensionamento Fluido
