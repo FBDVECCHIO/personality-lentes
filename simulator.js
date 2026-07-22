@@ -1315,19 +1315,24 @@ document.addEventListener('DOMContentLoaded', () => {
         // Coordenadas básicas para as lentes
         const rx = w * 0.28;
         const ry = h * 0.48;
-        const rw = w * 0.20;
-
-        // Calcula a proporção original da imagem para evitar distorção vertical
-        const imgW = images.lenteImg.naturalWidth || 500;
-        const imgH = images.lenteImg.naturalHeight || 500;
-        const aspect = imgW / imgH;
-
-        const drawW = rw * 2;
-        const drawH = drawW / aspect; // Calcula a altura exata com base na largura e proporção original
-        const actualRh = drawH / 2;
-
         const lx = w * 0.72;
         const ly = h * 0.48;
+
+        // Proporções fixas para as lentes (sem ajustar dinamicamente ao tamanho da tela)
+        const imgW = images.lenteImg.naturalWidth || 2856;
+        const imgH = images.lenteImg.naturalHeight || 2224;
+        const aspect = imgW / imgH; // Aprox. 1.284
+
+        // Largura base estática
+        let drawW = 320; 
+        const maxW = w * 0.20 * 2; // Clampa a largura máxima para 40% da tela para evitar sobreposição em telas pequenas
+        if (drawW > maxW) {
+            drawW = maxW;
+        }
+
+        const drawH = drawW / aspect; // Altura calculada estritamente proporcional à largura
+        const rw = drawW / 2;
+        const actualRh = drawH / 2;
 
         const isPolarized = state.polarized.mode !== 'sem-polarizado';
 
