@@ -6,7 +6,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // -------------------------------------------------------------
-    // 1. ESTADO GLOBAL DA APLICAÇÃO (Definido no topo para evitar ReferenceError)
+    // 1. ESTADO GLOBAL DA APLICAÇÃO
     // -------------------------------------------------------------
     const state = {
         authenticated: false,
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         outdoorSun: new Image()
     };
 
-    // Configura os handlers onload antes de setar o src (boa prática)
+    // Configura os handlers onload antes de setar o src
     Object.values(images).forEach(img => {
         img.onload = () => {
             if (state && state.authenticated) {
@@ -86,7 +86,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCloseTrailPanel = document.getElementById('btnCloseTrailPanel');
     const btnClearTrailFloat = document.getElementById('btnClearTrailFloat');
     const btnFinishTrailFloat = document.getElementById('btnFinishTrailFloat');
-    const sidebarPullBtn = document.getElementById('sidebarPullBtn');
 
     // -------------------------------------------------------------
     // 4. AUTENTICAÇÃO E SESSÃO
@@ -107,6 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         initAllCanvasEngines();
         initTabletControllers();
+        showActiveDockControls(state.activeTab);
         startRenderLoop();
     };
 
@@ -240,6 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const activeContent = document.getElementById(targetTab);
             if (activeContent) activeContent.style.display = 'block';
 
+            showActiveDockControls(targetTab);
             renderActiveCanvas(targetTab);
         });
     });
@@ -251,12 +252,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Exibição Dinâmica de Controles no Dock Inferior
+    function showActiveDockControls(tabId) {
+        document.querySelectorAll('.dock-controls-block').forEach(block => {
+            block.style.display = 'none';
+        });
+        const activeBlockId = `dock-controls-${tabId.replace('tab-', '')}`;
+        const activeBlock = document.getElementById(activeBlockId);
+        if (activeBlock) {
+            activeBlock.style.display = 'flex';
+        }
+    }
+
     // -------------------------------------------------------------
-    // 7. CONTROLES PREMIUM PARA TABLET (ABAS EM CASCATA & SIDEBARS RECOLHÍVEIS)
+    // 7. CONTROLES PREMIUM PARA TABLET (ABAS EM CASCATA & DOCK INFERIOR)
     // -------------------------------------------------------------
     function initTabletControllers() {
         
-        // 1. Câmera Flutuante
+        // 1. Câmera Flutuante (Canto Superior Direito)
         if (btnFloatCamera) {
             btnFloatCamera.addEventListener('click', async () => {
                 if (state.cameraActive) {
@@ -267,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // 2. Abrir Menu de Módulos
+        // 2. Abrir Menu de Módulos (Canto Inferior Esquerdo)
         if (btnFloatMenu && simMenuOverlay) {
             btnFloatMenu.addEventListener('click', () => {
                 simMenuOverlay.style.display = 'flex';
@@ -295,12 +308,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 menuCards.forEach(c => c.classList.remove('active'));
                 card.classList.add('active');
-
-                // Expandir sidebars ao trocar de aba
-                document.querySelectorAll('.sim-sidebar').forEach(sb => {
-                    sb.classList.remove('collapsed');
-                });
-                if (sidebarPullBtn) sidebarPullBtn.classList.remove('visible');
             });
         });
 
@@ -337,31 +344,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderTrailChipsFloat();
             });
         }
-
-        // 6. Configuração programática de Recolhimento de Painéis Laterais (Sidebars)
-        document.querySelectorAll('.sim-sidebar').forEach(sidebar => {
-            if (sidebar.querySelector('.sidebar-toggle-btn')) return;
-
-            const toggleBtn = document.createElement('button');
-            toggleBtn.className = 'sidebar-toggle-btn';
-            toggleBtn.innerHTML = '✕ Ocultar Controles';
-            sidebar.insertBefore(toggleBtn, sidebar.firstChild);
-
-            toggleBtn.addEventListener('click', () => {
-                sidebar.classList.add('collapsed');
-                if (sidebarPullBtn) sidebarPullBtn.classList.add('visible');
-            });
-        });
-
-        if (sidebarPullBtn) {
-            sidebarPullBtn.addEventListener('click', () => {
-                const activeSidebar = document.querySelector('.sim-tab-content[style*="display: block"] .sim-sidebar, .sim-tab-content:not([style*="display: none"]) .sim-sidebar');
-                if (activeSidebar) {
-                    activeSidebar.classList.remove('collapsed');
-                }
-                sidebarPullBtn.classList.remove('visible');
-            });
-        }
     }
 
     // -------------------------------------------------------------
@@ -378,7 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.style.background = 'var(--gold-primary)';
             btn.style.color = '#000';
             setTimeout(() => {
-                btn.textContent = '➕ Adicionar à Escolha do Cliente';
+                btn.textContent = '➕ Recomendar';
                 btn.style.background = 'transparent';
                 btn.style.color = 'var(--gold-light)';
             }, 1800);
@@ -401,9 +383,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (countSpanFloat) countSpanFloat.textContent = state.trail.length;
 
         renderTrailChipsFloat();
+        renderTrailChipsSubtle();
 
         if (state.trail.length === 0) {
-            simTrailChipsContainer.innerHTML = `<span style="font-size: 11px; color: var(--text-muted);">Nenhuma opção marcada ainda. Selecione conforme o atendimento.</span>`;
+            simTrailChipsContainer.innerHTML = `<span style="font-size: 11px; color: var(--text-muted);">Nenhuma opção marcada ainda.</span>`;
             if (simFinalSummaryList) simFinalSummaryList.innerHTML = `<p style="color: var(--text-muted); font-size: 13px;">Nenhuma escolha registrada na trilha ainda.</p>`;
             return;
         }
@@ -466,6 +449,36 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         container.querySelectorAll('.sim-chip-remove-float').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = parseInt(btn.getAttribute('data-idx'));
+                state.trail.splice(idx, 1);
+                renderTrailChips();
+            });
+        });
+    }
+
+    // Renderiza a trilha de escolhas sutis na base inferior
+    function renderTrailChipsSubtle() {
+        const container = document.getElementById('simTrailChipsContainerSubtle');
+        if (!container) return;
+        container.innerHTML = '';
+
+        if (state.trail.length === 0) {
+            container.innerHTML = `<span style="font-size: 9px; color: var(--text-muted);">Nenhuma recomendação salva.</span>`;
+            return;
+        }
+
+        state.trail.forEach((t, idx) => {
+            const chip = document.createElement('div');
+            chip.style.cssText = `background: rgba(255,255,255,0.03); border: 1px solid var(--border-gold); border-radius: 6px; padding: 3px 8px; display: flex; align-items: center; gap: 6px; font-size: 9.5px; color: #fff; white-space: nowrap;`;
+            chip.innerHTML = `
+                <span><strong>${t.category}:</strong> ${t.item}</span>
+                <span class="sim-chip-remove-subtle" data-idx="${idx}" style="cursor: pointer; color: #ff5555; font-weight: 700; padding-left: 2px;">✕</span>
+            `;
+            container.appendChild(chip);
+        });
+
+        container.querySelectorAll('.sim-chip-remove-subtle').forEach(btn => {
             btn.addEventListener('click', () => {
                 const idx = parseInt(btn.getAttribute('data-idx'));
                 state.trail.splice(idx, 1);
@@ -786,6 +799,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- MÓDULO 2: OFFICE VS PERTO ---
+    function initOfficeEngine() {
+        const btns = document.querySelectorAll('#dock-controls-office button[data-type="office"]');
+        btns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                btns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.office.mode = btn.getAttribute('data-val');
+                drawOffice();
+            });
+        });
+    }
+
     function drawOffice() {
         const canvas = document.getElementById('canvasOffice');
         if (!canvas) return;
@@ -842,6 +867,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- MÓDULO 3: VS FREEFORM VS PRONTAS ---
+    function initFreeformEngine() {
+        const btns = document.querySelectorAll('#dock-controls-freeform button[data-type="freeform"]');
+        btns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                btns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.freeform.mode = btn.getAttribute('data-val');
+                drawFreeform();
+            });
+        });
+    }
+
     function drawFreeform() {
         const canvas = document.getElementById('canvasFreeform');
         if (!canvas) return;
@@ -951,6 +988,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- MÓDULO 6: FOTOSSENSÍVEIS ---
+    function initPhotoEngine() {
+        const rangeUv = document.getElementById('rangeUv');
+        if (rangeUv) {
+            rangeUv.addEventListener('input', (e) => {
+                state.photo.uvLevel = parseInt(e.target.value);
+                drawPhoto();
+            });
+        }
+        const btns = document.querySelectorAll('#dock-controls-photo button[data-type="photo"]');
+        btns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                btns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.photo.mode = btn.getAttribute('data-val');
+                drawPhoto();
+            });
+        });
+    }
+
     function drawPhoto() {
         const canvas = document.getElementById('canvasPhoto');
         if (!canvas) return;
@@ -983,6 +1039,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- MÓDULO 7: CALCULADORA DE ESPESSURA DE BORDA ---
+    function initThicknessEngine() {
+        const rangeDiopter = document.getElementById('rangeDiopter');
+        const valDiopter = document.getElementById('valDiopter');
+        if (rangeDiopter) {
+            rangeDiopter.addEventListener('input', (e) => {
+                state.thickness.diopter = parseFloat(e.target.value);
+                if (valDiopter) valDiopter.textContent = `${state.thickness.diopter.toFixed(2)} D`;
+                drawThickness();
+            });
+        }
+    }
+
     function drawThickness() {
         const canvas = document.getElementById('canvasThickness');
         if (!canvas) return;
@@ -1034,6 +1102,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- MÓDULO 8: LENTES POLARIZADAS ---
+    function initPolarizedEngine() {
+        const btns = document.querySelectorAll('#dock-controls-polarized button[data-type="polar"]');
+        btns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                btns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.polarized.mode = btn.getAttribute('data-val');
+                drawPolarized();
+            });
+        });
+    }
+
     function drawPolarized() {
         const canvas = document.getElementById('canvasPolarized');
         if (!canvas) return;
@@ -1084,6 +1164,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- MÓDULO 9: CORES & SHINE MIRROR ---
+    function initColorsEngine() {
+        const btns = document.querySelectorAll('#dock-controls-colors button.sim-color-btn');
+        btns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                btns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.colors.color = btn.getAttribute('data-color');
+                drawColors();
+            });
+        });
+    }
+
     function drawColors() {
         const canvas = document.getElementById('canvasColors');
         if (!canvas) return;

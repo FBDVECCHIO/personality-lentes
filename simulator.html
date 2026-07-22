@@ -651,41 +651,143 @@
             <button class="sim-tab-btn" data-tab="tab-summary"></button>
         </nav>
 
-        <!-- NOVOS CONTROLES FLUTUANTES (UX Premium para Tablet) -->
-        
-        <!-- Câmera AR no Canto Superior Direito -->
-        <button id="btnFloatCamera" class="sim-float-btn" style="top: 20px; right: 20px;">
-            <span class="icon">📹</span>
-            <span class="lbl">Câmera</span>
+        <!-- Câmera AR no Canto Superior Direito (Redondo Glassmorphic) -->
+        <button id="btnFloatCamera" class="sim-float-btn" style="top: 20px; right: 20px; position: fixed; z-index: 160; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; background: rgba(10, 10, 15, 0.65); border: 1.5px solid rgba(255, 255, 255, 0.15); color: #fff; cursor: pointer; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); transition: all 0.3s ease;">
+            <span class="icon" style="font-size: 20px; line-height: 1;">📹</span>
+            <span style="font-size: 8px; font-weight: 800; text-transform: uppercase; margin-top: 2px; letter-spacing: 0.5px;">Câmera</span>
         </button>
 
-        <!-- Menu de Módulos (Abrir/Recolher) no Canto Inferior Esquerdo -->
-        <button id="btnFloatMenu" class="sim-float-btn" style="bottom: 20px; left: 20px;">
-            <span class="icon">☰</span>
-            <span class="lbl">Módulos</span>
-        </button>
+        <!-- PAINEL DOCK INFERIOR (UX Premium Horizontal - Zeiss Style) -->
+        <div id="simBottomDock" style="position: fixed; bottom: 12px; left: 12px; right: 12px; height: 110px; background: rgba(10, 10, 15, 0.65); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1.5px solid rgba(255, 255, 255, 0.12); border-radius: 20px; padding: 12px 24px; display: flex; flex-direction: column; justify-content: space-between; z-index: 150; box-shadow: 0 15px 40px rgba(0,0,0,0.65);">
+            
+            <!-- Linha Superior: Botões e Controles Auxiliares -->
+            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 16px;">
+                
+                <!-- Lado Esquerdo: Menu Retangular -->
+                <button id="btnFloatMenu" class="btn btn-gold" style="height: 42px; padding: 0 24px; font-weight: 800; font-size: 11.5px; letter-spacing: 1px; border-radius: 10px; display: flex; align-items: center; gap: 8px; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.25);">
+                    ☰ MÓDULOS
+                </button>
+                
+                <!-- Centro: Controles Dinâmicos (Injetados por aba) -->
+                <div id="simDockControls" style="display: flex; align-items: center; gap: 16px; flex-grow: 1; justify-content: center;">
+                    
+                    <!-- Controles Progressivos -->
+                    <div id="dock-controls-progressivos" class="dock-controls-block" style="display: flex; align-items: center; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <label style="font-size: 9px; font-weight: 700; color: var(--gold-light); white-space: nowrap;">ESQ:</label>
+                            <select id="selectLensLeft" class="sim-select-custom" style="width: 160px; padding: 6px 12px; font-size: 11px; border-radius: 8px; height: 34px; background: rgba(20, 20, 26, 0.95); border: 1px solid rgba(255,255,255,0.15); color: #fff;">
+                                <option value="personality-hd" selected>✨ Personality Digital HD</option>
+                                <option value="personality-gold">⚡ Personality 1.61 Gold</option>
+                                <option value="personality-ultra">👑 Personality 1.76 Ultra</option>
+                                <option value="concorrente-basica">❌ Concorrente Básica</option>
+                                <option value="convencional-padrao">❌ Convencional Padrão</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <label style="font-size: 9px; font-weight: 700; color: #ff8888; white-space: nowrap;">DIR:</label>
+                            <select id="selectLensRight" class="sim-select-custom" style="width: 160px; padding: 6px 12px; font-size: 11px; border-radius: 8px; height: 34px; background: rgba(20, 20, 26, 0.95); border: 1px solid rgba(255,255,255,0.15); color: #fff;">
+                                <option value="convencional-padrao" selected>❌ Convencional Padrão</option>
+                                <option value="concorrente-basica">❌ Concorrente Básica</option>
+                                <option value="personality-hd">✨ Personality Digital HD</option>
+                                <option value="personality-gold">⚡ Personality 1.61 Gold</option>
+                                <option value="personality-ultra">👑 Personality 1.76 Ultra</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-gold btn-sm btn-add-trail" data-category="Campo Visual" data-item="Personality Digital HD (Multifocal)" style="font-size: 10px; padding: 0 16px; height: 34px; font-weight: 700; border-radius: 8px;">➕ Recomendar</button>
+                    </div>
 
-        <!-- Trilha de Escolhas no Canto Inferior Direito -->
-        <button id="btnFloatTrail" class="sim-float-btn" style="bottom: 20px; right: 20px;">
-            <span class="icon">📋</span>
-            <span class="lbl">Trilha (<span id="trailCountFloat">0</span>)</span>
-        </button>
+                    <!-- Controles Office -->
+                    <div id="dock-controls-office" class="dock-controls-block" style="display: none; align-items: center; gap: 12px;">
+                        <button class="sim-btn-side active" data-type="office" data-val="office-personality" style="height: 34px; padding: 0 16px; border-radius: 8px; font-size: 11px; width: auto;">💼 Personality Office</button>
+                        <button class="sim-btn-side" data-type="office" data-val="perto-simples" style="height: 34px; padding: 0 16px; border-radius: 8px; font-size: 11px; width: auto;">👓 Perto Simples</button>
+                        <button class="btn btn-gold btn-sm btn-add-trail" data-category="Ocupacional" data-item="Personality Office (Trabalho/Perto)" style="font-size: 10px; padding: 0 16px; height: 34px; font-weight: 700; border-radius: 8px;">➕ Recomendar</button>
+                    </div>
 
-        <!-- Puxador Flutuante de Controles Laterais (Sidebar) -->
-        <button id="sidebarPullBtn" class="sidebar-pull-btn">⚙️</button>
+                    <!-- Controles Freeform -->
+                    <div id="dock-controls-freeform" class="dock-controls-block" style="display: none; align-items: center; gap: 12px;">
+                        <button class="sim-btn-side active" data-type="freeform" data-val="freeform-asferica" style="height: 34px; padding: 0 16px; border-radius: 8px; font-size: 11px; width: auto;">🔬 VS Freeform Asférica</button>
+                        <button class="sim-btn-side" data-type="freeform" data-val="pronta-esferica" style="height: 34px; padding: 0 16px; border-radius: 8px; font-size: 11px; width: auto;">❌ Pronta Esférica</button>
+                        <button class="btn btn-gold btn-sm btn-add-trail" data-category="Visão Simples" data-item="Personality VS Freeform Asférica" style="font-size: 10px; padding: 0 16px; height: 34px; font-weight: 700; border-radius: 8px;">➕ Recomendar</button>
+                    </div>
 
-        <!-- Painel Lateral da Trilha de Escolhas -->
-        <div id="simTrailPanel" class="sim-trail-panel">
+                    <!-- Controles AR Demo -->
+                    <div id="dock-controls-ar-demo" class="dock-controls-block" style="display: none; align-items: center; gap: 12px;">
+                        <span style="font-size: 11.5px; color: var(--text-muted);">Arraste a barra central na imagem para simular o reflexo</span>
+                        <button class="btn btn-gold btn-sm btn-add-trail" data-category="Tratamento AR" data-item="Tratamento Antirreflexo Gold Premium" style="font-size: 10px; padding: 0 16px; height: 34px; font-weight: 700; border-radius: 8px;">➕ Recomendar Gold</button>
+                    </div>
+
+                    <!-- Controles AR Benefits -->
+                    <div id="dock-controls-ar-benefits" class="dock-controls-block" style="display: none; align-items: center; gap: 12px;">
+                        <span style="font-size: 11px; color: var(--gold-light); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">✓ Proteção Completa: Hidrofóbico, Antirrisco, Antiestático, Blue Control</span>
+                        <button class="btn btn-gold btn-sm btn-add-trail" data-category="Proteção" data-item="Tratamento Antirreflexo Completo" style="font-size: 10px; padding: 0 16px; height: 34px; font-weight: 700; border-radius: 8px;">➕ Recomendar</button>
+                    </div>
+
+                    <!-- Controles Transitions -->
+                    <div id="dock-controls-photo" class="dock-controls-block" style="display: none; align-items: center; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <label style="font-size: 9px; font-weight: 700; color: var(--gold-light); white-space: nowrap;">NÍVEL UV:</label>
+                            <input type="range" id="rangeUv" min="0" max="100" value="0" style="width: 100px; accent-color: var(--gold-primary);">
+                        </div>
+                        <button class="sim-btn-side active" data-type="photo" data-val="gen-s" style="height: 34px; padding: 0 12px; border-radius: 8px; font-size: 10.5px; width: auto;">Transitions GEN S</button>
+                        <button class="sim-btn-side" data-type="photo" data-val="xtractive" style="height: 34px; padding: 0 12px; border-radius: 8px; font-size: 10.5px; width: auto;">Xtractive</button>
+                        <button class="btn btn-gold btn-sm btn-add-trail" data-category="Fotossensível" data-item="Lente Fotossensível Transitions" style="font-size: 10px; padding: 0 16px; height: 34px; font-weight: 700; border-radius: 8px;">➕ Recomendar</button>
+                    </div>
+
+                    <!-- Controles Thickness -->
+                    <div id="dock-controls-thickness" class="dock-controls-block" style="display: none; align-items: center; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <label style="font-size: 9px; font-weight: 700; color: var(--gold-light); white-space: nowrap;">DIOPTRIA:</label>
+                            <span id="valDiopter" style="font-size: 13px; font-weight: 900; color: var(--gold-light); min-width: 50px; text-align: center;">-5.00 D</span>
+                            <input type="range" id="rangeDiopter" min="-10" max="-1" step="0.25" value="-5.00" style="width: 110px; accent-color: var(--gold-primary);">
+                        </div>
+                        <button class="btn btn-gold btn-sm btn-add-trail" data-category="Índice de Refração" data-item="Lente Refração Elevada Fina" style="font-size: 10px; padding: 0 16px; height: 34px; font-weight: 700; border-radius: 8px;">➕ Recomendar</button>
+                    </div>
+
+                    <!-- Controles Polarized -->
+                    <div id="dock-controls-polarized" class="dock-controls-block" style="display: none; align-items: center; gap: 12px;">
+                        <button class="sim-btn-side active" data-type="polar" data-val="com-polarizado" style="height: 34px; padding: 0 16px; border-radius: 8px; font-size: 11px; width: auto;">🌊 Lente Polarizada</button>
+                        <button class="sim-btn-side" data-type="polar" data-val="sem-polarizado" style="height: 34px; padding: 0 16px; border-radius: 8px; font-size: 11px; width: auto;">❌ Sem Polarizado</button>
+                        <button class="btn btn-gold btn-sm btn-add-trail" data-category="Polarização" data-item="Lente Polarizada Solar" style="font-size: 10px; padding: 0 16px; height: 34px; font-weight: 700; border-radius: 8px;">➕ Recomendar</button>
+                    </div>
+
+                    <!-- Controles Colors -->
+                    <div id="dock-controls-colors" class="dock-controls-block" style="display: none; align-items: center; gap: 6px;">
+                        <button class="sim-btn-side sim-color-btn active" data-color="cinza" style="height: 34px; padding: 0 10px; border-radius: 8px; font-size: 10px; width: auto;">Cinza</button>
+                        <button class="sim-btn-side sim-color-btn" data-color="marrom" style="height: 34px; padding: 0 10px; border-radius: 8px; font-size: 10px; width: auto;">Marrom</button>
+                        <button class="sim-btn-side sim-color-btn" data-color="g15" style="height: 34px; padding: 0 10px; border-radius: 8px; font-size: 10px; width: auto;">G15</button>
+                        <button class="sim-btn-side sim-color-btn" data-color="gold-mirror" style="height: 34px; padding: 0 10px; border-radius: 8px; font-size: 10px; width: auto;">Gold Mirror</button>
+                        <button class="sim-btn-side sim-color-btn" data-color="blue-mirror" style="height: 34px; padding: 0 10px; border-radius: 8px; font-size: 10px; width: auto;">Blue Mirror</button>
+                        <button class="btn btn-gold btn-sm btn-add-trail" data-category="Acabamento Solar" data-item="Tratamento Shine Mirror Espelhado" style="font-size: 10px; padding: 0 12px; height: 34px; font-weight: 700; border-radius: 8px;">➕ Recomendar</button>
+                    </div>
+                </div>
+
+                <!-- Lado Direito: Botão Ficha de Recomendação -->
+                <button id="btnFloatTrail" class="btn btn-outline-gold" style="height: 42px; padding: 0 16px; font-weight: 700; font-size: 11px; border-radius: 10px; display: flex; align-items: center; gap: 6px; border: 1px solid var(--border-gold); background: transparent; cursor: pointer; color: var(--gold-light);">
+                    📋 FICHA (<span id="trailCountFloat">0</span>)
+                </button>
+            </div>
+
+            <!-- Linha Inferior: Trilha Sutil de Escolhas -->
+            <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 6px; display: flex; align-items: center; gap: 8px; overflow: hidden; width: 100%;">
+                <span style="font-size: 9px; font-weight: 800; color: var(--gold-light); text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">Recomendações:</span>
+                <div id="simTrailChipsContainerSubtle" style="display: flex; align-items: center; gap: 8px; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; width: 100%;">
+                    <!-- Chips sutis adicionados via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Painel Lateral de Trilha (Popup Lateral) -->
+        <div id="simTrailPanel" class="sim-trail-panel" style="position: fixed; bottom: 135px; right: 12px; z-index: 155; width: 320px; background: rgba(10, 10, 15, 0.9); border: 1.5px solid var(--border-gold); border-radius: 16px; padding: 16px; display: none; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 12px;">
-                <h4 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--gold-light); text-transform: uppercase;">📋 Trilha de Recomendações</h4>
-                <span id="btnCloseTrailPanel" style="cursor: pointer; color: #fff; font-weight: 700; font-size: 14px;">✕</span>
+                <h4 style="margin: 0; font-size: 12px; font-weight: 800; color: var(--gold-light); text-transform: uppercase; letter-spacing: 0.5px;">📋 Recomendações Salvas</h4>
+                <span id="btnCloseTrailPanel" style="cursor: pointer; color: #fff; font-weight: 700; font-size: 14px; padding: 2px 6px;">✕</span>
             </div>
             <div id="simTrailChipsContainerFloat" style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; margin-bottom: 16px;">
                 <!-- Inserido via JS -->
             </div>
             <div style="display: flex; gap: 8px;">
-                <button id="btnClearTrailFloat" class="btn btn-full" style="background: rgba(255,85,85,0.1); border: 1px solid rgba(255,85,85,0.3); color: #ff5555; font-size: 11px; padding: 8px;">🗑️ Limpar</button>
-                <button id="btnFinishTrailFloat" class="btn btn-gold btn-full" style="font-size: 11px; padding: 8px;">📋 Fechar Ficha</button>
+                <button id="btnClearTrailFloat" class="btn btn-full" style="background: rgba(255,85,85,0.15); border: 1px solid rgba(255,85,85,0.3); color: #ff5555; font-size: 11px; padding: 8px; border-radius: 8px;">🗑️ Limpar</button>
+                <button id="btnFinishTrailFloat" class="btn btn-gold btn-full" style="font-size: 11px; padding: 8px; border-radius: 8px;">📋 Fechar Ficha</button>
             </div>
         </div>
 
@@ -757,43 +859,6 @@
                         <div class="split-slider-button">↔</div>
                     </div>
                 </div>
-
-                <aside class="sim-sidebar">
-                    <h3 class="sim-sidebar-title">🕹️ Controles da Batalha</h3>
-
-                    <div>
-                        <label style="font-size: 10px; color: var(--gold-light); font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 6px;">👈 Lado Esquerdo (Lente 1)</label>
-                        <select id="selectLensLeft" class="sim-select-custom">
-                            <option value="personality-hd" selected>✨ Personality Digital HD (Campo Amplo)</option>
-                            <option value="personality-gold">⚡ Personality 1.61 Gold Digital</option>
-                            <option value="personality-ultra">👑 Personality 1.76 Ultra Digital</option>
-                            <option value="concorrente-basica">❌ Concorrente Básica (Campo Médio)</option>
-                            <option value="convencional-padrao">❌ Multifocal Convencional Padrão</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label style="font-size: 10px; color: #ff8888; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 6px;">👉 Lado Direito (Lente 2)</label>
-                        <select id="selectLensRight" class="sim-select-custom">
-                            <option value="convencional-padrao" selected>❌ Multifocal Convencional Padrão</option>
-                            <option value="concorrente-basica">❌ Concorrente Básica (Campo Médio)</option>
-                            <option value="personality-hd">✨ Personality Digital HD</option>
-                            <option value="personality-gold">⚡ Personality 1.61 Gold Digital</option>
-                            <option value="personality-ultra">👑 Personality 1.76 Ultra Digital</option>
-                        </select>
-                    </div>
-
-                    <div style="margin-top: 10px; margin-bottom: 10px;">
-                        <button id="btnToggleCamera" class="sim-btn-side" style="border-color: var(--gold-primary); background: rgba(212,175,55,0.05);">
-                            <span>📹 Câmera Realidade Aumentada</span>
-                            <small id="cameraStatus" style="color: var(--gold-light); font-weight:700;">OFF</small>
-                        </button>
-                    </div>
-
-                    <button class="btn btn-gold btn-full btn-add-trail" data-category="Campo Visual" data-item="Personality Digital HD (Multifocal)" style="margin-top: auto; font-weight: 700; font-size: 12px; padding: 12px;">
-                        ➕ Recomendar Lente
-                    </button>
-                </aside>
             </div>
 
             <!-- MÓDULO 2: OFFICE VS PERTO -->
@@ -801,22 +866,6 @@
                 <div class="sim-canvas-wrapper" id="wrapperOffice">
                     <canvas id="canvasOffice" class="sim-canvas"></canvas>
                 </div>
-
-                <aside class="sim-sidebar">
-                    <h3 class="sim-sidebar-title">🕹️ Opções de Visão</h3>
-                    <button class="sim-btn-side active" data-type="office" data-val="office-personality">
-                        <span>💼 Personality Office</span>
-                        <small style="color: var(--gold-light); display: block; font-size: 10px;">40cm a 4 metros</small>
-                    </button>
-                    <button class="sim-btn-side" data-type="office" data-val="perto-simples">
-                        <span>👓 Perto Simples Comum</span>
-                        <small style="color: #ff8888; display: block; font-size: 10px;">Apenas 40cm</small>
-                    </button>
-
-                    <button class="btn btn-gold btn-full btn-add-trail" data-category="Tipo de Lente" data-item="Personality Office (Ocupacional)" style="margin-top: auto; font-weight: 700; font-size: 12px; padding: 12px;">
-                        ➕ Recomendar Office
-                    </button>
-                </aside>
             </div>
 
             <!-- MÓDULO 3: VS FREEFORM VS PRONTAS -->
@@ -824,22 +873,6 @@
                 <div class="sim-canvas-wrapper" id="wrapperFreeform">
                     <canvas id="canvasFreeform" class="sim-canvas"></canvas>
                 </div>
-
-                <aside class="sim-sidebar">
-                    <h3 class="sim-sidebar-title">🕹️ Tecnologia VS</h3>
-                    <button class="sim-btn-side active" data-type="freeform" data-val="freeform-asferica">
-                        <span>🔬 VS Freeform Asférica</span>
-                        <small style="color: var(--gold-light); display: block; font-size: 10px;">Zero distorção de borda</small>
-                    </button>
-                    <button class="sim-btn-side" data-type="freeform" data-val="pronta-esferica">
-                        <span>❌ Pronta Comum Esférica</span>
-                        <small style="color: #ff8888; display: block; font-size: 10px;">Distorção 'Olho de Peixe'</small>
-                    </button>
-
-                    <button class="btn btn-gold btn-full btn-add-trail" data-category="Tecnologia VS" data-item="Personality VS Freeform Asférica" style="margin-top: auto; font-weight: 700; font-size: 12px; padding: 12px;">
-                        ➕ Recomendar VS Freeform
-                    </button>
-                </aside>
             </div>
 
             <!-- MÓDULO 4: COM VS SEM ANTIRREFLEXO -->
@@ -850,13 +883,6 @@
                         <div class="split-slider-button">↔</div>
                     </div>
                 </div>
-
-                <aside class="sim-sidebar">
-                    <h3 class="sim-sidebar-title">🕹️ Tratamento Antirreflexo</h3>
-                    <button class="btn btn-gold btn-full btn-add-trail" data-category="Tratamento AR" data-item="Tratamento Antirreflexo Gold Premium" style="margin-top: auto; font-weight: 700; font-size: 12px; padding: 12px;">
-                        ➕ Recomendar AR Gold
-                    </button>
-                </aside>
             </div>
 
             <!-- MÓDULO 5: BENEFÍCIOS DO AR -->
@@ -905,58 +931,15 @@
                 <div class="sim-canvas-wrapper" id="wrapperPhoto">
                     <canvas id="canvasPhoto" class="sim-canvas"></canvas>
                 </div>
-
-                <aside class="sim-sidebar">
-                    <h3 class="sim-sidebar-title">🕹️ Intensidade UV / Sol</h3>
-                    
-                    <div>
-                        <input type="range" id="rangeUv" min="0" max="100" value="0" style="width: 100%; accent-color: var(--gold-primary);">
-                        <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); margin-top: 4px;">
-                            <span>🏠 Interno</span>
-                            <span>☀️ Sol Forte</span>
-                        </div>
-                    </div>
-
-                    <h3 class="sim-sidebar-title" style="margin-top: 10px;">Tecnologia Transitions</h3>
-                    <button class="sim-btn-side active" data-type="photo" data-val="gen-s">
-                        <span>⚡ Transitions GEN S</span>
-                        <small style="color: var(--gold-light); display: block; font-size: 10px;">Ativação ultrarrápida</small>
-                    </button>
-                    <button class="sim-btn-side" data-type="photo" data-val="xtractive">
-                        <span>🚗 Transitions Xtractive</span>
-                        <small style="color: var(--gold-light); display: block; font-size: 10px;">Ativação no carro</small>
-                    </button>
-
-                    <button class="btn btn-gold btn-full btn-add-trail" data-category="Tecnologia Sol" data-item="Lente Fotossensível Transitions" style="margin-top: auto; font-weight: 700; font-size: 12px; padding: 12px;">
-                        ➕ Recomendar Transitions
-                    </button>
-                </aside>
             </div>
 
             <!-- MÓDULO 7: CALCULADORA DE ESPESSURA (TELA DE CONTEÚDO) -->
             <div class="sim-tab-content" id="tab-thickness" style="display: none;">
                 <div style="position: fixed; inset: 0; background: #08080c; z-index: 1; display: flex; align-items: center; justify-content: center; padding: 24px; padding-top: 190px;">
-                    <div style="background: rgba(16, 16, 22, 0.85); border: 1px solid var(--border-gold); max-width: 900px; width: 100%; border-radius: 20px; padding: 30px; backdrop-filter: blur(20px); box-shadow: 0 20px 60px rgba(0,0,0,0.6); display: grid; grid-template-columns: 1fr 280px; gap: 24px;">
-                        
-                        <div>
-                            <h3 style="color: #fff; font-size: 18px; font-weight: 800; margin-bottom: 12px;">Calculadora de Espessura por Grau</h3>
-                            <div style="height: 250px; background: rgba(0,0,0,0.4); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);" id="wrapperThickness">
-                                <canvas id="canvasThickness" class="sim-canvas"></canvas>
-                            </div>
-                        </div>
-
-                        <div style="display: flex; flex-direction: column; justify-content: space-between;">
-                            <div>
-                                <label style="font-size: 11px; color: var(--gold-light); font-weight: 700; text-transform: uppercase;">Grau da Receita (Dioptria)</label>
-                                <div style="text-align: center; margin: 15px 0;">
-                                    <span id="valDiopter" style="font-size: 26px; font-weight: 900; color: var(--gold-light);">-5.00 D</span>
-                                </div>
-                                <input type="range" id="rangeDiopter" min="-10" max="-1" step="0.25" value="-5.00" style="width: 100%; accent-color: var(--gold-primary);">
-                            </div>
-
-                            <button class="btn btn-gold btn-full btn-add-trail" data-category="Índice de Refração" data-item="Lente 1.61 Coringa / 1.76 Ultra" style="font-weight: 700; font-size: 12px; padding: 12px;">
-                                ➕ Recomendar Índice
-                            </button>
+                    <div style="background: rgba(16, 16, 22, 0.85); border: 1px solid var(--border-gold); max-width: 900px; width: 100%; border-radius: 20px; padding: 30px; backdrop-filter: blur(20px); box-shadow: 0 20px 60px rgba(0,0,0,0.6); display: flex; flex-direction: column; gap: 16px;">
+                        <h3 style="color: #fff; font-size: 18px; font-weight: 800; margin-bottom: 4px; text-align: center;">Calculadora de Espessura por Grau</h3>
+                        <div style="height: 300px; background: rgba(0,0,0,0.4); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);" id="wrapperThickness">
+                            <canvas id="canvasThickness" class="sim-canvas"></canvas>
                         </div>
                     </div>
                 </div>
@@ -967,22 +950,6 @@
                 <div class="sim-canvas-wrapper" id="wrapperPolarized">
                     <canvas id="canvasPolarized" class="sim-canvas"></canvas>
                 </div>
-
-                <aside class="sim-sidebar">
-                    <h3 class="sim-sidebar-title">🕹️ Filtro Polarizado</h3>
-                    <button class="sim-btn-side active" data-type="polar" data-val="com-polarizado">
-                        <span>🌊 Com Polarizado</span>
-                        <small style="color: var(--gold-light); display: block; font-size: 10px;">Reflexos removidos</small>
-                    </button>
-                    <button class="sim-btn-side" data-type="polar" data-val="sem-polarizado">
-                        <span>❌ Sem Polarizado</span>
-                        <small style="color: #ff8888; display: block; font-size: 10px;">Ofuscamento excessivo</small>
-                    </button>
-
-                    <button class="btn btn-gold btn-full btn-add-trail" data-category="Tratamento Solar" data-item="Filtro Polarizado Anti-Ofuscamento" style="margin-top: auto; font-weight: 700; font-size: 12px; padding: 12px;">
-                        ➕ Recomendar Polarizado
-                    </button>
-                </aside>
             </div>
 
             <!-- MÓDULO 9: CORES & SHINE MIRROR -->
@@ -990,19 +957,6 @@
                 <div class="sim-canvas-wrapper" id="wrapperColors">
                     <canvas id="canvasColors" class="sim-canvas"></canvas>
                 </div>
-
-                <aside class="sim-sidebar">
-                    <h3 class="sim-sidebar-title">🕹️ Cores & Espelhados</h3>
-                    <button class="sim-btn-side sim-color-btn active" data-color="cinza">Cinza Clássico</button>
-                    <button class="sim-btn-side sim-color-btn" data-color="marrom">Marrom Warm</button>
-                    <button class="sim-btn-side sim-color-btn" data-color="g15">G15 (Verde)</button>
-                    <button class="sim-btn-side sim-color-btn" data-color="gold-mirror">✨ Shine Gold</button>
-                    <button class="sim-btn-side sim-color-btn" data-color="blue-mirror">💎 Shine Blue</button>
-
-                    <button class="btn btn-gold btn-full btn-add-trail" data-category="Acabamento Solar" data-item="Tratamento Shine Mirror Espelhado" style="margin-top: auto; font-weight: 700; font-size: 12px; padding: 12px;">
-                        ➕ Recomendar Cor
-                    </button>
-                </aside>
             </div>
 
             <!-- MÓDULO 10: FICHA DE RECOMENDAÇÃO DO CLIENTE -->
@@ -1033,6 +987,6 @@
     <video id="simVideoFeed" autoplay playsinline muted style="display: none;"></video>
 
     <!-- Scripts da Aplicação -->
-    <script src="simulator.js?v=2.5"></script>
+    <script src="simulator.js?v=2.6"></script>
 </body>
 </html>
