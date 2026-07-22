@@ -1339,53 +1339,40 @@ document.addEventListener('DOMContentLoaded', () => {
         const rw = drawW / 2;
         const actualRh = drawH / 2;
 
-        const isPolarized = state.polarized.mode !== 'sem-polarizado';
-
-        // 2. VISÃO INTERNA DA LENTE ESQUERDA (DENTRO DA IMAGEM LENS/FRAME - MIOLO CLARO)
+        // 2. VISÃO INTERNA DA LENTE ESQUERDA (DENTRO DA IMAGEM LENS/FRAME - MIOLO CLARO - SEMPRE POLARIZADA)
         ctx.save();
         ctx.beginPath();
-        // A elipse de recorte acompanha perfeitamente a proporção original de 2850x2220
+        // A elipse de recorte acompanha perfeitamente a proporção original de 5850x4557
         ctx.ellipse(rx, ry, rw * 0.88, actualRh * 0.88, 0, 0, Math.PI * 2);
         ctx.clip();
         
-        // Desenha a cena clara/brilhante sem o escurecimento externo
+        // Desenha a cena clara/brilhante sem o escurecimento externo (revela os peixes!)
         ctx.drawImage(offscreenCanvas, 0, 0, w, h);
-
-        if (!isPolarized) {
-            ctx.save();
-            const glare = ctx.createRadialGradient(rx, ry, 10, rx, ry, rw * 0.95);
-            glare.addColorStop(0, 'rgba(255, 255, 255, 0.75)');
-            glare.addColorStop(0.5, 'rgba(255, 255, 255, 0.48)');
-            glare.addColorStop(1, 'rgba(255, 255, 255, 0)');
-            ctx.fillStyle = glare;
-            ctx.fillRect(rx - rw, ry - actualRh, rw * 2, drawH);
-            ctx.restore();
-        }
         ctx.restore();
 
-        // 3. VISÃO INTERNA DA LENTE DIREITA (DENTRO DA IMAGEM LENS/FRAME ESPELHADA - MIOLO CLARO)
+        // 3. VISÃO INTERNA DA LENTE DIREITA (DENTRO DA IMAGEM LENS/FRAME ESPELHADA - MIOLO CLARO - SEMPRE NÃO POLARIZADA)
         ctx.save();
         ctx.beginPath();
         ctx.ellipse(lx, ly, rw * 0.88, actualRh * 0.88, 0, 0, Math.PI * 2);
         ctx.clip();
         
-        // Desenha a cena clara/brilhante sem o escurecimento externo
+        // Desenha a cena clara/brilhante
         ctx.drawImage(offscreenCanvas, 0, 0, w, h);
 
-        if (!isPolarized) {
-            ctx.save();
-            const glare = ctx.createRadialGradient(lx, ly, 10, lx, ly, rw * 0.95);
-            glare.addColorStop(0, 'rgba(255, 255, 255, 0.75)');
-            glare.addColorStop(0.5, 'rgba(255, 255, 255, 0.48)');
-            glare.addColorStop(1, 'rgba(255, 255, 255, 0)');
-            ctx.fillStyle = glare;
-            ctx.fillRect(lx - rw, ly - actualRh, rw * 2, drawH);
-            ctx.restore();
-        }
+        // Aplica o ofuscamento de sol na água (glare) sobre o canal direito não-polarizado
+        ctx.save();
+        const glare = ctx.createRadialGradient(lx, ly, 10, lx, ly, rw * 0.95);
+        glare.addColorStop(0, 'rgba(255, 255, 255, 0.78)');
+        glare.addColorStop(0.5, 'rgba(255, 255, 255, 0.48)');
+        glare.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = glare;
+        ctx.fillRect(lx - rw, ly - actualRh, rw * 2, drawH);
+        ctx.restore();
+        
         ctx.restore();
 
         // 4. DESENHO DA IMAGEM LENTE.PNG SOBRE AS DUAS ÁREAS
-        // Lente Esquerda (Proporcional à largura de 2850x2220 e sem distorção)
+        // Lente Esquerda (Proporcional à largura de 5850x4557 e sem distorção)
         if (images.lenteImg && images.lenteImg.complete && images.lenteImg.naturalWidth > 0) {
             ctx.drawImage(images.lenteImg, rx - rw, ry - actualRh, rw * 2, drawH);
         }
@@ -1397,21 +1384,6 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.scale(-1, 1);
             ctx.drawImage(images.lenteImg, -rw, -actualRh, rw * 2, drawH);
             ctx.restore();
-        }
-
-        // Atualiza crachá flutuante HTML
-        const badgePolarized = document.getElementById('badgePolarized');
-        if (badgePolarized) {
-            badgePolarized.innerHTML = isPolarized ? `
-                <strong>🌊 LENTE POLARIZADA PERSONALITY</strong>
-                <span>Filtração de Reflexos Ofuscantes na Água</span>
-                <small>Visão nítida do fundo da água e cores de alta definição</small>
-            ` : `
-                <strong style="color: #ff8888;">❌ LENTE SOLAR SEM POLARIZADO</strong>
-                <span>Ofuscamento Intenso Encobre a Visão</span>
-                <small>Dificuldade extrema para ver sob a superfície da água</small>
-            `;
-            badgePolarized.style.borderColor = isPolarized ? 'var(--gold-primary)' : '#ff5555';
         }
     }
 
