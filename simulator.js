@@ -280,36 +280,74 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // 1.2. Tela Cheia (Canto Superior Esquerdo)
+        // 1.2. Tela Cheia (Canto Superior Esquerdo - Compatível com iPadOS/Safari/Android/Chrome)
         const btnFullscreen = document.getElementById('btnFullscreen');
         if (btnFullscreen) {
             btnFullscreen.addEventListener('click', () => {
-                if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen().catch(err => {
-                        console.error(`Erro ao ativar Tela Cheia: ${err.message}`);
-                    });
+                const doc = window.document;
+                const docEl = doc.documentElement;
+
+                // Mapeia métodos de entrada em tela cheia cross-browser
+                const requestFS = docEl.requestFullscreen || 
+                                  docEl.webkitRequestFullscreen || 
+                                  docEl.webkitRequestFullScreen || 
+                                  docEl.mozRequestFullScreen || 
+                                  docEl.msRequestFullscreen;
+
+                // Mapeia métodos de saída de tela cheia
+                const exitFS = doc.exitFullscreen || 
+                               doc.webkitExitFullscreen || 
+                               doc.webkitCancelFullScreen || 
+                               doc.mozCancelFullScreen || 
+                               doc.msExitFullscreen;
+
+                // Verifica se já está em tela cheia
+                const isFS = doc.fullscreenElement || 
+                             doc.webkitFullscreenElement || 
+                             doc.webkitIsFullScreen || 
+                             doc.mozFullScreenElement || 
+                             doc.msFullscreenElement;
+
+                if (!isFS) {
+                    if (requestFS) {
+                        requestFS.call(docEl).catch(err => {
+                            console.error(`Erro ao ativar Tela Cheia: ${err.message}`);
+                        });
+                    }
                 } else {
-                    document.exitFullscreen();
+                    if (exitFS) {
+                        exitFS.call(doc);
+                    }
                 }
             });
         }
 
-        document.addEventListener('fullscreenchange', () => {
-            if (btnFullscreen) {
-                if (document.fullscreenElement) {
-                    btnFullscreen.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #fff; width: 20px; height: 20px;">
-                            <path d="M4 14h6v6m10-6h-6v6M4 10h6V4m10 6h-6V4"></path>
-                        </svg>
-                    `;
-                } else {
-                    btnFullscreen.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #fff; width: 20px; height: 20px;">
-                            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
-                        </svg>
-                    `;
+        // Eventos de alteração de tela cheia com suporte a prefixos de navegadores
+        const fsEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'];
+        fsEvents.forEach(evt => {
+            document.addEventListener(evt, () => {
+                const isFSNow = document.fullscreenElement || 
+                                document.webkitFullscreenElement || 
+                                document.webkitIsFullScreen || 
+                                document.mozFullScreenElement || 
+                                document.msFullscreenElement;
+
+                if (btnFullscreen) {
+                    if (isFSNow) {
+                        btnFullscreen.innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #fff; width: 20px; height: 20px;">
+                                <path d="M4 14h6v6m10-6h-6v6M4 10h6V4m10 6h-6V4"></path>
+                            </svg>
+                        `;
+                    } else {
+                        btnFullscreen.innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #fff; width: 20px; height: 20px;">
+                                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                            </svg>
+                        `;
+                    }
                 }
-            }
+            });
         });
 
         // 2. Abrir Menu de Módulos (Canto Inferior Esquerdo - Popup Vertical que sobe)
