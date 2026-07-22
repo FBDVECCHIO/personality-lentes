@@ -1374,12 +1374,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const lx = w * 0.735;
         const ly = h * 0.40;
 
-        // Proporções exatas do novo arquivo LENTE Chroma Key.png: 5743x4481 pixels
-        const imgW = 5743;
-        const imgH = 4481;
-        const aspect = imgW / imgH; // 1.28163
+        // Proporções exatas do novo arquivo LENTE Chroma Key.png (apenas a lente): 5743x4481 pixels
+        // A LENTE.png tem 12473x4591 pixels porque inclui a haste lateral à esquerda
+        const aspect = 5743 / 4591;
 
-        // Largura base estática
+        // Largura base estática do aro da lente na tela
         let drawW = 440; 
         const maxW = w * 0.22 * 2; // Clampa a largura máxima para 44% da tela para evitar sobreposição em telas pequenas
         if (drawW > maxW) {
@@ -1390,18 +1389,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const rw = drawW / 2;
         const actualRh = drawH / 2;
 
+        // Fatores de escala para desenhar a imagem inteira LENTE.png (haste + lente) alinhada com o centro do aro
+        const scale = drawW / 5743;
+        const totalDrawW = 12473 * scale;
+        const lensCenterOffset = 9601.5 * scale; // Centro do aro na imagem LENTE.png original (6730 + 5743/2)
+
         // Garante que o processamento do Chroma Key foi executado
         if (!processedLenteCanvas) {
             processLenteMask();
         }
 
-        // Determina o elemento visual a ser desenhado (usa o canvas com o miolo transparente processado ou a imagem original como fallback)
+        // Determina o elemento visual a ser desenhado
         const renderTarget = processedLenteCanvas || images.lenteImg;
 
         // 2. VISÃO INTERNA DA LENTE ESQUERDA (DENTRO DA IMAGEM LENS/FRAME - MIOLO CLARO - SEMPRE POLARIZADA)
         ctx.save();
         ctx.beginPath();
-        // A elipse de recorte acompanha perfeitamente a proporção original de 5743x4481
+        // A elipse de recorte acompanha perfeitamente o centro do aro (rx, ry)
         ctx.ellipse(rx, ry, rw * 0.88, actualRh * 0.88, 0, 0, Math.PI * 2);
         ctx.clip();
         
@@ -1431,17 +1435,17 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.restore();
 
         // 4. DESENHO DA IMAGEM LENTE.PNG (COM CHROMA KEY REMOVIDO) SOBRE AS DUAS ÁREAS
-        // Lente Esquerda (Proporcional à largura de 5743x4481 e sem distorção)
+        // Lente Esquerda (Alinhada pelo centro do aro rx e com a haste lateral estendendo-se para a esquerda)
         if (renderTarget && (renderTarget.complete || renderTarget.width > 0)) {
-            ctx.drawImage(renderTarget, rx - rw, ry - actualRh, rw * 2, drawH);
+            ctx.drawImage(renderTarget, rx - lensCenterOffset, ry - actualRh, totalDrawW, drawH);
         }
 
-        // Lente Direita (Espelhada horizontalmente, Proporcional e sem distorção)
+        // Lente Direita (Espelhada horizontalmente, com a haste lateral estendendo-se para a direita)
         if (renderTarget && (renderTarget.complete || renderTarget.width > 0)) {
             ctx.save();
             ctx.translate(lx, ly);
             ctx.scale(-1, 1);
-            ctx.drawImage(renderTarget, -rw, -actualRh, rw * 2, drawH);
+            ctx.drawImage(renderTarget, -lensCenterOffset, -actualRh, totalDrawW, drawH);
             ctx.restore();
         }
     }

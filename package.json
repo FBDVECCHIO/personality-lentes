@@ -1,0 +1,24 @@
+{
+  "name": "personality-lentes",
+  "version": "1.0.0",
+  "description": "",
+  "main": "admin.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FBDVECCHIO/personality-lentes.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/FBDVECCHIO/personality-lentes/issues"
+  },
+  "homepage": "https://github.com/FBDVECCHIO/personality-lentes#readme",
+  "dependencies": {
+    "pngjs": "^7.0.0"
+  }
+}
