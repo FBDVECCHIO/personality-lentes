@@ -289,7 +289,7 @@
 
         /* Botões Laterais Esmaecidos com Textos em Branco */
         .sim-btn-side {
-            background: rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: #fff;
             padding: 12px 16px;
@@ -303,36 +303,47 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
         }
 
         .sim-btn-side:hover {
-            background: rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.08);
             border-color: rgba(255, 255, 255, 0.2);
         }
 
         .sim-btn-side.active {
-            background: var(--gold-primary);
-            color: #000;
-            border-color: var(--gold-light);
+            background: rgba(212, 175, 55, 0.18);
+            color: var(--gold-light);
+            border-color: var(--gold-primary);
             font-weight: 800;
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.25);
+            text-shadow: 0 0 5px rgba(212,175,55,0.4);
         }
 
         .sim-btn-side.active small {
-            color: #333 !important;
+            color: var(--gold-light) !important;
         }
 
         .sim-select-custom {
             width: 100%;
             padding: 12px 14px;
             border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            background: rgba(20, 20, 26, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(20, 20, 26, 0.35);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             color: #fff;
             font-size: 12.5px;
             font-weight: 600;
             outline: none;
             cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .sim-select-custom:hover {
+            background: rgba(20, 20, 26, 0.55);
+            border-color: rgba(255,255,255,0.2);
         }
 
         /* Modal de Autenticação */
@@ -699,6 +710,25 @@
             margin-top: 2px;
             font-weight: 500;
         }
+
+        /* Classes de Posicionamento Centralizado nas Lentes ou Tela Única */
+        .sim-badge-split-left {
+            left: 25% !important;
+            transform: translateX(-50%) !important;
+            top: 24px !important;
+        }
+        
+        .sim-badge-split-right {
+            left: 75% !important;
+            transform: translateX(-50%) !important;
+            top: 24px !important;
+        }
+        
+        .sim-badge-center {
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            top: 24px !important;
+        }
     </style>
 </head>
 <body>
@@ -764,8 +794,11 @@
         </nav>
 
         <!-- Câmera AR no Canto Superior Direito (Redondo Glassmorphic) -->
-        <button id="btnFloatCamera" class="sim-float-btn" style="top: 20px; right: 20px; position: fixed; z-index: 160; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; background: rgba(10, 10, 15, 0.65); border: 1.5px solid rgba(255, 255, 255, 0.15); color: #fff; cursor: pointer; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); transition: all 0.3s ease;">
-            <span class="icon" style="font-size: 20px; line-height: 1;">📹</span>
+        <button id="btnFloatCamera" class="sim-float-btn" style="top: 20px; right: 20px; position: fixed; z-index: 160; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; background: rgba(10, 10, 15, 0.35); border: 1.5px solid rgba(255, 255, 255, 0.15); color: #fff; cursor: pointer; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); transition: all 0.3s ease;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="icon" style="color: #fff; width: 22px; height: 22px; margin-bottom: 2px;">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+            </svg>
             <span style="font-size: 8px; font-weight: 800; text-transform: uppercase; margin-top: 2px; letter-spacing: 0.5px;">Câmera</span>
         </button>
 
@@ -980,10 +1013,10 @@
             <!-- MÓDULO 1: BATALHA DE PROGRESSIVOS -->
             <div class="sim-tab-content" id="tab-progressivos">
                 <div class="sim-canvas-wrapper" id="wrapperProgressive">
-                    <div id="badgeProgressiveLeft" class="sim-canvas-badge" style="left: 24px; top: 24px;">
+                    <div id="badgeProgressiveLeft" class="sim-canvas-badge sim-badge-split-left">
                         <!-- Inserido dinamicamente via JS -->
                     </div>
-                    <div id="badgeProgressiveRight" class="sim-canvas-badge" style="right: 24px; top: 24px;">
+                    <div id="badgeProgressiveRight" class="sim-canvas-badge sim-badge-split-right">
                         <!-- Inserido dinamicamente via JS -->
                     </div>
                     <canvas id="canvasProgressive" class="sim-canvas"></canvas>
@@ -996,7 +1029,7 @@
             <!-- MÓDULO 2: OFFICE VS PERTO -->
             <div class="sim-tab-content" id="tab-office" style="display: none;">
                 <div class="sim-canvas-wrapper" id="wrapperOffice">
-                    <div id="badgeOffice" class="sim-canvas-badge" style="left: 24px; top: 24px;">
+                    <div id="badgeOffice" class="sim-canvas-badge sim-badge-center">
                         <!-- Inserido dinamicamente via JS -->
                     </div>
                     <canvas id="canvasOffice" class="sim-canvas"></canvas>
@@ -1006,7 +1039,7 @@
             <!-- MÓDULO 3: VS FREEFORM VS PRONTAS -->
             <div class="sim-tab-content" id="tab-freeform" style="display: none;">
                 <div class="sim-canvas-wrapper" id="wrapperFreeform">
-                    <div id="badgeFreeform" class="sim-canvas-badge" style="left: 24px; top: 24px;">
+                    <div id="badgeFreeform" class="sim-canvas-badge sim-badge-center">
                         <!-- Inserido dinamicamente via JS -->
                     </div>
                     <canvas id="canvasFreeform" class="sim-canvas"></canvas>
@@ -1016,12 +1049,12 @@
             <!-- MÓDULO 4: COM VS SEM ANTIRREFLEXO -->
             <div class="sim-tab-content" id="tab-ar-demo" style="display: none;">
                 <div class="sim-canvas-wrapper" id="wrapperArDemo">
-                    <div id="badgeArLeft" class="sim-canvas-badge" style="left: 24px; top: 24px; border-color: var(--border-gold);">
+                    <div id="badgeArLeft" class="sim-canvas-badge sim-badge-split-left" style="border-color: var(--border-gold);">
                         <strong>✨ LENTE ESQUERDA (COM ANTIRREFLEXO)</strong>
                         <span>Personality Gold Premium</span>
                         <small>Reflexo Noturno 100% Mitigado</small>
                     </div>
-                    <div id="badgeArRight" class="sim-canvas-badge" style="right: 24px; top: 24px; border-color: #ff5555;">
+                    <div id="badgeArRight" class="sim-canvas-badge sim-badge-split-right" style="border-color: #ff5555;">
                         <strong style="color: #ff8888;">❌ LENTE DIREITA (SEM ANTIRREFLEXO)</strong>
                         <span>Acabamento Comum</span>
                         <small>Ofuscamento e Fadiga Visual Noturna</small>
@@ -1077,7 +1110,7 @@
             <!-- MÓDULO 6: FOTOSSENSÍVEIS -->
             <div class="sim-tab-content" id="tab-photo" style="display: none;">
                 <div class="sim-canvas-wrapper" id="wrapperPhoto">
-                    <div id="badgePhoto" class="sim-canvas-badge" style="left: 24px; top: 24px;">
+                    <div id="badgePhoto" class="sim-canvas-badge sim-badge-center">
                         <!-- Inserido dinamicamente via JS -->
                     </div>
                     <canvas id="canvasPhoto" class="sim-canvas"></canvas>
@@ -1099,7 +1132,7 @@
             <!-- MÓDULO 8: LENTES POLARIZADAS -->
             <div class="sim-tab-content" id="tab-polarized" style="display: none;">
                 <div class="sim-canvas-wrapper" id="wrapperPolarized">
-                    <div id="badgePolarized" class="sim-canvas-badge" style="left: 24px; top: 24px;">
+                    <div id="badgePolarized" class="sim-canvas-badge sim-badge-center">
                         <!-- Inserido dinamicamente via JS -->
                     </div>
                     <canvas id="canvasPolarized" class="sim-canvas"></canvas>
@@ -1109,7 +1142,7 @@
             <!-- MÓDULO 9: CORES & SHINE MIRROR -->
             <div class="sim-tab-content" id="tab-colors" style="display: none;">
                 <div class="sim-canvas-wrapper" id="wrapperColors">
-                    <div id="badgeColors" class="sim-canvas-badge" style="left: 50%; top: 24px; transform: translateX(-50%); text-align: center;">
+                    <div id="badgeColors" class="sim-canvas-badge sim-badge-center" style="text-align: center;">
                         <!-- Inserido dinamicamente via JS -->
                     </div>
                     <canvas id="canvasColors" class="sim-canvas"></canvas>
@@ -1144,6 +1177,6 @@
     <video id="simVideoFeed" autoplay playsinline muted style="display: none;"></video>
 
     <!-- Scripts da Aplicação -->
-    <script src="simulator.js?v=2.7"></script>
+    <script src="simulator.js?v=2.8"></script>
 </body>
 </html>
