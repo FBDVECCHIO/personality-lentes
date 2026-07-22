@@ -361,6 +361,232 @@
             box-shadow: 0 30px 80px rgba(0,0,0,0.8);
             text-align: center;
         }
+
+        /* Botões Flutuantes Redondos Glassmorphic */
+        .sim-float-btn {
+            position: fixed;
+            z-index: 110;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(10, 10, 15, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1.5px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            user-select: none;
+        }
+
+        .sim-float-btn:hover {
+            transform: scale(1.1);
+            border-color: var(--gold-primary);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+        }
+
+        .sim-float-btn .icon {
+            font-size: 20px;
+        }
+
+        .sim-float-btn .lbl {
+            font-size: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .sim-float-btn:hover .lbl {
+            color: var(--gold-light);
+        }
+
+        /* Menu Cascata Overlay (Slide-Up) */
+        .sim-menu-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            background: rgba(4, 4, 6, 0.94);
+            backdrop-filter: blur(35px);
+            -webkit-backdrop-filter: blur(35px);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideUpFade {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .sim-menu-container {
+            width: 100%;
+            max-width: 900px;
+            text-align: center;
+        }
+
+        .sim-menu-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .sim-menu-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sim-menu-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .sim-menu-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 20px;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sim-menu-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--gold-primary);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.15);
+        }
+
+        .sim-menu-card.active {
+            background: rgba(212, 175, 55, 0.08);
+            border-color: var(--gold-primary);
+        }
+
+        .sim-menu-card-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: #fff;
+            margin: 0 0 4px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sim-menu-card-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        /* Barra Lateral (Sidebar) Colapsável */
+        .sim-sidebar {
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+        }
+
+        .sim-sidebar.collapsed {
+            transform: translateX(calc(100% + 40px));
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Botão para colapsar/expandir na sidebar */
+        .sidebar-toggle-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-toggle-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        /* Botão Flutuante de puxar a sidebar de volta */
+        .sidebar-pull-btn {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 97;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1.5px solid var(--border-gold);
+            color: var(--gold-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            transition: all 0.25s ease;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .sidebar-pull-btn.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .sidebar-pull-btn:hover {
+            transform: translateY(-50%) scale(1.1);
+            color: #fff;
+            box-shadow: 0 0 15px var(--gold-primary);
+        }
+
+        /* Painel Lateral da Trilha de Escolhas */
+        .sim-trail-panel {
+            position: fixed;
+            right: 20px;
+            bottom: 90px;
+            width: 350px;
+            background: rgba(10, 10, 15, 0.95);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1.5px solid var(--border-gold);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+            z-index: 105;
+            display: none;
+            animation: slideUpFade 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
     </style>
 </head>
 <body>
@@ -399,59 +625,126 @@
     <!-- Aplicação Principal (Demonstrador) -->
     <div id="simAppContent" style="display: none;">
         
-        <!-- Header Superior Suspenso -->
-        <header class="sim-app-header">
-            <div class="sim-brand">
-                <div>
-                    <h1 class="sim-brand-title">PERSONALITY</h1>
-                    <div class="sim-brand-subtitle">Demonstrador Digital de Lentes</div>
-                </div>
-            </div>
-
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <span id="simStoreBadge" style="background: rgba(197,168,92,0.15); border: 1px solid rgba(197,168,92,0.35); color: var(--gold-light); padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700;">
-                    🏬 Ótica Licenciada
-                </span>
-                
-                <button id="btnViewTrailSummary" class="btn btn-gold btn-sm" style="font-size: 11px; font-weight: 700; padding: 6px 12px;">
-                    📋 Resumo do Cliente (<span id="trailCount">0</span>)
-                </button>
-
-                <a href="index.html" class="btn btn-outline-gold btn-sm" style="font-size: 11px; font-weight: 600; padding: 6px 12px;">
-                    🚪 Sair
-                </a>
-            </div>
+        <!-- ELEMENTOS DE MENU ESTÁTICOS (Ocultos para liberar tela, mas mantidos para compatibilidade com seletores JS) -->
+        <header class="sim-app-header" style="display: none !important;">
+            <span id="simStoreBadge"></span>
+            <button id="btnViewTrailSummary"></button>
+            <span id="trailCount">0</span>
+            <a href="index.html">Sair</a>
         </header>
 
-        <!-- Barra de Trilha Dinâmica de Escolhas Suspensa -->
-        <div class="sim-trail-bar">
-            <div style="display: flex; align-items: center; gap: 10px; overflow: hidden; width: 100%;">
-                <span style="font-size: 11px; font-weight: 800; color: var(--gold-light); text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
-                    📌 Trilha:
-                </span>
-                <div class="sim-trail-chips" id="simTrailChipsContainer">
-                    <span style="font-size: 11px; color: var(--text-muted);">Nenhuma opção marcada ainda. Selecione conforme o atendimento.</span>
-                </div>
-            </div>
-
-            <button id="btnClearTrail" style="background: none; border: none; color: #ff5555; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; margin-left: 12px;">
-                🗑️ Limpar
-            </button>
+        <div class="sim-trail-bar" style="display: none !important;">
+            <div id="simTrailChipsContainer"></div>
+            <button id="btnClearTrail"></button>
         </div>
 
-        <!-- Menu de Abas Flutuante (Grid 5x2) -->
-        <nav class="sim-tabs-nav">
-            <button class="sim-tab-btn active" data-tab="tab-progressivos">⚔️ Batalha de Progressivos</button>
-            <button class="sim-tab-btn" data-tab="tab-office">💼 Office vs. Perto</button>
-            <button class="sim-tab-btn" data-tab="tab-freeform">🔬 VS Freeform vs. Prontas</button>
-            <button class="sim-tab-btn" data-tab="tab-ar-demo">✨ Com vs. Sem Antirreflexo</button>
-            <button class="sim-tab-btn" data-tab="tab-ar-benefits">🛡️ Benefícios do AR</button>
-            <button class="sim-tab-btn" data-tab="tab-photo">☀️ Fotossensíveis (Transitions)</button>
-            <button class="sim-tab-btn" data-tab="tab-thickness">📐 Calculadora de Espessura</button>
-            <button class="sim-tab-btn" data-tab="tab-polarized">🌊 Lentes Polarizadas</button>
-            <button class="sim-tab-btn" data-tab="tab-colors">🎨 Cores & Espelhados</button>
-            <button class="sim-tab-btn" data-tab="tab-summary" style="border-color: var(--gold-primary); color: var(--gold-light);">📋 Ficha de Recomendação</button>
+        <nav class="sim-tabs-nav" style="display: none !important;">
+            <button class="sim-tab-btn active" data-tab="tab-progressivos"></button>
+            <button class="sim-tab-btn" data-tab="tab-office"></button>
+            <button class="sim-tab-btn" data-tab="tab-freeform"></button>
+            <button class="sim-tab-btn" data-tab="tab-ar-demo"></button>
+            <button class="sim-tab-btn" data-tab="tab-ar-benefits"></button>
+            <button class="sim-tab-btn" data-tab="tab-photo"></button>
+            <button class="sim-tab-btn" data-tab="tab-thickness"></button>
+            <button class="sim-tab-btn" data-tab="tab-polarized"></button>
+            <button class="sim-tab-btn" data-tab="tab-colors"></button>
+            <button class="sim-tab-btn" data-tab="tab-summary"></button>
         </nav>
+
+        <!-- NOVOS CONTROLES FLUTUANTES (UX Premium para Tablet) -->
+        
+        <!-- Câmera AR no Canto Superior Direito -->
+        <button id="btnFloatCamera" class="sim-float-btn" style="top: 20px; right: 20px;">
+            <span class="icon">📹</span>
+            <span class="lbl">Câmera</span>
+        </button>
+
+        <!-- Menu de Módulos (Abrir/Recolher) no Canto Inferior Esquerdo -->
+        <button id="btnFloatMenu" class="sim-float-btn" style="bottom: 20px; left: 20px;">
+            <span class="icon">☰</span>
+            <span class="lbl">Módulos</span>
+        </button>
+
+        <!-- Trilha de Escolhas no Canto Inferior Direito -->
+        <button id="btnFloatTrail" class="sim-float-btn" style="bottom: 20px; right: 20px;">
+            <span class="icon">📋</span>
+            <span class="lbl">Trilha (<span id="trailCountFloat">0</span>)</span>
+        </button>
+
+        <!-- Puxador Flutuante de Controles Laterais (Sidebar) -->
+        <button id="sidebarPullBtn" class="sidebar-pull-btn">⚙️</button>
+
+        <!-- Painel Lateral da Trilha de Escolhas -->
+        <div id="simTrailPanel" class="sim-trail-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 12px;">
+                <h4 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--gold-light); text-transform: uppercase;">📋 Trilha de Recomendações</h4>
+                <span id="btnCloseTrailPanel" style="cursor: pointer; color: #fff; font-weight: 700; font-size: 14px;">✕</span>
+            </div>
+            <div id="simTrailChipsContainerFloat" style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; margin-bottom: 16px;">
+                <!-- Inserido via JS -->
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button id="btnClearTrailFloat" class="btn btn-full" style="background: rgba(255,85,85,0.1); border: 1px solid rgba(255,85,85,0.3); color: #ff5555; font-size: 11px; padding: 8px;">🗑️ Limpar</button>
+                <button id="btnFinishTrailFloat" class="btn btn-gold btn-full" style="font-size: 11px; padding: 8px;">📋 Fechar Ficha</button>
+            </div>
+        </div>
+
+        <!-- CASCADING MENU OVERLAY (Tela Cheia Glassmorphic) -->
+        <div id="simMenuOverlay" class="sim-menu-overlay">
+            <div class="sim-menu-container">
+                <span style="font-size: 32px; display: block; margin-bottom: 8px;">👑</span>
+                <h2 style="font-size: 24px; font-weight: 900; color: #fff; margin-bottom: 2px; letter-spacing: 2px;">PERSONALITY</h2>
+                <p style="font-size: 12px; color: var(--gold-light); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 24px;">Painel de Demonstração Interativa</p>
+
+                <div class="sim-menu-grid">
+                    <div class="sim-menu-card" data-tab="tab-progressivos">
+                        <div class="sim-menu-card-title">⚔️ Batalha de Progressivos</div>
+                        <div class="sim-menu-card-desc">Compare os campos visuais e distorções laterais de cada multifocal ao vivo.</div>
+                    </div>
+                    <div class="sim-menu-card" data-tab="tab-office">
+                        <div class="sim-menu-card-title">💼 Office vs. Perto</div>
+                        <div class="sim-menu-card-desc">Demonstre a profundidade de foco no escritório para usuários de computador.</div>
+                    </div>
+                    <div class="sim-menu-card" data-tab="tab-freeform">
+                        <div class="sim-menu-card-title">🔬 VS Freeform vs. Prontas</div>
+                        <div class="sim-menu-card-desc">Elucide a asfericidade e a nitidez de ponta a ponta em visão simples.</div>
+                    </div>
+                    <div class="sim-menu-card" data-tab="tab-ar-demo">
+                        <div class="sim-menu-card-title">✨ Com vs. Sem Antirreflexo</div>
+                        <div class="sim-menu-card-desc">Simule o ofuscamento noturno e a eliminação de reflexos.</div>
+                    </div>
+                    <div class="sim-menu-card" data-tab="tab-ar-benefits">
+                        <div class="sim-menu-card-title">🛡️ Benefícios do AR</div>
+                        <div class="sim-menu-card-desc">Apresente a facilidade de limpeza e durabilidade do tratamento.</div>
+                    </div>
+                    <div class="sim-menu-card" data-tab="tab-photo">
+                        <div class="sim-menu-card-title">☀️ Fotossensíveis (Transitions)</div>
+                        <div class="sim-menu-card-desc">Ativação sob radiação UV com a tecnologia GEN S.</div>
+                    </div>
+                    <div class="sim-menu-card" data-tab="tab-thickness">
+                        <div class="sim-menu-card-title">📐 Calculadora de Espessura</div>
+                        <div class="sim-menu-card-desc">Compare a espessura de borda das lentes em diferentes índices de refração.</div>
+                    </div>
+                    <div class="sim-menu-card" data-tab="tab-polarized">
+                        <div class="sim-menu-card-title">🌊 Lentes Polarizadas</div>
+                        <div class="sim-menu-card-desc">Visão fotorrealista antirreflexo sob a superfície da água.</div>
+                    </div>
+                    <div class="sim-menu-card" data-tab="tab-colors">
+                        <div class="sim-menu-card-title">🎨 Cores & Espelhados</div>
+                        <div class="sim-menu-card-desc">Escolha a tonalidade perfeita e o acabamento Shine Mirror.</div>
+                    </div>
+                    <div class="sim-menu-card" data-tab="tab-summary" style="border-color: var(--border-gold);">
+                        <div class="sim-menu-card-title" style="color: var(--gold-light);">📋 Ficha de Recomendação</div>
+                        <div class="sim-menu-card-desc">Gere a receita/fechamento das lentes selecionadas para o balcão.</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: center; gap: 16px; align-items: center; margin-top: 20px;">
+                    <button id="btnCloseMenuOverlay" class="btn btn-sm" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 10px 24px;">✕ Fechar Painel</button>
+                    <a href="index.html" class="btn btn-outline-gold btn-sm" style="padding: 10px 24px;">🚪 Sair</a>
+                </div>
+            </div>
+        </div>
 
         <!-- Visualizador Principal Imersivo (Fundo de Tela Cheia) -->
         <main>
@@ -740,6 +1033,6 @@
     <video id="simVideoFeed" autoplay playsinline muted style="display: none;"></video>
 
     <!-- Scripts da Aplicação -->
-    <script src="simulator.js?v=2.3"></script>
+    <script src="simulator.js?v=2.5"></script>
 </body>
 </html>

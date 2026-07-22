@@ -76,6 +76,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnToggleCamera = document.getElementById('btnToggleCamera');
     const cameraStatus = document.getElementById('cameraStatus');
 
+    // Controles Flutuantes e Overlay (Tablet Mode)
+    const btnFloatCamera = document.getElementById('btnFloatCamera');
+    const btnFloatMenu = document.getElementById('btnFloatMenu');
+    const btnFloatTrail = document.getElementById('btnFloatTrail');
+    const simMenuOverlay = document.getElementById('simMenuOverlay');
+    const btnCloseMenuOverlay = document.getElementById('btnCloseMenuOverlay');
+    const simTrailPanel = document.getElementById('simTrailPanel');
+    const btnCloseTrailPanel = document.getElementById('btnCloseTrailPanel');
+    const btnClearTrailFloat = document.getElementById('btnClearTrailFloat');
+    const btnFinishTrailFloat = document.getElementById('btnFinishTrailFloat');
+    const sidebarPullBtn = document.getElementById('sidebarPullBtn');
+
     // -------------------------------------------------------------
     // 4. AUTENTICAÇÃO E SESSÃO
     // -------------------------------------------------------------
@@ -94,6 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (simAppContent) simAppContent.style.display = 'block';
 
         initAllCanvasEngines();
+        initTabletControllers();
         startRenderLoop();
     };
 
@@ -163,6 +176,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 btnToggleCamera.style.background = 'rgba(40, 199, 111, 0.15)';
                 btnToggleCamera.style.borderColor = 'var(--success)';
             }
+            if (btnFloatCamera) {
+                btnFloatCamera.style.background = 'rgba(40, 199, 111, 0.25)';
+                btnFloatCamera.style.borderColor = 'var(--success)';
+            }
         } catch (err) {
             console.error("Erro ao acessar a câmera: ", err);
             alert("Não foi possível acessar a câmera do aparelho. Verifique as permissões de privacidade.");
@@ -187,6 +204,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnToggleCamera) {
             btnToggleCamera.style.background = 'rgba(212,175,55,0.05)';
             btnToggleCamera.style.borderColor = 'var(--gold-primary)';
+        }
+        if (btnFloatCamera) {
+            btnFloatCamera.style.background = 'rgba(10, 10, 15, 0.65)';
+            btnFloatCamera.style.borderColor = 'rgba(255, 255, 255, 0.15)';
         }
         renderActiveCanvas(state.activeTab);
     }
@@ -231,7 +252,120 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // -------------------------------------------------------------
-    // 7. TRILHA DE ESCOLHAS DO CLIENTE
+    // 7. CONTROLES PREMIUM PARA TABLET (ABAS EM CASCATA & SIDEBARS RECOLHÍVEIS)
+    // -------------------------------------------------------------
+    function initTabletControllers() {
+        
+        // 1. Câmera Flutuante
+        if (btnFloatCamera) {
+            btnFloatCamera.addEventListener('click', async () => {
+                if (state.cameraActive) {
+                    stopCamera();
+                } else {
+                    await startCamera();
+                }
+            });
+        }
+
+        // 2. Abrir Menu de Módulos
+        if (btnFloatMenu && simMenuOverlay) {
+            btnFloatMenu.addEventListener('click', () => {
+                simMenuOverlay.style.display = 'flex';
+            });
+        }
+
+        // 3. Fechar Menu de Módulos
+        if (btnCloseMenuOverlay && simMenuOverlay) {
+            btnCloseMenuOverlay.addEventListener('click', () => {
+                simMenuOverlay.style.display = 'none';
+            });
+        }
+
+        // 4. Seleção de Abas via Menu Cascata (Overlay)
+        const menuCards = document.querySelectorAll('.sim-menu-card');
+        menuCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const targetTab = card.getAttribute('data-tab');
+                const targetBtn = document.querySelector(`.sim-tab-btn[data-tab="${targetTab}"]`);
+                if (targetBtn) {
+                    targetBtn.click(); // Troca de aba real
+                }
+                if (simMenuOverlay) {
+                    simMenuOverlay.style.display = 'none'; // Auto-recolhe ao selecionar!
+                }
+                menuCards.forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+
+                // Expandir sidebars ao trocar de aba
+                document.querySelectorAll('.sim-sidebar').forEach(sb => {
+                    sb.classList.remove('collapsed');
+                });
+                if (sidebarPullBtn) sidebarPullBtn.classList.remove('visible');
+            });
+        });
+
+        // 5. Botão Flutuante de Trilha
+        if (btnFloatTrail && simTrailPanel) {
+            btnFloatTrail.addEventListener('click', () => {
+                if (simTrailPanel.style.display === 'block') {
+                    simTrailPanel.style.display = 'none';
+                } else {
+                    simTrailPanel.style.display = 'block';
+                    renderTrailChipsFloat();
+                }
+            });
+        }
+
+        if (btnCloseTrailPanel && simTrailPanel) {
+            btnCloseTrailPanel.addEventListener('click', () => {
+                simTrailPanel.style.display = 'none';
+            });
+        }
+
+        if (btnFinishTrailFloat) {
+            btnFinishTrailFloat.addEventListener('click', () => {
+                if (simTrailPanel) simTrailPanel.style.display = 'none';
+                const summaryBtn = document.querySelector('.sim-tab-btn[data-tab="tab-summary"]');
+                if (summaryBtn) summaryBtn.click();
+            });
+        }
+
+        if (btnClearTrailFloat) {
+            btnClearTrailFloat.addEventListener('click', () => {
+                state.trail = [];
+                renderTrailChips();
+                renderTrailChipsFloat();
+            });
+        }
+
+        // 6. Configuração programática de Recolhimento de Painéis Laterais (Sidebars)
+        document.querySelectorAll('.sim-sidebar').forEach(sidebar => {
+            if (sidebar.querySelector('.sidebar-toggle-btn')) return;
+
+            const toggleBtn = document.createElement('button');
+            toggleBtn.className = 'sidebar-toggle-btn';
+            toggleBtn.innerHTML = '✕ Ocultar Controles';
+            sidebar.insertBefore(toggleBtn, sidebar.firstChild);
+
+            toggleBtn.addEventListener('click', () => {
+                sidebar.classList.add('collapsed');
+                if (sidebarPullBtn) sidebarPullBtn.classList.add('visible');
+            });
+        });
+
+        if (sidebarPullBtn) {
+            sidebarPullBtn.addEventListener('click', () => {
+                const activeSidebar = document.querySelector('.sim-tab-content[style*="display: block"] .sim-sidebar, .sim-tab-content:not([style*="display: none"]) .sim-sidebar');
+                if (activeSidebar) {
+                    activeSidebar.classList.remove('collapsed');
+                }
+                sidebarPullBtn.classList.remove('visible');
+            });
+        }
+    }
+
+    // -------------------------------------------------------------
+    // 8. TRILHA DE ESCOLHAS DO CLIENTE
     // -------------------------------------------------------------
     const btnAddTrails = document.querySelectorAll('.btn-add-trail');
     btnAddTrails.forEach(btn => {
@@ -261,6 +395,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!simTrailChipsContainer) return;
         simTrailChipsContainer.innerHTML = '';
         if (trailCountSpan) trailCountSpan.textContent = state.trail.length;
+
+        // Atualiza contagem no botão flutuante
+        const countSpanFloat = document.getElementById('trailCountFloat');
+        if (countSpanFloat) countSpanFloat.textContent = state.trail.length;
+
+        renderTrailChipsFloat();
 
         if (state.trail.length === 0) {
             simTrailChipsContainer.innerHTML = `<span style="font-size: 11px; color: var(--text-muted);">Nenhuma opção marcada ainda. Selecione conforme o atendimento.</span>`;
@@ -302,6 +442,38 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function renderTrailChipsFloat() {
+        const container = document.getElementById('simTrailChipsContainerFloat');
+        if (!container) return;
+        container.innerHTML = '';
+
+        if (state.trail.length === 0) {
+            container.innerHTML = `<span style="font-size: 11px; color: var(--text-muted); text-align: center; padding: 16px 0; display: block;">Nenhuma escolha registrada.</span>`;
+            return;
+        }
+
+        state.trail.forEach((t, idx) => {
+            const row = document.createElement('div');
+            row.style.cssText = `background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 11.5px;`;
+            row.innerHTML = `
+                <div>
+                    <span style="color: var(--gold-light); font-weight: 700; display: block; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px;">${t.category}</span>
+                    <strong style="color: #fff;">${t.item}</strong>
+                </div>
+                <span class="sim-chip-remove-float" data-idx="${idx}" style="cursor: pointer; color: #ff5555; font-weight: 700; padding: 2px 6px;">✕</span>
+            `;
+            container.appendChild(row);
+        });
+
+        container.querySelectorAll('.sim-chip-remove-float').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = parseInt(btn.getAttribute('data-idx'));
+                state.trail.splice(idx, 1);
+                renderTrailChips();
+            });
+        });
+    }
+
     if (btnClearTrail) {
         btnClearTrail.addEventListener('click', () => {
             state.trail = [];
@@ -310,7 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // -------------------------------------------------------------
-    // 8. MOTOR DE VISÃO EM PRIMEIRA PESSOA (POV GLASSES ENGINE)
+    // 9. MOTOR DE VISÃO EM PRIMEIRA PESSOA (POV GLASSES ENGINE)
     // -------------------------------------------------------------
     function drawGlassesPOV(ctx, w, h, bgImg, renderLeftLens, renderRightLens) {
         if (w <= 0 || h <= 0) return;
@@ -416,7 +588,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // -------------------------------------------------------------
-    // 9. FUNÇÃO PARA DESENHAR MAPA DE ABERRAÇÃO PEDAGÓGICA (HEATMAP)
+    // 10. FUNÇÃO PARA DESENHAR MAPA DE ABERRAÇÃO PEDAGÓGICA (HEATMAP)
     // -------------------------------------------------------------
     function drawAberrationHeatmap(ctx, cx, cy, rw, rh, meta) {
         if (!meta.isBad && meta.blur <= 3) return;
@@ -455,7 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // -------------------------------------------------------------
-    // 10. RENDERIZADORES DOS MÓDULOS DE SIMULAÇÃO
+    // 11. RENDERIZADORES DOS MÓDULOS DE SIMULAÇÃO
     // -------------------------------------------------------------
 
     function renderActiveCanvas(tabId) {
@@ -614,17 +786,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- MÓDULO 2: OFFICE VS PERTO ---
-    function initOfficeEngine() {
-        document.querySelectorAll('[data-type="office"]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('[data-type="office"]').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                state.office.mode = btn.getAttribute('data-val');
-                drawOffice();
-            });
-        });
-    }
-
     function drawOffice() {
         const canvas = document.getElementById('canvasOffice');
         if (!canvas) return;
@@ -681,17 +842,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- MÓDULO 3: VS FREEFORM VS PRONTAS ---
-    function initFreeformEngine() {
-        document.querySelectorAll('[data-type="freeform"]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('[data-type="freeform"]').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                state.freeform.mode = btn.getAttribute('data-val');
-                drawFreeform();
-            });
-        });
-    }
-
     function drawFreeform() {
         const canvas = document.getElementById('canvasFreeform');
         if (!canvas) return;
@@ -748,34 +898,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- MÓDULO 4: COM VS SEM ANTIRREFLEXO ---
-    function initArDemoEngine() {
-        const canvas = document.getElementById('canvasArDemo');
-        const handle = document.getElementById('sliderHandleAr');
-        const wrapper = document.getElementById('wrapperArDemo');
-        if (!canvas) return;
-
-        let isDragging = false;
-        const updatePos = (clientX) => {
-            if (!wrapper) return;
-            const rect = wrapper.getBoundingClientRect();
-            let pos = (clientX - rect.left) / rect.width;
-            pos = Math.max(0.05, Math.min(0.95, pos));
-            state.arDemo.sliderPos = pos;
-            if (handle) handle.style.left = `${pos * 100}%`;
-            drawArDemo();
-        };
-
-        if (wrapper) {
-            wrapper.addEventListener('mousedown', (e) => { isDragging = true; updatePos(e.clientX); });
-            window.addEventListener('mousemove', (e) => { if (isDragging) updatePos(e.clientX); });
-            window.addEventListener('mouseup', () => { isDragging = false; });
-
-            wrapper.addEventListener('touchstart', (e) => { isDragging = true; updatePos(e.touches[0].clientX); });
-            window.addEventListener('touchmove', (e) => { if (isDragging) updatePos(e.touches[0].clientX); });
-            window.addEventListener('touchend', () => { isDragging = false; });
-        }
-    }
-
     function drawArDemo() {
         const canvas = document.getElementById('canvasArDemo');
         if (!canvas) return;
@@ -829,25 +951,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- MÓDULO 6: FOTOSSENSÍVEIS ---
-    function initPhotoEngine() {
-        const rangeUv = document.getElementById('rangeUv');
-        if (rangeUv) {
-            rangeUv.addEventListener('input', (e) => {
-                state.photo.uvLevel = parseInt(e.target.value);
-                drawPhoto();
-            });
-        }
-
-        document.querySelectorAll('[data-type="photo"]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('[data-type="photo"]').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                state.photo.mode = btn.getAttribute('data-val');
-                drawPhoto();
-            });
-        });
-    }
-
     function drawPhoto() {
         const canvas = document.getElementById('canvasPhoto');
         if (!canvas) return;
@@ -880,19 +983,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- MÓDULO 7: CALCULADORA DE ESPESSURA DE BORDA ---
-    function initThicknessEngine() {
-        const rangeDiopter = document.getElementById('rangeDiopter');
-        const valDiopter = document.getElementById('valDiopter');
-
-        if (rangeDiopter) {
-            rangeDiopter.addEventListener('input', (e) => {
-                state.thickness.diopter = parseFloat(e.target.value);
-                if (valDiopter) valDiopter.textContent = `${state.thickness.diopter.toFixed(2)} D`;
-                drawThickness();
-            });
-        }
-    }
-
     function drawThickness() {
         const canvas = document.getElementById('canvasThickness');
         if (!canvas) return;
@@ -944,17 +1034,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- MÓDULO 8: LENTES POLARIZADAS ---
-    function initPolarizedEngine() {
-        document.querySelectorAll('[data-type="polar"]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('[data-type="polar"]').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                state.polarized.mode = btn.getAttribute('data-val');
-                drawPolarized();
-            });
-        });
-    }
-
     function drawPolarized() {
         const canvas = document.getElementById('canvasPolarized');
         if (!canvas) return;
@@ -1005,17 +1084,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- MÓDULO 9: CORES & SHINE MIRROR ---
-    function initColorsEngine() {
-        document.querySelectorAll('.sim-color-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.sim-color-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                state.colors.color = btn.getAttribute('data-color');
-                drawColors();
-            });
-        });
-    }
-
     function drawColors() {
         const canvas = document.getElementById('canvasColors');
         if (!canvas) return;
@@ -1088,7 +1156,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // -------------------------------------------------------------
-    // 11. INICIALIZAÇÃO DO AR ENGINE MÓDULO ANTIRREFLEXO (SOLUÇÃO DE CLICK)
+    // 12. INICIALIZAÇÃO DO AR ENGINE MÓDULO ANTIRREFLEXO
     // -------------------------------------------------------------
     function initArDemoEngine() {
         const canvas = document.getElementById('canvasArDemo');
