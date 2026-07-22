@@ -1323,13 +1323,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const lx = w * 0.72;
         const ly = h * 0.48;
 
-        // Proporções exatas especificadas pelo usuário: 3850x3000 pixels
-        const imgW = 3850;
-        const imgH = 3000;
-        const aspect = imgW / imgH; // 1.28333
+        // Proporções exatas especificadas pelo usuário: 5850x4557 pixels
+        const imgW = 5850;
+        const imgH = 4557;
+        const aspect = imgW / imgH; // 1.283739
 
-        // Largura base estática ampliada para maior tamanho na tela
-        let drawW = 400; 
+        // Largura base estática ampliada para maior destaque na tela
+        let drawW = 440; 
         const maxW = w * 0.22 * 2; // Clampa a largura máxima para 44% da tela para evitar sobreposição em telas pequenas
         if (drawW > maxW) {
             drawW = maxW;
