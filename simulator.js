@@ -38,38 +38,10 @@ document.addEventListener('DOMContentLoaded', () => {
         lenteChromaKey: new Image()
     };
 
-    let processedLenteCanvas = null;
-
-    function processLenteMask() {
-        if (!images.lenteImg || !images.lenteImg.complete || images.lenteImg.naturalWidth === 0) return;
-        if (!images.lenteChromaKey || !images.lenteChromaKey.complete || images.lenteChromaKey.naturalWidth === 0) return;
-        
-        const imgW = images.lenteImg.naturalWidth;
-        const imgH = images.lenteImg.naturalHeight;
-        
-        processedLenteCanvas = document.createElement('canvas');
-        processedLenteCanvas.width = imgW;
-        processedLenteCanvas.height = imgH;
-        const pCtx = processedLenteCanvas.getContext('2d');
-        
-        // 1. Desenha a LENTE.png original
-        pCtx.drawImage(images.lenteImg, 0, 0);
-        
-        // 2. Apaga a área correspondente às lentes usando a máscara (Chroma Key) por cima
-        pCtx.globalCompositeOperation = 'destination-out';
-        pCtx.drawImage(images.lenteChromaKey, 0, 0, imgW, imgH);
-        
-        // 3. Restaura a operação padrão
-        pCtx.globalCompositeOperation = 'source-over';
-    }
-
     // Configura os handlers onload antes de setar o src
     Object.keys(images).forEach(key => {
         const img = images[key];
         img.onload = () => {
-            if (key === 'lenteImg' || key === 'lenteChromaKey') {
-                processLenteMask();
-            }
             if (state && state.authenticated) {
                 renderActiveCanvas(state.activeTab);
             }
@@ -80,8 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
     images.officeScene.src = 'images/sim_office_scene.png';
     images.waterGlare.src = 'images/sim_water_glare.png';
     images.outdoorSun.src = 'images/sim_outdoor_sun.png';
-    images.lenteImg.src = 'images/LENTE.png?v=3.25';
-    images.lenteChromaKey.src = 'images/LENTE_Chroma_Key.png?v=3.25';
+    images.lenteImg.src = 'images/LENTE.png?v=3.26';
+    images.lenteChromaKey.src = 'images/LENTE_Chroma_Key.png?v=3.26';
 
     // Offscreen canvas auxiliar para renderizar efeitos de desfoque ótico (Blur)
     const offscreenCanvas = document.createElement('canvas');
@@ -1372,13 +1344,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const rw = drawW / 2;
         const actualRh = drawH / 2;
 
-        // Garante que o processamento do Chroma Key foi executado
-        if (!processedLenteCanvas) {
-            processLenteMask();
-        }
-
-        // Determina o elemento visual a ser desenhado
-        const renderTarget = processedLenteCanvas || images.lenteImg;
+        // Determina o elemento visual a ser desenhado diretamente (LENTE.png realista)
+        const renderTarget = images.lenteImg;
 
         // 2. PREPARAÇÃO DA MÁSCARA DENTRO DO MASK CANVAS
         // Redimensiona o canvas de máscara para o tamanho do canvas principal
