@@ -37,9 +37,48 @@ document.addEventListener('DOMContentLoaded', () => {
         lenteImg: new Image()
     };
 
+    let maskedLenteCanvas = null;
+
+    function processChromaKey() {
+        if (!images.lenteImg || !images.lenteImg.complete || images.lenteImg.naturalWidth === 0) return;
+        
+        const imgW = images.lenteImg.naturalWidth;
+        const imgH = images.lenteImg.naturalHeight;
+        
+        maskedLenteCanvas = document.createElement('canvas');
+        maskedLenteCanvas.width = imgW;
+        maskedLenteCanvas.height = imgH;
+        const mCtx = maskedLenteCanvas.getContext('2d');
+        mCtx.drawImage(images.lenteImg, 0, 0);
+        
+        try {
+            const imgData = mCtx.getImageData(0, 0, imgW, imgH);
+            const data = imgData.data;
+            
+            // Varredura de Pixels: Remove tons de verde puro (Chroma Key) e torna transparentes
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i+1];
+                const b = data[i+2];
+                
+                // Condição para detecção de verde puro com tolerância a sombreamento
+                if (g > 110 && r < 120 && b < 120 && g > r * 1.2 && g > b * 1.2) {
+                    data[i+3] = 0; // Transparência total
+                }
+            }
+            mCtx.putImageData(imgData, 0, 0);
+        } catch (e) {
+            console.error("Erro no processamento do Chroma Key local:", e);
+        }
+    }
+
     // Configura os handlers onload antes de setar o src
-    Object.values(images).forEach(img => {
+    Object.keys(images).forEach(key => {
+        const img = images[key];
         img.onload = () => {
+            if (key === 'lenteImg') {
+                processChromaKey();
+            }
             if (state && state.authenticated) {
                 renderActiveCanvas(state.activeTab);
             }
@@ -50,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
     images.officeScene.src = 'images/sim_office_scene.png';
     images.waterGlare.src = 'images/sim_water_glare.png';
     images.outdoorSun.src = 'images/sim_outdoor_sun.png';
-    images.lenteImg.src = 'images/LENTE.png';
+    images.lenteImg.src = 'images/LENTE Chroma Key.png';
 
     // Offscreen canvas auxiliar para renderizar efeitos de desfoque ótico (Blur)
     const offscreenCanvas = document.createElement('canvas');
@@ -1323,12 +1362,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const lx = w * 0.735;
         const ly = h * 0.40;
 
-        // Proporções exatas da imagem atualizada: 5876x4576 pixels
-        const imgW = 5876;
-        const imgH = 4576;
-        const aspect = imgW / imgH; // 1.284091
+        // Proporções exatas do novo arquivo LENTE Chroma Key.png: 5743x4481 pixels
+        const imgW = 5743;
+        const imgH = 4481;
+        const aspect = imgW / imgH; // 1.28163
 
-        // Largura base estática ampliada para maior destaque na tela
+        // Largura base estática
         let drawW = 440; 
         const maxW = w * 0.22 * 2; // Clampa a largura máxima para 44% da tela para evitar sobreposição em telas pequenas
         if (drawW > maxW) {
@@ -1339,10 +1378,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const rw = drawW / 2;
         const actualRh = drawH / 2;
 
+        // Garante que o processamento do Chroma Key foi executado
+        if (!maskedLenteCanvas) {
+            processChromaKey();
+        }
+
+        // Determina o elemento visual a ser desenhado (usa o canvas com chroma key removido ou a imagem original como fallback)
+        const renderTarget = maskedLenteCanvas || images.lenteImg;
+
         // 2. VISÃO INTERNA DA LENTE ESQUERDA (DENTRO DA IMAGEM LENS/FRAME - MIOLO CLARO - SEMPRE POLARIZADA)
         ctx.save();
         ctx.beginPath();
-        // A elipse de recorte acompanha perfeitamente a proporção original de 5850x4557
+        // A elipse de recorte acompanha perfeitamente a proporção original de 5743x4481
         ctx.ellipse(rx, ry, rw * 0.88, actualRh * 0.88, 0, 0, Math.PI * 2);
         ctx.clip();
         
@@ -1371,18 +1418,18 @@ document.addEventListener('DOMContentLoaded', () => {
         
         ctx.restore();
 
-        // 4. DESENHO DA IMAGEM LENTE.PNG SOBRE AS DUAS ÁREAS
-        // Lente Esquerda (Proporcional à largura de 5850x4557 e sem distorção)
-        if (images.lenteImg && images.lenteImg.complete && images.lenteImg.naturalWidth > 0) {
-            ctx.drawImage(images.lenteImg, rx - rw, ry - actualRh, rw * 2, drawH);
+        // 4. DESENHO DA IMAGEM LENTE.PNG (COM CHROMA KEY REMOVIDO) SOBRE AS DUAS ÁREAS
+        // Lente Esquerda (Proporcional à largura de 5743x4481 e sem distorção)
+        if (renderTarget && (renderTarget.complete || renderTarget.width > 0)) {
+            ctx.drawImage(renderTarget, rx - rw, ry - actualRh, rw * 2, drawH);
         }
 
         // Lente Direita (Espelhada horizontalmente, Proporcional e sem distorção)
-        if (images.lenteImg && images.lenteImg.complete && images.lenteImg.naturalWidth > 0) {
+        if (renderTarget && (renderTarget.complete || renderTarget.width > 0)) {
             ctx.save();
             ctx.translate(lx, ly);
             ctx.scale(-1, 1);
-            ctx.drawImage(images.lenteImg, -rw, -actualRh, rw * 2, drawH);
+            ctx.drawImage(renderTarget, -rw, -actualRh, rw * 2, drawH);
             ctx.restore();
         }
     }
