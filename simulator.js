@@ -731,24 +731,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const metaLeft = getLensMeta(state.progressive.lensLeft);
         const metaRight = getLensMeta(state.progressive.lensRight);
 
-        // Atualiza crachás flutuantes HTML no topo esquerdo/direito
+        // Atualiza crachás flutuantes HTML no topo esquerdo/direito (apenas nome da lente para minimizar altura)
         const badgeL = document.getElementById('badgeProgressiveLeft');
         if (badgeL) {
-            badgeL.innerHTML = `
-                <strong>👈 LENTE ESQUERDA (LENTE 1)</strong>
-                <span>${metaLeft.title}</span>
-                <small>${metaLeft.sub}</small>
-            `;
+            badgeL.innerHTML = `<span>${metaLeft.title}</span>`;
             badgeL.style.borderColor = metaLeft.border;
         }
 
         const badgeR = document.getElementById('badgeProgressiveRight');
         if (badgeR) {
-            badgeR.innerHTML = `
-                <strong>👉 LADO DIREITO (LENTE 2)</strong>
-                <span>${metaRight.title}</span>
-                <small>${metaRight.sub}</small>
-            `;
+            badgeR.innerHTML = `<span>${metaRight.title}</span>`;
             badgeR.style.borderColor = metaRight.border;
         }
 
