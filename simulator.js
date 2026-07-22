@@ -33,7 +33,8 @@ document.addEventListener('DOMContentLoaded', () => {
         nightDriving: new Image(),
         officeScene: new Image(),
         waterGlare: new Image(),
-        outdoorSun: new Image()
+        outdoorSun: new Image(),
+        lenteImg: new Image()
     };
 
     // Configura os handlers onload antes de setar o src
@@ -49,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
     images.officeScene.src = 'images/sim_office_scene.png';
     images.waterGlare.src = 'images/sim_water_glare.png';
     images.outdoorSun.src = 'images/sim_outdoor_sun.png';
+    images.lenteImg.src = 'images/LENTE.png';
 
     // Offscreen canvas auxiliar para renderizar efeitos de desfoque ótico (Blur)
     const offscreenCanvas = document.createElement('canvas');
@@ -1263,8 +1265,119 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (w <= 0 || h <= 0) return;
 
-        const img = images.waterGlare;
+        ctx.clearRect(0, 0, w, h);
+
+        const isCamActive = state.cameraActive && simVideoFeed && simVideoFeed.readyState >= 2;
+
+        offscreenCanvas.width = w;
+        offscreenCanvas.height = h;
+
+        // 1. Fundo Geral da Cena (Visão Periférica)
+        ctx.save();
+        if (isCamActive) {
+            const vidW = simVideoFeed.videoWidth || 1280;
+            const vidH = simVideoFeed.videoHeight || 720;
+            const aspectVid = vidW / vidH;
+            const aspectCanvas = w / h;
+            let sx = 0, sy = 0, sw = vidW, sh = vidH;
+
+            if (aspectCanvas > aspectVid) {
+                sh = vidW / aspectCanvas;
+                sy = (vidH - sh) / 2;
+            } else {
+                sw = vidH * aspectCanvas;
+                sx = (vidW - sw) / 2;
+            }
+            offscreenCtx.drawImage(simVideoFeed, sx, sy, sw, sh, 0, 0, w, h);
+        } else {
+            const img = images.waterGlare;
+            if (img && img.complete && img.naturalWidth > 0) {
+                const imgW = img.naturalWidth;
+                const imgH = img.naturalHeight;
+                const aspectImg = imgW / imgH;
+                const aspectCanvas = w / h;
+                let sx = 0, sy = 0, sw = imgW, sh = imgH;
+
+                if (aspectCanvas > aspectImg) {
+                    sh = imgW / aspectCanvas;
+                    sy = (imgH - sh) / 2;
+                } else {
+                    sw = imgH * aspectCanvas;
+                    sx = (imgW - sw) / 2;
+                }
+                offscreenCtx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+            }
+        }
+
+        ctx.drawImage(offscreenCanvas, 0, 0, w, h);
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.fillRect(0, 0, w, h);
+        ctx.restore();
+
+        // Proporções para as lentes
+        const rx = w * 0.28;
+        const ry = h * 0.48;
+        const rw = w * 0.20;
+        const rh = h * 0.34;
+
+        const lx = w * 0.72;
+        const ly = h * 0.48;
+
         const isPolarized = state.polarized.mode !== 'sem-polarizado';
+
+        // 2. VISÃO DA LENTE ESQUERDA (DENTRO DA IMAGEM LENS/FRAME)
+        ctx.save();
+        ctx.beginPath();
+        ctx.ellipse(rx, ry, rw * 0.9, rh * 0.9, 0, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.drawImage(offscreenCanvas, 0, 0, w, h);
+
+        if (!isPolarized) {
+            ctx.save();
+            const glare = ctx.createRadialGradient(rx, ry, 10, rx, ry, rw * 0.95);
+            glare.addColorStop(0, 'rgba(255, 255, 255, 0.75)');
+            glare.addColorStop(0.5, 'rgba(255, 255, 255, 0.48)');
+            glare.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = glare;
+            ctx.fillRect(rx - rw, ry - rh, rw * 2, rh * 2);
+            ctx.restore();
+        }
+        ctx.restore();
+
+        // 3. VISÃO DA LENTE DIREITA (DENTRO DA IMAGEM LENS/FRAME ESPELHADA)
+        ctx.save();
+        ctx.beginPath();
+        ctx.ellipse(lx, ly, rw * 0.9, rh * 0.9, 0, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.drawImage(offscreenCanvas, 0, 0, w, h);
+
+        if (!isPolarized) {
+            ctx.save();
+            const glare = ctx.createRadialGradient(lx, ly, 10, lx, ly, rw * 0.95);
+            glare.addColorStop(0, 'rgba(255, 255, 255, 0.75)');
+            glare.addColorStop(0.5, 'rgba(255, 255, 255, 0.48)');
+            glare.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = glare;
+            ctx.fillRect(lx - rw, ly - rh, rw * 2, rh * 2);
+            ctx.restore();
+        }
+        ctx.restore();
+
+        // 4. DESENHO DA IMAGEM LENTE.PNG SOBRE AS DUAS ÁREAS
+        // Lente Esquerda (Proporcional)
+        if (images.lenteImg && images.lenteImg.complete && images.lenteImg.naturalWidth > 0) {
+            ctx.drawImage(images.lenteImg, rx - rw, ry - rh, rw * 2, rh * 2);
+        }
+
+        // Lente Direita (Flipped/Invertida horizontalmente)
+        if (images.lenteImg && images.lenteImg.complete && images.lenteImg.naturalWidth > 0) {
+            ctx.save();
+            ctx.translate(lx, ly);
+            ctx.scale(-1, 1);
+            ctx.drawImage(images.lenteImg, -rw, -rh, rw * 2, rh * 2);
+            ctx.restore();
+        }
 
         // Atualiza crachá flutuante HTML
         const badgePolarized = document.getElementById('badgePolarized');
@@ -1275,42 +1388,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 <small>Visão nítida do fundo da água e cores de alta definição</small>
             ` : `
                 <strong style="color: #ff8888;">❌ LENTE SOLAR SEM POLARIZADO</strong>
-                <span>Ofuscamento Intenso Enobre a Visão</span>
+                <span>Ofuscamento Intenso Encobre a Visão</span>
                 <small>Dificuldade extrema para ver sob a superfície da água</small>
             `;
             badgePolarized.style.borderColor = isPolarized ? 'var(--gold-primary)' : '#ff5555';
         }
-
-        drawGlassesPOV(ctx, w, h, img,
-            (c, rx, ry, rw, rh, isCam, offscreen) => {
-                c.drawImage(offscreen, 0, 0, w, h);
-                
-                if (!isPolarized) {
-                    c.save();
-                    const glare = c.createRadialGradient(rx, ry, 10, rx, ry, rw * 0.95);
-                    glare.addColorStop(0, 'rgba(255, 255, 255, 0.72)');
-                    glare.addColorStop(0.5, 'rgba(255, 255, 255, 0.45)');
-                    glare.addColorStop(1, 'rgba(255, 255, 255, 0)');
-                    c.fillStyle = glare;
-                    c.fillRect(0, 0, w, h);
-                    c.restore();
-                }
-            },
-            (c, lx, ly, rw, rh, isCam, offscreen) => {
-                c.drawImage(offscreen, 0, 0, w, h);
-                
-                if (!isPolarized) {
-                    c.save();
-                    const glare = c.createRadialGradient(lx, ly, 10, lx, ly, rw * 0.95);
-                    glare.addColorStop(0, 'rgba(255, 255, 255, 0.72)');
-                    glare.addColorStop(0.5, 'rgba(255, 255, 255, 0.45)');
-                    glare.addColorStop(1, 'rgba(255, 255, 255, 0)');
-                    c.fillStyle = glare;
-                    c.fillRect(0, 0, w, h);
-                    c.restore();
-                }
-            }
-        );
     }
 
     // --- MÓDULO 9: CORES & SHINE MIRROR ---
