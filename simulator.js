@@ -804,4 +804,9 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.textAlign = 'left';
     }
 
+    // Listener de Redimensionamento Fluido
+    window.addEventListener('resize', () => {
+        if (state.authenticated) renderActiveCanvas(state.activeTab);
+    });
+
 });
