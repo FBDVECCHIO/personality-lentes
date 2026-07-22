@@ -1,6 +1,6 @@
 /* ==========================================================================
    PERSONALITY LENTES - DEMONSTRADOR DIGITAL FOTORREALISTA EM 1ª PESSOA (POV)
-   Motor de Efeitos Óticos Premium (Blur Gaussiano, Distorção & Filtros de Fusão)
+   Motor de Efeitos Óticos Premium & Alta Robustez (Prevenção de Falhas)
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -86,9 +86,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const startApp = (storeName) => {
         state.authenticated = true;
         state.storeName = storeName;
-        simStoreBadge.textContent = `🏬 ${storeName}`;
-        simLoginModal.style.display = 'none';
-        simAppContent.style.display = 'block';
+        if (simStoreBadge) simStoreBadge.textContent = `🏬 ${storeName}`;
+        if (simLoginModal) simLoginModal.style.display = 'none';
+        if (simAppContent) simAppContent.style.display = 'block';
 
         initAllCanvasEngines();
         startRenderLoop();
@@ -97,15 +97,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (simLoginForm) {
         simLoginForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const u = simUser.value.trim().toLowerCase();
-            const p = simPass.value.trim();
+            const u = simUser ? simUser.value.trim().toLowerCase() : 'otica';
+            const p = simPass ? simPass.value.trim() : '1234';
 
             if (u.length > 0 && p.length > 0) {
                 sessionStorage.setItem('personality_session_store', `Ótica Licenciada: ${u.toUpperCase()}`);
                 startApp(`Ótica Licenciada: ${u.toUpperCase()}`);
             } else {
-                simLoginError.style.display = 'block';
-                simLoginError.textContent = 'Usuário ou senha inválidos.';
+                if (simLoginError) {
+                    simLoginError.style.display = 'block';
+                    simLoginError.textContent = 'Usuário ou senha inválidos.';
+                }
             }
         });
     }
@@ -255,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderTrailChips() {
         if (!simTrailChipsContainer) return;
         simTrailChipsContainer.innerHTML = '';
-        trailCountSpan.textContent = state.trail.length;
+        if (trailCountSpan) trailCountSpan.textContent = state.trail.length;
 
         if (state.trail.length === 0) {
             simTrailChipsContainer.innerHTML = `<span style="font-size: 11px; color: var(--text-muted);">Nenhuma opção marcada ainda. Selecione conforme o atendimento.</span>`;
@@ -308,6 +310,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // 8. MOTOR DE VISÃO EM PRIMEIRA PESSOA (POV GLASSES ENGINE)
     // -------------------------------------------------------------
     function drawGlassesPOV(ctx, w, h, bgImg, renderLeftLens, renderRightLens) {
+        if (w <= 0 || h <= 0) return;
+
         ctx.clearRect(0, 0, w, h);
 
         const isCamActive = state.cameraActive && simVideoFeed && simVideoFeed.readyState >= 2;
@@ -338,6 +342,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const lx = w * 0.72;
         const ly = h * 0.48;
+
+        if (rw <= 0 || rh <= 0) return;
 
         // 2. VISÃO DA LENTE ESQUERDA (DENTRO DO ARO)
         ctx.save();
@@ -410,38 +416,37 @@ document.addEventListener('DOMContentLoaded', () => {
     // 9. FUNÇÃO PARA DESENHAR MAPA DE ABERRAÇÃO PEDAGÓGICA (HEATMAP)
     // -------------------------------------------------------------
     function drawAberrationHeatmap(ctx, cx, cy, rw, rh, meta) {
-        if (!meta.isBad && meta.blur <= 3) return; // Lentes excelentes não têm aberração perceptível
+        if (!meta.isBad && meta.blur <= 3) return;
 
         ctx.save();
         ctx.globalCompositeOperation = 'source-over';
 
-        // Escala da aberração baseada na qualidade da lente
         const radius = rw * (meta.blur / 16);
         const opacity = meta.isBad ? 0.45 : 0.25;
 
-        // Gradiente da asa lateral esquerda
-        const gradL = ctx.createRadialGradient(cx - rw * 0.7, cy + rh * 0.45, 5, cx - rw * 0.7, cy + rh * 0.45, radius);
-        gradL.addColorStop(0, `rgba(255, 50, 50, ${opacity})`);
-        gradL.addColorStop(0.4, `rgba(255, 140, 0, ${opacity * 0.6})`);
-        gradL.addColorStop(0.7, `rgba(255, 230, 0, ${opacity * 0.3})`);
-        gradL.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        if (radius > 0) {
+            const gradL = ctx.createRadialGradient(cx - rw * 0.7, cy + rh * 0.45, 5, cx - rw * 0.7, cy + rh * 0.45, radius);
+            gradL.addColorStop(0, `rgba(255, 50, 50, ${opacity})`);
+            gradL.addColorStop(0.4, `rgba(255, 140, 0, ${opacity * 0.6})`);
+            gradL.addColorStop(0.7, `rgba(255, 230, 0, ${opacity * 0.3})`);
+            gradL.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
-        ctx.fillStyle = gradL;
-        ctx.beginPath();
-        ctx.arc(cx - rw * 0.7, cy + rh * 0.45, radius, 0, Math.PI * 2);
-        ctx.fill();
+            ctx.fillStyle = gradL;
+            ctx.beginPath();
+            ctx.arc(cx - rw * 0.7, cy + rh * 0.45, radius, 0, Math.PI * 2);
+            ctx.fill();
 
-        // Gradiente da asa lateral direita
-        const gradR = ctx.createRadialGradient(cx + rw * 0.7, cy + rh * 0.45, 5, cx + rw * 0.7, cy + rh * 0.45, radius);
-        gradR.addColorStop(0, `rgba(255, 50, 50, ${opacity})`);
-        gradR.addColorStop(0.4, `rgba(255, 140, 0, ${opacity * 0.6})`);
-        gradR.addColorStop(0.7, `rgba(255, 230, 0, ${opacity * 0.3})`);
-        gradR.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            const gradR = ctx.createRadialGradient(cx + rw * 0.7, cy + rh * 0.45, 5, cx + rw * 0.7, cy + rh * 0.45, radius);
+            gradR.addColorStop(0, `rgba(255, 50, 50, ${opacity})`);
+            gradR.addColorStop(0.4, `rgba(255, 140, 0, ${opacity * 0.6})`);
+            gradR.addColorStop(0.7, `rgba(255, 230, 0, ${opacity * 0.3})`);
+            gradR.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
-        ctx.fillStyle = gradR;
-        ctx.beginPath();
-        ctx.arc(cx + rw * 0.7, cy + rh * 0.45, radius, 0, Math.PI * 2);
-        ctx.fill();
+            ctx.fillStyle = gradR;
+            ctx.beginPath();
+            ctx.arc(cx + rw * 0.7, cy + rh * 0.45, radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
 
         ctx.restore();
     }
@@ -473,21 +478,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let isDragging = false;
         const updateSliderPos = (clientX) => {
+            if (!wrapper) return;
             const rect = wrapper.getBoundingClientRect();
             let pos = (clientX - rect.left) / rect.width;
             pos = Math.max(0.05, Math.min(0.95, pos));
             state.progressive.sliderPos = pos;
-            handle.style.left = `${pos * 100}%`;
+            if (handle) handle.style.left = `${pos * 100}%`;
             drawProgressive();
         };
 
-        wrapper.addEventListener('mousedown', (e) => { isDragging = true; updateSliderPos(e.clientX); });
-        window.addEventListener('mousemove', (e) => { if (isDragging) updateSliderPos(e.clientX); });
-        window.addEventListener('mouseup', () => { isDragging = false; });
+        if (wrapper) {
+            wrapper.addEventListener('mousedown', (e) => { isDragging = true; updateSliderPos(e.clientX); });
+            window.addEventListener('mousemove', (e) => { if (isDragging) updateSliderPos(e.clientX); });
+            window.addEventListener('mouseup', () => { isDragging = false; });
 
-        wrapper.addEventListener('touchstart', (e) => { isDragging = true; updateSliderPos(e.touches[0].clientX); });
-        window.addEventListener('touchmove', (e) => { if (isDragging) updateSliderPos(e.touches[0].clientX); });
-        window.addEventListener('touchend', () => { isDragging = false; });
+            wrapper.addEventListener('touchstart', (e) => { isDragging = true; updateSliderPos(e.touches[0].clientX); });
+            window.addEventListener('touchmove', (e) => { if (isDragging) updateSliderPos(e.touches[0].clientX); });
+            window.addEventListener('touchend', () => { isDragging = false; });
+        }
 
         if (selectLeft) {
             selectLeft.addEventListener('change', (e) => {
@@ -522,6 +530,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const w = canvas.width = canvas.offsetWidth;
         const h = canvas.height = canvas.offsetHeight;
 
+        if (w <= 0 || h <= 0) return;
+
         const img = images.officeScene;
         const splitX = w * state.progressive.sliderPos;
         const metaLeft = getLensMeta(state.progressive.lensLeft);
@@ -546,7 +556,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     c.restore();
                 }
 
-                // Desenha o mapa de calor da aberração ótica do progressivo (Heatmap)
                 drawAberrationHeatmap(c, rx, ry, rw, rh, metaLeft);
 
                 if (!metaLeft.isBad) {
@@ -609,6 +618,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const w = canvas.width = canvas.offsetWidth;
         const h = canvas.height = canvas.offsetHeight;
 
+        if (w <= 0 || h <= 0) return;
+
         const img = images.officeScene;
 
         drawGlassesPOV(ctx, w, h, img,
@@ -663,6 +674,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const w = canvas.width = canvas.offsetWidth;
         const h = canvas.height = canvas.offsetHeight;
 
+        if (w <= 0 || h <= 0) return;
+
         const img = images.officeScene;
 
         drawGlassesPOV(ctx, w, h, img,
@@ -710,12 +723,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- MÓDULO 4: COM VS SEM ANTIRREFLEXO ---
+    function initArDemoEngine() {
+        const canvas = document.getElementById('canvasArDemo');
+        const handle = document.getElementById('sliderHandleAr');
+        const wrapper = document.getElementById('wrapperArDemo');
+        if (!canvas) return;
+
+        let isDragging = false;
+        const updatePos = (clientX) => {
+            if (!wrapper) return;
+            const rect = wrapper.getBoundingClientRect();
+            let pos = (clientX - rect.left) / rect.width;
+            pos = Math.max(0.05, Math.min(0.95, pos));
+            state.arDemo.sliderPos = pos;
+            if (handle) handle.style.left = `${pos * 100}%`;
+            drawArDemo();
+        };
+
+        if (wrapper) {
+            wrapper.addEventListener('mousedown', (e) => { isDragging = true; updatePos(e.clientX); });
+            window.addEventListener('mousemove', (e) => { if (isDragging) updatePos(e.clientX); });
+            window.addEventListener('mouseup', () => { isDragging = false; });
+
+            wrapper.addEventListener('touchstart', (e) => { isDragging = true; updatePos(e.touches[0].clientX); });
+            window.addEventListener('touchmove', (e) => { if (isDragging) updatePos(e.touches[0].clientX); });
+            window.addEventListener('touchend', () => { isDragging = false; });
+        }
+    }
+
     function drawArDemo() {
         const canvas = document.getElementById('canvasArDemo');
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
         const w = canvas.width = canvas.offsetWidth;
         const h = canvas.height = canvas.offsetHeight;
+
+        if (w <= 0 || h <= 0) return;
 
         const img = images.nightDriving;
         const splitX = w * state.arDemo.sliderPos;
@@ -761,12 +804,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- MÓDULO 6: FOTOSSENSÍVEIS ---
+    function initPhotoEngine() {
+        const rangeUv = document.getElementById('rangeUv');
+        if (rangeUv) {
+            rangeUv.addEventListener('input', (e) => {
+                state.photo.uvLevel = parseInt(e.target.value);
+                drawPhoto();
+            });
+        }
+
+        document.querySelectorAll('[data-type="photo"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('[data-type="photo"]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.photo.mode = btn.getAttribute('data-val');
+                drawPhoto();
+            });
+        });
+    }
+
     function drawPhoto() {
         const canvas = document.getElementById('canvasPhoto');
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
         const w = canvas.width = canvas.offsetWidth;
         const h = canvas.height = canvas.offsetHeight;
+
+        if (w <= 0 || h <= 0) return;
 
         const img = images.outdoorSun;
         const opacity = (state.photo.uvLevel / 100) * 0.78;
@@ -791,12 +855,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- MÓDULO 7: CALCULADORA DE ESPESSURA DE BORDA ---
+    function initThicknessEngine() {
+        const rangeDiopter = document.getElementById('rangeDiopter');
+        const valDiopter = document.getElementById('valDiopter');
+
+        if (rangeDiopter) {
+            rangeDiopter.addEventListener('input', (e) => {
+                state.thickness.diopter = parseFloat(e.target.value);
+                if (valDiopter) valDiopter.textContent = `${state.thickness.diopter.toFixed(2)} D`;
+                drawThickness();
+            });
+        }
+    }
+
     function drawThickness() {
         const canvas = document.getElementById('canvasThickness');
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
         const w = canvas.width = canvas.offsetWidth;
         const h = canvas.height = canvas.offsetHeight;
+
+        if (w <= 0 || h <= 0) return;
 
         ctx.clearRect(0, 0, w, h);
         ctx.fillStyle = '#0a0a0e';
@@ -840,12 +919,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- MÓDULO 8: LENTES POLARIZADAS ---
+    function initPolarizedEngine() {
+        document.querySelectorAll('[data-type="polar"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('[data-type="polar"]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.polarized.mode = btn.getAttribute('data-val');
+                drawPolarized();
+            });
+        });
+    }
+
     function drawPolarized() {
         const canvas = document.getElementById('canvasPolarized');
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
         const w = canvas.width = canvas.offsetWidth;
         const h = canvas.height = canvas.offsetHeight;
+
+        if (w <= 0 || h <= 0) return;
 
         const img = images.waterGlare;
 
@@ -888,12 +980,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- MÓDULO 9: CORES & SHINE MIRROR ---
+    function initColorsEngine() {
+        document.querySelectorAll('.sim-color-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.sim-color-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.colors.color = btn.getAttribute('data-color');
+                drawColors();
+            });
+        });
+    }
+
     function drawColors() {
         const canvas = document.getElementById('canvasColors');
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
         const w = canvas.width = canvas.offsetWidth;
         const h = canvas.height = canvas.offsetHeight;
+
+        if (w <= 0 || h <= 0) return;
 
         const img = images.outdoorSun;
 
