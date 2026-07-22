@@ -52,8 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
     images.officeScene.src = 'images/sim_office_scene.png';
     images.waterGlare.src = 'images/sim_water_glare.png';
     images.outdoorSun.src = 'images/sim_outdoor_sun.png';
-    images.lenteImg.src = 'images/LENTE.png?v=3.26';
-    images.lenteChromaKey.src = 'images/LENTE_Chroma_Key.png?v=3.26';
+    images.lenteImg.src = 'images/LENTE.png?v=3.27';
+    images.lenteChromaKey.src = 'images/LENTE_Chroma_Key.png?v=3.27';
 
     // Offscreen canvas auxiliar para renderizar efeitos de desfoque ótico (Blur)
     const offscreenCanvas = document.createElement('canvas');
@@ -1367,18 +1367,25 @@ document.addEventListener('DOMContentLoaded', () => {
         // Define o modo de recorte para manter apenas a área onde desenharmos as silhuetas de lentes
         maskCtx.globalCompositeOperation = 'destination-in';
         
-        // Desenha a silhueta da lente esquerda (Polarizada)
-        if (images.lenteChromaKey && images.lenteChromaKey.complete && images.lenteChromaKey.naturalWidth > 0) {
-            maskCtx.drawImage(images.lenteChromaKey, rx - rw, ry - actualRh, rw * 2, drawH);
-        }
+        const hasMask = images.lenteChromaKey && images.lenteChromaKey.complete && images.lenteChromaKey.naturalWidth > 0;
         
-        // Desenha a silhueta da lente direita (Não Polarizada) espelhada
-        if (images.lenteChromaKey && images.lenteChromaKey.complete && images.lenteChromaKey.naturalWidth > 0) {
+        if (hasMask) {
+            // Desenha a silhueta da lente esquerda (Polarizada)
+            maskCtx.drawImage(images.lenteChromaKey, rx - rw, ry - actualRh, rw * 2, drawH);
+            
+            // Desenha a silhueta da lente direita (Não Polarizada) espelhada
             maskCtx.save();
             maskCtx.translate(lx, ly);
             maskCtx.scale(-1, 1);
             maskCtx.drawImage(images.lenteChromaKey, -rw, -actualRh, rw * 2, drawH);
             maskCtx.restore();
+        } else {
+            // Recorte por elipse como fallback caso a máscara ainda esteja carregando
+            maskCtx.fillStyle = '#fff';
+            maskCtx.beginPath();
+            maskCtx.ellipse(rx, ry, rw * 0.88, actualRh * 0.88, 0, 0, Math.PI * 2);
+            maskCtx.ellipse(lx, ly, rw * 0.88, actualRh * 0.88, 0, 0, Math.PI * 2);
+            maskCtx.fill();
         }
         
         // Restaura a operação padrão de desenho
