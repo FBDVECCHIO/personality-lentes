@@ -38,10 +38,38 @@ document.addEventListener('DOMContentLoaded', () => {
         lenteChromaKey: new Image()
     };
 
+    let processedLenteCanvas = null;
+
+    function processLenteMask() {
+        if (!images.lenteImg || !images.lenteImg.complete || images.lenteImg.naturalWidth === 0) return;
+        if (!images.lenteChromaKey || !images.lenteChromaKey.complete || images.lenteChromaKey.naturalWidth === 0) return;
+        
+        const imgW = images.lenteImg.naturalWidth;
+        const imgH = images.lenteImg.naturalHeight;
+        
+        processedLenteCanvas = document.createElement('canvas');
+        processedLenteCanvas.width = imgW;
+        processedLenteCanvas.height = imgH;
+        const pCtx = processedLenteCanvas.getContext('2d');
+        
+        // 1. Desenha a LENTE.png original
+        pCtx.drawImage(images.lenteImg, 0, 0);
+        
+        // 2. Apaga a área correspondente às lentes usando a máscara (Chroma Key) por cima
+        pCtx.globalCompositeOperation = 'destination-out';
+        pCtx.drawImage(images.lenteChromaKey, 0, 0, imgW, imgH);
+        
+        // 3. Restaura a operação padrão
+        pCtx.globalCompositeOperation = 'source-over';
+    }
+
     // Configura os handlers onload antes de setar o src
     Object.keys(images).forEach(key => {
         const img = images[key];
         img.onload = () => {
+            if (key === 'lenteImg' || key === 'lenteChromaKey') {
+                processLenteMask();
+            }
             if (state && state.authenticated) {
                 renderActiveCanvas(state.activeTab);
             }
@@ -52,8 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
     images.officeScene.src = 'images/sim_office_scene.png';
     images.waterGlare.src = 'images/sim_water_glare.png';
     images.outdoorSun.src = 'images/sim_outdoor_sun.png';
-    images.lenteImg.src = 'images/LENTE.png?v=3.23';
-    images.lenteChromaKey.src = 'images/LENTE_Chroma_Key.png?v=3.23';
+    images.lenteImg.src = 'images/LENTE.png?v=3.25';
+    images.lenteChromaKey.src = 'images/LENTE_Chroma_Key.png?v=3.25';
 
     // Offscreen canvas auxiliar para renderizar efeitos de desfoque ótico (Blur)
     const offscreenCanvas = document.createElement('canvas');
@@ -1330,9 +1358,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const lx = w * 0.735;
         const ly = h * 0.40;
 
-        // Proporções exatas do novo arquivo LENTE Chroma Key.png (apenas a lente): 5743x4481 pixels
-        // A LENTE.png tem 12473x4591 pixels porque inclui a haste lateral à esquerda
-        const aspect = 5743 / 4591;
+        // Proporções proporcionais exatas baseadas nas dimensões da LENTE.png (5881x4591)
+        const aspect = images.lenteImg.naturalWidth > 0 ? (images.lenteImg.naturalWidth / images.lenteImg.naturalHeight) : (5881 / 4591);
 
         // Largura base estática do aro da lente na tela
         let drawW = 440; 
@@ -1345,54 +1372,68 @@ document.addEventListener('DOMContentLoaded', () => {
         const rw = drawW / 2;
         const actualRh = drawH / 2;
 
-        // Fatores de escala para desenhar a imagem inteira LENTE.png (haste + lente) alinhada com o centro do aro
-        const scale = drawW / 5743;
-        const totalDrawW = 12473 * scale;
-        const lensCenterOffset = 9601.5 * scale; // Centro do aro na imagem LENTE.png original (6730 + 5743/2)
+        // Garante que o processamento do Chroma Key foi executado
+        if (!processedLenteCanvas) {
+            processLenteMask();
+        }
 
-        // 2. VISÃO INTERNA DA LENTE ESQUERDA (DENTRO DA IMAGEM LENS/FRAME - MIOLO CLARO - SEMPRE POLARIZADA)
-        ctx.save();
-        ctx.beginPath();
-        ctx.ellipse(rx, ry, rw * 0.88, actualRh * 0.88, 0, 0, Math.PI * 2);
-        ctx.clip();
+        // Determina o elemento visual a ser desenhado
+        const renderTarget = processedLenteCanvas || images.lenteImg;
+
+        // 2. PREPARAÇÃO DA MÁSCARA DENTRO DO MASK CANVAS
+        // Redimensiona o canvas de máscara para o tamanho do canvas principal
+        maskCanvas.width = w;
+        maskCanvas.height = h;
+        maskCtx.clearRect(0, 0, w, h);
         
-        // Desenha a cena clara/brilhante sem o escurecimento externo (revela os peixes!)
-        ctx.drawImage(offscreenCanvas, 0, 0, w, h);
-        ctx.restore();
-
-        // 3. VISÃO INTERNA DA LENTE DIREITA (DENTRO DA IMAGEM LENS/FRAME ESPELHADA - MIOLO CLARO - SEMPRE NÃO POLARIZADA)
-        ctx.save();
-        ctx.beginPath();
-        ctx.ellipse(lx, ly, rw * 0.88, actualRh * 0.88, 0, 0, Math.PI * 2);
-        ctx.clip();
+        // Desenha a cena brilhante (nítida/sem escurecer) em todo o maskCanvas
+        maskCtx.drawImage(offscreenCanvas, 0, 0, w, h);
         
-        // Desenha a cena clara/brilhante
-        ctx.drawImage(offscreenCanvas, 0, 0, w, h);
-
-        // Aplica o ofuscamento de sol na água (glare) sobre o canal direito não-polarizado
-        ctx.save();
-        const glare = ctx.createRadialGradient(lx, ly, 10, lx, ly, rw * 0.95);
+        // Aplica o brilho de sol/reflexo (glare) apenas na lente direita (Não Polarizada)
+        const glare = maskCtx.createRadialGradient(lx, ly, 10, lx, ly, rw * 0.95);
         glare.addColorStop(0, 'rgba(255, 255, 255, 0.78)');
         glare.addColorStop(0.5, 'rgba(255, 255, 255, 0.48)');
         glare.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        ctx.fillStyle = glare;
-        ctx.fillRect(lx - rw, ly - actualRh, rw * 2, drawH);
-        ctx.restore();
+        maskCtx.fillStyle = glare;
+        maskCtx.fillRect(lx - rw, ly - actualRh, rw * 2, drawH);
         
-        ctx.restore();
+        // Define o modo de recorte para manter apenas a área onde desenharmos as silhuetas de lentes
+        maskCtx.globalCompositeOperation = 'destination-in';
+        
+        // Desenha a silhueta da lente esquerda (Polarizada)
+        if (images.lenteChromaKey && images.lenteChromaKey.complete && images.lenteChromaKey.naturalWidth > 0) {
+            maskCtx.drawImage(images.lenteChromaKey, rx - rw, ry - actualRh, rw * 2, drawH);
+        }
+        
+        // Desenha a silhueta da lente direita (Não Polarizada) espelhada
+        if (images.lenteChromaKey && images.lenteChromaKey.complete && images.lenteChromaKey.naturalWidth > 0) {
+            maskCtx.save();
+            maskCtx.translate(lx, ly);
+            maskCtx.scale(-1, 1);
+            maskCtx.drawImage(images.lenteChromaKey, -rw, -actualRh, rw * 2, drawH);
+            maskCtx.restore();
+        }
+        
+        // Restaura a operação padrão de desenho
+        maskCtx.globalCompositeOperation = 'source-over';
+        
+        // 3. DESENHO NO CANVAS PRINCIPAL
+        // O fundo principal com escurecimento já foi desenhado no início do método.
+        // Agora desenhamos a máscara recortada com as lentes nítidas por cima!
+        ctx.drawImage(maskCanvas, 0, 0);
 
-        // 4. DESENHO DA IMAGEM LENTE.PNG REALISTA DIRETA
-        // Lente Esquerda (Alinhada pelo centro do aro rx e com a haste lateral estendendo-se para a esquerda)
-        if (images.lenteImg && images.lenteImg.complete && images.lenteImg.naturalWidth > 0) {
-            ctx.drawImage(images.lenteImg, rx - lensCenterOffset, ry - actualRh, totalDrawW, drawH);
+        // 4. DESENHO DA IMAGEM LENTE.PNG REALISTA (COM RECORTE DO CHROMA KEY)
+        // Lente Esquerda (Alinhada pelo centro do aro rx)
+        if (renderTarget && (renderTarget.complete || renderTarget.width > 0)) {
+            ctx.drawImage(renderTarget, rx - rw, ry - actualRh, rw * 2, drawH);
         }
 
-        // Lente Direita (Espelhada horizontalmente, com a haste lateral estendendo-se para a direita)
-        if (images.lenteImg && images.lenteImg.complete && images.lenteImg.naturalWidth > 0) {
+        // Lente Direita (Espelhada horizontalmente, alinhada pelo centro lx)
+        if (renderTarget && (renderTarget.complete || renderTarget.width > 0)) {
             ctx.save();
             ctx.translate(lx, ly);
             ctx.scale(-1, 1);
-            ctx.drawImage(images.lenteImg, -lensCenterOffset, -actualRh, totalDrawW, drawH);
+            ctx.drawImage(renderTarget, -rw, -actualRh, rw * 2, drawH);
             ctx.restore();
         }
     }
