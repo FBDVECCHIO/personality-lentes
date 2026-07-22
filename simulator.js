@@ -1272,7 +1272,7 @@ document.addEventListener('DOMContentLoaded', () => {
         offscreenCanvas.width = w;
         offscreenCanvas.height = h;
 
-        // 1. Fundo Geral da Cena (Visão Periférica) - MANTIDO BRILHANTE (Sem escurecimento geral)
+        // 1. Fundo Geral da Cena (Visão Periférica)
         ctx.save();
         if (isCamActive) {
             const vidW = simVideoFeed.videoWidth || 1280;
@@ -1309,19 +1309,24 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // Desenha a cena original no canvas
         ctx.drawImage(offscreenCanvas, 0, 0, w, h);
+
+        // Aplica o escurecimento do ambiente ao redor (fora das lentes)
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+        ctx.fillRect(0, 0, w, h);
         ctx.restore();
 
-        // Coordenadas básicas para as lentes
+        // Coordenadas centrais das duas lentes
         const rx = w * 0.28;
         const ry = h * 0.48;
         const lx = w * 0.72;
         const ly = h * 0.48;
 
-        // Proporções fixas para as lentes (sem ajustar dinamicamente ao tamanho da tela)
-        const imgW = images.lenteImg.naturalWidth || 2856;
-        const imgH = images.lenteImg.naturalHeight || 2224;
-        const aspect = imgW / imgH; // Aprox. 1.284
+        // Proporções exatas especificadas pelo usuário: 2850x2220 pixels
+        const imgW = 2850;
+        const imgH = 2220;
+        const aspect = imgW / imgH; // 1.28378
 
         // Largura base estática
         let drawW = 320; 
@@ -1330,23 +1335,21 @@ document.addEventListener('DOMContentLoaded', () => {
             drawW = maxW;
         }
 
-        const drawH = drawW / aspect; // Altura calculada estritamente proporcional à largura
+        const drawH = drawW / aspect; // Altura calculada estritamente proporcional
         const rw = drawW / 2;
         const actualRh = drawH / 2;
 
         const isPolarized = state.polarized.mode !== 'sem-polarizado';
 
-        // 2. VISÃO INTERNA DA LENTE ESQUERDA (DENTRO DA IMAGEM LENS/FRAME)
+        // 2. VISÃO INTERNA DA LENTE ESQUERDA (DENTRO DA IMAGEM LENS/FRAME - MIOLO CLARO)
         ctx.save();
         ctx.beginPath();
-        // A elipse de recorte acompanha perfeitamente a proporção original calculada da imagem
+        // A elipse de recorte acompanha perfeitamente a proporção original de 2850x2220
         ctx.ellipse(rx, ry, rw * 0.88, actualRh * 0.88, 0, 0, Math.PI * 2);
         ctx.clip();
+        
+        // Desenha a cena clara/brilhante sem o escurecimento externo
         ctx.drawImage(offscreenCanvas, 0, 0, w, h);
-
-        // Aplica o escurecimento do filtro solar DENTRO da lente
-        ctx.fillStyle = 'rgba(20, 16, 12, 0.45)';
-        ctx.fillRect(rx - rw, ry - actualRh, rw * 2, drawH);
 
         if (!isPolarized) {
             ctx.save();
@@ -1360,16 +1363,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         ctx.restore();
 
-        // 3. VISÃO INTERNA DA LENTE DIREITA (DENTRO DA IMAGEM LENS/FRAME ESPELHADA)
+        // 3. VISÃO INTERNA DA LENTE DIREITA (DENTRO DA IMAGEM LENS/FRAME ESPELHADA - MIOLO CLARO)
         ctx.save();
         ctx.beginPath();
         ctx.ellipse(lx, ly, rw * 0.88, actualRh * 0.88, 0, 0, Math.PI * 2);
         ctx.clip();
+        
+        // Desenha a cena clara/brilhante sem o escurecimento externo
         ctx.drawImage(offscreenCanvas, 0, 0, w, h);
-
-        // Aplica o escurecimento do filtro solar DENTRO da lente
-        ctx.fillStyle = 'rgba(20, 16, 12, 0.45)';
-        ctx.fillRect(lx - rw, ly - actualRh, rw * 2, drawH);
 
         if (!isPolarized) {
             ctx.save();
@@ -1384,7 +1385,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.restore();
 
         // 4. DESENHO DA IMAGEM LENTE.PNG SOBRE AS DUAS ÁREAS
-        // Lente Esquerda (Proporcional à largura e sem distorção)
+        // Lente Esquerda (Proporcional à largura de 2850x2220 e sem distorção)
         if (images.lenteImg && images.lenteImg.complete && images.lenteImg.naturalWidth > 0) {
             ctx.drawImage(images.lenteImg, rx - rw, ry - actualRh, rw * 2, drawH);
         }
