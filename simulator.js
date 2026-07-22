@@ -52,8 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
     images.officeScene.src = 'images/sim_office_scene.png';
     images.waterGlare.src = 'images/sim_water_glare.png';
     images.outdoorSun.src = 'images/sim_outdoor_sun.png';
-    images.lenteImg.src = 'images/LENTE.png?v=3.29';
-    images.lenteChromaKey.src = 'images/LENTE_Chroma_Key.png?v=3.29';
+    images.lenteImg.src = 'images/LENTE.png?v=3.30';
+    images.lenteChromaKey.src = 'images/LENTE_Chroma_Key.png?v=3.30';
 
     // Offscreen canvas auxiliar para renderizar efeitos de desfoque ótico (Blur)
     const offscreenCanvas = document.createElement('canvas');
@@ -650,79 +650,106 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const rx = w * 0.265;
         const ry = h * 0.40;
-        const rw = w * 0.21;
-        const rh = h * 0.36;
-
         const lx = w * 0.735;
         const ly = h * 0.40;
 
-        if (rw <= 0 || rh <= 0) return;
+        const aspect = images.lenteImg.naturalWidth > 0 ? (images.lenteImg.naturalWidth / images.lenteImg.naturalHeight) : (5881 / 4591);
 
-        // 2. VISÃO DA LENTE ESQUERDA (DENTRO DO ARO)
-        ctx.save();
-        ctx.beginPath();
-        ctx.ellipse(rx, ry, rw, rh, 0, 0, Math.PI * 2);
-        ctx.clip();
-        renderLeftLens(ctx, rx, ry, rw, rh, isCamActive, offscreenCanvas);
+        // Largura base estática do aro da lente na tela
+        let drawW = 440; 
+        const maxW = w * 0.22 * 2; // Clampa a largura máxima para 44% da tela para evitar sobreposição em telas pequenas
+        if (drawW > maxW) {
+            drawW = maxW;
+        }
 
-        const gradL = ctx.createLinearGradient(rx - rw, ry - rh, rx + rw, ry + rh);
+        const drawH = drawW / aspect; // Altura calculada estritamente proporcional
+        const rw = drawW / 2;
+        const actualRh = drawH / 2;
+
+        if (rw <= 0 || actualRh <= 0) return;
+
+        const hasMask = images.lenteChromaKey && images.lenteChromaKey.complete && images.lenteChromaKey.naturalWidth > 0;
+        const maskDrawW = drawW * (5742 / 5881);
+        const maskDrawH = drawH * (4480 / 4591);
+        const maskRw = maskDrawW / 2;
+        const maskRh = maskDrawH / 2;
+
+        // 2. VISÃO DA LENTE ESQUERDA (DENTRO DO ARO FOTORREALISTA)
+        maskCanvas.width = w;
+        maskCanvas.height = h;
+        maskCtx.clearRect(0, 0, w, h);
+
+        // Passo A: Desenha a silhueta da lente esquerda
+        if (hasMask) {
+            maskCtx.drawImage(images.lenteChromaKey, rx - maskRw, ry - maskRh, maskDrawW, maskDrawH);
+        } else {
+            maskCtx.fillStyle = '#fff';
+            maskCtx.beginPath();
+            maskCtx.ellipse(rx, ry, rw * 0.88, actualRh * 0.88, 0, 0, Math.PI * 2);
+            maskCtx.fill();
+        }
+
+        // Passo B: Renderiza o efeito óptico esquerdo da tab ativa apenas dentro da silhueta
+        maskCtx.globalCompositeOperation = 'source-in';
+        renderLeftLens(maskCtx, rx, ry, rw, actualRh, isCamActive, offscreenCanvas);
+
+        // Passo C: Aplica o gradiente de brilho e reflexão clássico sobre a lente
+        maskCtx.globalCompositeOperation = 'source-atop';
+        const gradL = maskCtx.createLinearGradient(rx - rw, ry - actualRh, rx + rw, ry + actualRh);
         gradL.addColorStop(0, 'rgba(255, 255, 255, 0.18)');
         gradL.addColorStop(0.3, 'rgba(255, 255, 255, 0.02)');
         gradL.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        ctx.fillStyle = gradL;
-        ctx.fillRect(rx - rw, ry - rh, rw * 2, rh * 2);
-        ctx.restore();
+        maskCtx.fillStyle = gradL;
+        maskCtx.fillRect(rx - rw, ry - actualRh, rw * 2, drawH);
 
-        // 3. VISÃO DA LENTE DIREITA (DENTRO DO ARO)
-        ctx.save();
-        ctx.beginPath();
-        ctx.ellipse(lx, ly, rw, rh, 0, 0, Math.PI * 2);
-        ctx.clip();
-        renderRightLens(ctx, lx, ly, rw, rh, isCamActive, offscreenCanvas);
+        maskCtx.globalCompositeOperation = 'source-over';
+        ctx.drawImage(maskCanvas, 0, 0);
 
-        const gradR = ctx.createLinearGradient(lx - rw, ly - rh, lx + rw, ly + rh);
+        // 3. VISÃO DA LENTE DIREITA (DENTRO DO ARO FOTORREALISTA ESPELHADO)
+        maskCtx.clearRect(0, 0, w, h);
+
+        // Passo A: Desenha a silhueta da lente direita
+        if (hasMask) {
+            maskCtx.save();
+            maskCtx.translate(lx, ly);
+            maskCtx.scale(-1, 1);
+            maskCtx.drawImage(images.lenteChromaKey, -maskRw, -maskRh, maskDrawW, maskDrawH);
+            maskCtx.restore();
+        } else {
+            maskCtx.fillStyle = '#fff';
+            maskCtx.beginPath();
+            maskCtx.ellipse(lx, ly, rw * 0.88, actualRh * 0.88, 0, 0, Math.PI * 2);
+            maskCtx.fill();
+        }
+
+        // Passo B: Renderiza o efeito óptico direito da tab ativa
+        maskCtx.globalCompositeOperation = 'source-in';
+        renderRightLens(maskCtx, lx, ly, rw, actualRh, isCamActive, offscreenCanvas);
+
+        // Passo C: Aplica o gradiente de brilho sobre a lente
+        maskCtx.globalCompositeOperation = 'source-atop';
+        const gradR = maskCtx.createLinearGradient(lx - rw, ly - actualRh, lx + rw, ly + actualRh);
         gradR.addColorStop(0, 'rgba(255, 255, 255, 0.18)');
         gradR.addColorStop(0.3, 'rgba(255, 255, 255, 0.02)');
         gradR.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        ctx.fillStyle = gradR;
-        ctx.fillRect(lx - rw, ly - rh, rw * 2, rh * 2);
-        ctx.restore();
+        maskCtx.fillStyle = gradR;
+        maskCtx.fillRect(lx - rw, ly - actualRh, rw * 2, drawH);
 
-        // 4. DESENHO FOTORREALISTA DA ARMAÇÃO METÁLICA (1ª PESSOA)
-        ctx.save();
+        maskCtx.globalCompositeOperation = 'source-over';
+        ctx.drawImage(maskCanvas, 0, 0);
 
-        // Ponte Central
-        ctx.strokeStyle = 'var(--gold-primary)';
-        ctx.lineWidth = 8;
-        ctx.shadowBlur = 12;
-        ctx.shadowColor = 'rgba(212, 175, 55, 0.8)';
-        ctx.beginPath();
-        ctx.moveTo(rx + rw * 0.75, ry - 15);
-        ctx.quadraticCurveTo(w * 0.5, ry - 40, lx - rw * 0.75, ly - 15);
-        ctx.stroke();
+        // 4. DESENHO FOTORREALISTA DA ARMAÇÃO SOBREPOSTA (LENTE.PNG)
+        if (images.lenteImg && images.lenteImg.complete && images.lenteImg.naturalWidth > 0) {
+            // Lente Esquerda (Alinhada pelo centro rx)
+            ctx.drawImage(images.lenteImg, rx - rw, ry - actualRh, rw * 2, drawH);
 
-        // Aro Esquerdo em Ouro Luxo
-        ctx.lineWidth = 9;
-        ctx.beginPath();
-        ctx.ellipse(rx, ry, rw, rh, 0, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // Aro Direito em Ouro Luxo
-        ctx.beginPath();
-        ctx.ellipse(lx, ly, rw, rh, 0, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // Hastes estendendo para as laterais do rosto
-        ctx.lineWidth = 10;
-        ctx.beginPath();
-        ctx.moveTo(rx - rw * 0.95, ry - 15);
-        ctx.lineTo(0, ry - 35);
-        ctx.moveTo(lx + rw * 0.95, ly - 15);
-        ctx.lineTo(w, ly - 35);
-        ctx.stroke();
-
-        ctx.shadowBlur = 0;
-        ctx.restore();
+            // Lente Direita (Espelhada horizontalmente, alinhada pelo centro lx)
+            ctx.save();
+            ctx.translate(lx, ly);
+            ctx.scale(-1, 1);
+            ctx.drawImage(images.lenteImg, -rw, -actualRh, rw * 2, drawH);
+            ctx.restore();
+        }
     }
 
     // -------------------------------------------------------------
