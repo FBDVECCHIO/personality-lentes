@@ -84,8 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
     images.officeScene.src = 'images/sim_office_scene.png';
     images.waterGlare.src = 'images/sim_water_glare.png';
     images.outdoorSun.src = 'images/sim_outdoor_sun.png';
-    images.lenteImg.src = 'images/LENTE.png';
-    images.lenteChromaKey.src = 'images/LENTE Chroma Key.png';
+    images.lenteImg.src = 'images/LENTE.png?v=3.23';
+    images.lenteChromaKey.src = 'images/LENTE_Chroma_Key.png?v=3.23';
 
     // Offscreen canvas auxiliar para renderizar efeitos de desfoque ótico (Blur)
     const offscreenCanvas = document.createElement('canvas');
