@@ -1,6 +1,6 @@
 /* ==========================================================================
    PERSONALITY LENTES - DEMONSTRADOR DIGITAL FOTORREALISTA EM 1ª PESSOA (POV)
-   Motor de Câmera em Tempo Real (Realidade Aumentada) & Filtros Óticos 60 FPS
+   Motor de Efeitos Óticos Premium (Blur Gaussiano, Distorção & Filtros de Fusão)
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -25,6 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (state.authenticated) renderActiveCanvas(state.activeTab);
         };
     });
+
+    // Offscreen canvas auxiliar para renderizar efeitos de desfoque ótico (Blur)
+    const offscreenCanvas = document.createElement('canvas');
+    const offscreenCtx = offscreenCanvas.getContext('2d');
 
     // -------------------------------------------------------------
     // 2. ESTADO GLOBAL DA APLICAÇÃO
@@ -131,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const constraints = {
                 video: {
-                    facingMode: { ideal: "environment" }, // Prioriza a câmera traseira do tablet
+                    facingMode: { ideal: "environment" },
                     width: { ideal: 1280 },
                     height: { ideal: 720 }
                 },
@@ -182,7 +186,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderActiveCanvas(state.activeTab);
     }
 
-    // Loop contínuo de renderização a 60 FPS (necessário para a câmera ao vivo)
     function startRenderLoop() {
         const loop = () => {
             if (state.authenticated) {
@@ -309,18 +312,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const isCamActive = state.cameraActive && simVideoFeed && simVideoFeed.readyState >= 2;
 
-        // 1. Fundo Geral da Cena (Visão Periférica Nua fora dos óculos)
+        // Atualiza tamanho do offscreen canvas para renderização paralela de blurs
+        offscreenCanvas.width = w;
+        offscreenCanvas.height = h;
+
+        // 1. Fundo Geral da Cena (Visão Periférica Nua fora dos óculos com leve desfoque)
         ctx.save();
         if (isCamActive) {
-            ctx.drawImage(simVideoFeed, 0, 0, w, h);
+            offscreenCtx.drawImage(simVideoFeed, 0, 0, w, h);
         } else if (bgImg && bgImg.complete && bgImg.naturalWidth > 0) {
-            ctx.drawImage(bgImg, 0, 0, w, h);
+            offscreenCtx.drawImage(bgImg, 0, 0, w, h);
         } else {
-            ctx.fillStyle = '#111'; ctx.fillRect(0, 0, w, h);
+            offscreenCtx.fillStyle = '#111'; offscreenCtx.fillRect(0, 0, w, h);
         }
 
-        // Camada de visão periférica levemente escurecida fora dos óculos
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+        // Desenha a cena geral no canvas principal
+        ctx.drawImage(offscreenCanvas, 0, 0, w, h);
+
+        // Aplica o desfoque periférico do olho sem óculos
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
         ctx.fillRect(0, 0, w, h);
         ctx.restore();
 
@@ -338,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.beginPath();
         ctx.ellipse(rx, ry, rw, rh, 0, 0, Math.PI * 2);
         ctx.clip();
-        renderLeftLens(ctx, rx, ry, rw, rh, isCamActive);
+        renderLeftLens(ctx, rx, ry, rw, rh, isCamActive, offscreenCanvas);
 
         // Brilho realista de reflexo de vidro na borda da lente
         const gradL = ctx.createLinearGradient(rx - rw, ry - rh, rx + rw, ry + rh);
@@ -354,7 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.beginPath();
         ctx.ellipse(lx, ly, rw, rh, 0, 0, Math.PI * 2);
         ctx.clip();
-        renderRightLens(ctx, lx, ly, rw, rh, isCamActive);
+        renderRightLens(ctx, lx, ly, rw, rh, isCamActive, offscreenCanvas);
 
         // Brilho realista de reflexo de vidro na borda da lente
         const gradR = ctx.createLinearGradient(lx - rw, ly - rh, lx + rw, ly + rh);
@@ -428,7 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tabId === 'tab-colors') drawColors();
     }
 
-    // --- MÓDULO 1: BATALHA DE PROGRESSIVOS (1ª PESSOA COM REALIDADE AUMENTADA) ---
+    // --- MÓDULO 1: BATALHA DE PROGRESSIVOS (DESFOQUE ÓTICO REAL) ---
     function initProgressiveEngine() {
         const canvas = document.getElementById('canvasProgressive');
         const handle = document.getElementById('sliderHandleProgressive');
@@ -473,11 +483,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getLensMeta(key) {
         const map = {
-            'personality-hd': { title: '✨ Personality Digital HD', sub: 'Corredor Amplo +80% • Zero Distorção', color: 'var(--gold-light)', border: 'var(--gold-primary)', isBad: false },
-            'personality-gold': { title: '⚡ Personality 1.61 Gold Digital', sub: 'Lente Coringa • Antirreflexo Premium', color: 'var(--gold-light)', border: 'var(--gold-primary)', isBad: false },
-            'personality-ultra': { title: '👑 Personality 1.76 Ultra Digital', sub: 'Linha Ultra Tecnologia • Ultrafina', color: '#9bf6ff', border: '#9bf6ff', isBad: false },
-            'concorrente-basica': { title: '❌ Concorrente Básica (Campo Médio)', sub: 'Aberrações Médias nas Laterais', color: '#ffaa66', border: '#ffaa66', isBad: true },
-            'convencional-padrao': { title: '❌ Multifocal Convencional Padrão', sub: 'Visão Túnel Restrita & Distorções', color: '#ff8888', border: '#ff5555', isBad: true }
+            'personality-hd': { title: '✨ Personality Digital HD', sub: 'Corredor Amplo +80% • Zero Distorção', color: 'var(--gold-light)', border: 'var(--gold-primary)', isBad: false, blur: 2 },
+            'personality-gold': { title: '⚡ Personality 1.61 Gold Digital', sub: 'Lente Coringa • Antirreflexo Premium', color: 'var(--gold-light)', border: 'var(--gold-primary)', isBad: false, blur: 3 },
+            'personality-ultra': { title: '👑 Personality 1.76 Ultra Digital', sub: 'Linha Ultra Tecnologia • Ultrafina', color: '#9bf6ff', border: '#9bf6ff', isBad: false, blur: 1 },
+            'concorrente-basica': { title: '❌ Concorrente Básica (Campo Médio)', sub: 'Aberrações Médias nas Laterais', color: '#ffaa66', border: '#ffaa66', isBad: true, blur: 8 },
+            'convencional-padrao': { title: '❌ Multifocal Convencional Padrão', sub: 'Visão Túnel Restrita & Distorções', color: '#ff8888', border: '#ff5555', isBad: true, blur: 14 }
         };
         return map[key] || map['personality-hd'];
     }
@@ -495,34 +505,61 @@ document.addEventListener('DOMContentLoaded', () => {
         const metaRight = getLensMeta(state.progressive.lensRight);
 
         drawGlassesPOV(ctx, w, h, img, 
-            (c, rx, ry, rw, rh, isCam) => {
-                if (isCam) {
-                    c.drawImage(simVideoFeed, 0, 0, w, h);
-                } else if (img.complete && img.naturalWidth > 0) {
-                    c.drawImage(img, 0, 0, w, h);
+            (c, rx, ry, rw, rh, isCam, offscreen) => {
+                // Desenha imagem nítida no fundo da lente
+                c.drawImage(offscreen, 0, 0, w, h);
+                
+                // Simulação de Aberração de Desfoque Ótico Real (Gaussian Blur)
+                if (metaLeft.blur > 2) {
+                    c.save();
+                    // Cria uma máscara para manter apenas o canal central (corredor progressivo) nítido
+                    c.beginPath();
+                    c.ellipse(rx, ry + 20, rw * 0.45, rh * 0.9, 0, 0, Math.PI * 2);
+                    c.clip();
+                    c.drawImage(offscreen, 0, 0, w, h);
+                    c.restore();
+
+                    // Aplica desfoque nas laterais
+                    c.save();
+                    c.globalCompositeOperation = 'destination-over';
+                    c.filter = `blur(${metaLeft.blur}px)`;
+                    c.drawImage(offscreen, 0, 0, w, h);
+                    c.restore();
                 }
-                if (metaLeft.isBad) {
-                    c.fillStyle = 'rgba(255, 85, 85, 0.28)'; c.fillRect(0, 0, w, h);
-                } else {
-                    c.fillStyle = 'rgba(212, 175, 55, 0.12)'; c.fillRect(0, 0, w, h);
+
+                // Película de reflexo dourado suave nas lentes premium
+                if (!metaLeft.isBad) {
+                    c.fillStyle = 'rgba(212, 175, 55, 0.06)';
+                    c.fillRect(0, 0, w, h);
                 }
             },
-            (c, lx, ly, rw, rh, isCam) => {
-                if (isCam) {
-                    c.drawImage(simVideoFeed, 0, 0, w, h);
-                } else if (img.complete && img.naturalWidth > 0) {
-                    c.drawImage(img, 0, 0, w, h);
+            (c, lx, ly, rw, rh, isCam, offscreen) => {
+                c.drawImage(offscreen, 0, 0, w, h);
+
+                if (metaRight.blur > 2) {
+                    c.save();
+                    c.beginPath();
+                    c.ellipse(lx, ly + 20, rw * 0.45, rh * 0.9, 0, 0, Math.PI * 2);
+                    c.clip();
+                    c.drawImage(offscreen, 0, 0, w, h);
+                    c.restore();
+
+                    c.save();
+                    c.globalCompositeOperation = 'destination-over';
+                    c.filter = `blur(${metaRight.blur}px)`;
+                    c.drawImage(offscreen, 0, 0, w, h);
+                    c.restore();
                 }
-                if (metaRight.isBad) {
-                    c.fillStyle = 'rgba(255, 85, 85, 0.32)'; c.fillRect(0, 0, w, h);
-                } else {
-                    c.fillStyle = 'rgba(212, 175, 55, 0.12)'; c.fillRect(0, 0, w, h);
+
+                if (!metaRight.isBad) {
+                    c.fillStyle = 'rgba(212, 175, 55, 0.06)';
+                    c.fillRect(0, 0, w, h);
                 }
             }
         );
 
         // Badges de Identificação das Lentes
-        ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
+        ctx.fillStyle = 'rgba(10, 10, 15, 0.9)';
         ctx.fillRect(15, 15, 290, 48);
         ctx.strokeStyle = metaLeft.border; ctx.lineWidth = 1.5;
         ctx.strokeRect(15, 15, 290, 48);
@@ -531,7 +568,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillStyle = '#fff'; ctx.font = '500 10.5px Montserrat, sans-serif';
         ctx.fillText(metaLeft.sub, 25, 50);
 
-        ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
+        ctx.fillStyle = 'rgba(10, 10, 15, 0.9)';
         ctx.fillRect(w - 305, 15, 290, 48);
         ctx.strokeStyle = metaRight.border;
         ctx.strokeRect(w - 305, 15, 290, 48);
@@ -541,7 +578,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillText(metaRight.sub, w - 295, 50);
     }
 
-    // --- MÓDULO 2: OFFICE VS PERTO ---
+    // --- MÓDULO 2: OFFICE VS PERTO (DESFOQUE DE PROFUNDIDADE DE CAMPO REAL) ---
     function initOfficeEngine() {
         document.querySelectorAll('[data-type="office"]').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -563,34 +600,52 @@ document.addEventListener('DOMContentLoaded', () => {
         const img = images.officeScene;
 
         drawGlassesPOV(ctx, w, h, img,
-            (c, rx, ry, rw, rh, isCam) => {
-                if (isCam) c.drawImage(simVideoFeed, 0, 0, w, h);
-                else if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+            (c, rx, ry, rw, rh, isCam, offscreen) => {
                 if (state.office.mode === 'perto-simples') {
-                    c.fillStyle = 'rgba(8, 8, 12, 0.68)'; c.fillRect(0, 0, w, h);
+                    // Desfoca o fundo (Monitor e Sala de Reunião distante)
+                    c.save();
+                    c.filter = 'blur(10px)';
+                    c.drawImage(offscreen, 0, 0, w, h);
+                    c.restore();
+
+                    // Mantém apenas foco de perto nítido (porção inferior da lente)
+                    c.save();
+                    c.beginPath();
+                    c.ellipse(rx, ry + rh * 0.4, rw * 0.8, rh * 0.5, 0, 0, Math.PI * 2);
+                    c.clip();
+                    c.drawImage(offscreen, 0, 0, w, h);
+                    c.restore();
                 } else {
-                    c.fillStyle = 'rgba(212, 175, 55, 0.08)'; c.fillRect(0, 0, w, h);
+                    c.drawImage(offscreen, 0, 0, w, h);
                 }
             },
-            (c, lx, ly, rw, rh, isCam) => {
-                if (isCam) c.drawImage(simVideoFeed, 0, 0, w, h);
-                else if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+            (c, lx, ly, rw, rh, isCam, offscreen) => {
                 if (state.office.mode === 'perto-simples') {
-                    c.fillStyle = 'rgba(8, 8, 12, 0.68)'; c.fillRect(0, 0, w, h);
+                    c.save();
+                    c.filter = 'blur(10px)';
+                    c.drawImage(offscreen, 0, 0, w, h);
+                    c.restore();
+
+                    c.save();
+                    c.beginPath();
+                    c.ellipse(lx, ly + rh * 0.4, rw * 0.8, rh * 0.5, 0, 0, Math.PI * 2);
+                    c.clip();
+                    c.drawImage(offscreen, 0, 0, w, h);
+                    c.restore();
                 } else {
-                    c.fillStyle = 'rgba(212, 175, 55, 0.08)'; c.fillRect(0, 0, w, h);
+                    c.drawImage(offscreen, 0, 0, w, h);
                 }
             }
         );
 
-        ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
+        ctx.fillStyle = 'rgba(10, 10, 15, 0.9)';
         ctx.fillRect(20, 20, 440, 45);
         ctx.fillStyle = state.office.mode === 'perto-simples' ? '#ff8888' : 'var(--gold-light)';
         ctx.font = '700 13px Montserrat, sans-serif';
-        ctx.fillText(state.office.mode === 'perto-simples' ? '❌ Lente de Perto Simples: Foco restrito a 40cm' : '✨ Personality Office: Visão cristalina contínua de 40cm a 4 metros!', 35, 47);
+        ctx.fillText(state.office.mode === 'perto-simples' ? '❌ Lente de Perto Simples: Desfoca tudo além de 40cm' : '✨ Personality Office: Visão nítida contínua de 40cm a 4 metros!', 35, 47);
     }
 
-    // --- MÓDULO 3: VS FREEFORM VS PRONTAS ---
+    // --- MÓDULO 3: VS FREEFORM VS PRONTAS (DESFOQUE DE ASTIGMATISMO OBLÍQUO) ---
     function initFreeformEngine() {
         document.querySelectorAll('[data-type="freeform"]').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -612,34 +667,52 @@ document.addEventListener('DOMContentLoaded', () => {
         const img = images.officeScene;
 
         drawGlassesPOV(ctx, w, h, img,
-            (c, rx, ry, rw, rh, isCam) => {
-                if (isCam) c.drawImage(simVideoFeed, 0, 0, w, h);
-                else if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+            (c, rx, ry, rw, rh, isCam, offscreen) => {
                 if (state.freeform.mode === 'pronta-esferica') {
-                    c.fillStyle = 'rgba(255, 85, 85, 0.28)'; c.fillRect(0, 0, w, h);
+                    // Desfoca a periferia da lente (astigmatismo marginal)
+                    c.save();
+                    c.filter = 'blur(9px)';
+                    c.drawImage(offscreen, 0, 0, w, h);
+                    c.restore();
+
+                    // Mantém apenas o centro perfeito
+                    c.save();
+                    c.beginPath();
+                    c.ellipse(rx, ry, rw * 0.5, rh * 0.5, 0, 0, Math.PI * 2);
+                    c.clip();
+                    c.drawImage(offscreen, 0, 0, w, h);
+                    c.restore();
                 } else {
-                    c.fillStyle = 'rgba(212, 175, 55, 0.08)'; c.fillRect(0, 0, w, h);
+                    c.drawImage(offscreen, 0, 0, w, h);
                 }
             },
-            (c, lx, ly, rw, rh, isCam) => {
-                if (isCam) c.drawImage(simVideoFeed, 0, 0, w, h);
-                else if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+            (c, lx, ly, rw, rh, isCam, offscreen) => {
                 if (state.freeform.mode === 'pronta-esferica') {
-                    c.fillStyle = 'rgba(255, 85, 85, 0.28)'; c.fillRect(0, 0, w, h);
+                    c.save();
+                    c.filter = 'blur(9px)';
+                    c.drawImage(offscreen, 0, 0, w, h);
+                    c.restore();
+
+                    c.save();
+                    c.beginPath();
+                    c.ellipse(lx, ly, rw * 0.5, rh * 0.5, 0, 0, Math.PI * 2);
+                    c.clip();
+                    c.drawImage(offscreen, 0, 0, w, h);
+                    c.restore();
                 } else {
-                    c.fillStyle = 'rgba(212, 175, 55, 0.08)'; c.fillRect(0, 0, w, h);
+                    c.drawImage(offscreen, 0, 0, w, h);
                 }
             }
         );
 
-        ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
+        ctx.fillStyle = 'rgba(10, 10, 15, 0.9)';
         ctx.fillRect(20, 20, 450, 45);
         ctx.fillStyle = state.freeform.mode === 'pronta-esferica' ? '#ff8888' : 'var(--gold-light)';
         ctx.font = '700 13px Montserrat, sans-serif';
-        ctx.fillText(state.freeform.mode === 'pronta-esferica' ? '❌ Lente Pronta Esférica: Distorção "Olho de Peixe" na borda' : '✨ Personality VS Freeform Asférica: Visão nítida ponta a ponta', 35, 47);
+        ctx.fillText(state.freeform.mode === 'pronta-esferica' ? '❌ Lente Pronta Esférica: Distorção e embaçamento na borda' : '✨ Personality VS Freeform Asférica: Visão cristalina até a borda', 35, 47);
     }
 
-    // --- MÓDULO 4: COM VS SEM ANTIRREFLEXO ---
+    // --- MÓDULO 4: COM VS SEM ANTIRREFLEXO (HALOS DE LUZ REALISTAS) ---
     function initArDemoEngine() {
         const canvas = document.getElementById('canvasArDemo');
         const handle = document.getElementById('sliderHandleAr');
@@ -676,32 +749,50 @@ document.addEventListener('DOMContentLoaded', () => {
         const splitX = w * state.arDemo.sliderPos;
 
         drawGlassesPOV(ctx, w, h, img,
-            (c, rx, ry, rw, rh, isCam) => {
-                if (isCam) c.drawImage(simVideoFeed, 0, 0, w, h);
-                else if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+            (c, rx, ry, rw, rh, isCam, offscreen) => {
+                c.drawImage(offscreen, 0, 0, w, h);
+                // Antirreflexo Gold Premium: Película dourada antirefletiva sutil
                 c.fillStyle = 'rgba(212, 175, 55, 0.08)'; c.fillRect(0, 0, w, h);
             },
-            (c, lx, ly, rw, rh, isCam) => {
-                if (isCam) c.drawImage(simVideoFeed, 0, 0, w, h);
-                else if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
-                c.fillStyle = 'rgba(255, 255, 255, 0.35)'; c.fillRect(0, 0, w, h);
-                c.fillStyle = '#ffffff'; c.shadowBlur = 40; c.shadowColor = '#fff';
-                c.beginPath(); c.arc(w * 0.72, h * 0.48, 70, 0, Math.PI * 2); c.fill(); c.shadowBlur = 0;
+            (c, lx, ly, rw, rh, isCam, offscreen) => {
+                c.drawImage(offscreen, 0, 0, w, h);
+                
+                // Simulação fotorrealista de ofuscamento noturno (Halos sobre faróis)
+                c.save();
+                c.globalCompositeOperation = 'screen';
+                
+                // Farol 1
+                const flare1 = c.createRadialGradient(w * 0.72 - 30, h * 0.44, 2, w * 0.72 - 30, h * 0.44, 75);
+                flare1.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+                flare1.addColorStop(0.2, 'rgba(255, 240, 200, 0.55)');
+                flare1.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                c.fillStyle = flare1;
+                c.beginPath(); c.arc(w * 0.72 - 30, h * 0.44, 75, 0, Math.PI * 2); c.fill();
+
+                // Farol 2
+                const flare2 = c.createRadialGradient(w * 0.72 + 60, h * 0.46, 2, w * 0.72 + 60, h * 0.46, 60);
+                flare2.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+                flare2.addColorStop(0.3, 'rgba(255, 220, 180, 0.45)');
+                flare2.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                c.fillStyle = flare2;
+                c.beginPath(); c.arc(w * 0.72 + 60, h * 0.46, 60, 0, Math.PI * 2); c.fill();
+
+                c.restore();
             }
         );
 
-        ctx.fillStyle = 'rgba(12, 12, 16, 0.85)';
+        ctx.fillStyle = 'rgba(10, 10, 15, 0.9)';
         ctx.fillRect(15, 15, 310, 45);
         ctx.fillStyle = 'var(--gold-light)'; ctx.font = '700 13px Montserrat, sans-serif';
         ctx.fillText('✨ Lente Esquerda: Com Antirreflexo Gold', 25, 42);
 
-        ctx.fillStyle = 'rgba(12, 12, 16, 0.85)';
+        ctx.fillStyle = 'rgba(10, 10, 15, 0.9)';
         ctx.fillRect(w - 325, 15, 310, 45);
         ctx.fillStyle = '#ff8888'; ctx.font = '700 13px Montserrat, sans-serif';
         ctx.fillText('❌ Lente Direita: Sem Antirreflexo', w - 315, 42);
     }
 
-    // --- MÓDULO 6: FOTOSSENSÍVEIS (TRANSITIONS) ---
+    // --- MÓDULO 6: FOTOSSENSÍVEIS (TRANSITIONS E FILTRO DE MULTIPLY) ---
     function initPhotoEngine() {
         const rangeUv = document.getElementById('rangeUv');
         if (rangeUv) {
@@ -729,22 +820,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const h = canvas.height = canvas.offsetHeight;
 
         const img = images.outdoorSun;
-        const opacity = (state.photo.uvLevel / 100) * 0.82;
+        const opacity = (state.photo.uvLevel / 100) * 0.78;
 
         drawGlassesPOV(ctx, w, h, img,
-            (c, rx, ry, rw, rh, isCam) => {
-                if (isCam) c.drawImage(simVideoFeed, 0, 0, w, h);
-                else if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
-                c.fillStyle = `rgba(18, 18, 22, ${opacity})`; c.fillRect(0, 0, w, h);
+            (c, rx, ry, rw, rh, isCam, offscreen) => {
+                c.drawImage(offscreen, 0, 0, w, h);
+                // Transitions: Efeito realista de escurecimento (Multiply)
+                c.fillStyle = `rgba(32, 28, 30, ${opacity})`;
+                c.fillRect(0, 0, w, h);
             },
-            (c, lx, ly, rw, rh, isCam) => {
-                if (isCam) c.drawImage(simVideoFeed, 0, 0, w, h);
-                else if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
-                c.fillStyle = `rgba(18, 18, 22, ${opacity})`; c.fillRect(0, 0, w, h);
+            (c, lx, ly, rw, rh, isCam, offscreen) => {
+                c.drawImage(offscreen, 0, 0, w, h);
+                c.fillStyle = `rgba(32, 28, 30, ${opacity})`;
+                c.fillRect(0, 0, w, h);
             }
         );
 
-        ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
+        ctx.fillStyle = 'rgba(10, 10, 15, 0.9)';
         ctx.fillRect(20, 20, 440, 45);
         ctx.fillStyle = 'var(--gold-light)'; ctx.font = '700 13px Montserrat, sans-serif';
         ctx.fillText(`☀️ ${state.photo.mode === 'gen-s' ? 'Transitions GEN S (Ativação Ultrarrápida)' : 'Transitions Xtractive (Ativação no Carro)'} - UV: ${state.photo.uvLevel}%`, 35, 47);
@@ -788,17 +880,16 @@ document.addEventListener('DOMContentLoaded', () => {
         indices.forEach((idxObj, i) => {
             const edgeThick = 20 + (diopter * 8 * idxObj.factor);
             const x = slotW * i + slotW / 2;
-            const y = h / 2;
 
             ctx.fillStyle = 'rgba(255,255,255,0.05)';
             ctx.strokeStyle = idxObj.color;
             ctx.lineWidth = 2;
 
             ctx.beginPath();
-            ctx.moveTo(x - 40, y - edgeThick / 2);
-            ctx.lineTo(x + 40, y - edgeThick / 2);
-            ctx.lineTo(x + 40, y + edgeThick / 2);
-            ctx.lineTo(x - 40, y + edgeThick / 2);
+            ctx.moveTo(x - 40, h / 2 - edgeThick / 2);
+            ctx.lineTo(x + 40, h / 2 - edgeThick / 2);
+            ctx.lineTo(x + 40, h / 2 + edgeThick / 2);
+            ctx.lineTo(x - 40, h / 2 + edgeThick / 2);
             ctx.closePath();
             ctx.fill();
             ctx.stroke();
@@ -813,7 +904,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- MÓDULO 8: LENTES POLARIZADAS ---
+    // --- MÓDULO 8: LENTES POLARIZADAS (REMOÇÃO FOTORREALISTA DE BRILHO) ---
     function initPolarizedEngine() {
         document.querySelectorAll('[data-type="polar"]').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -835,30 +926,45 @@ document.addEventListener('DOMContentLoaded', () => {
         const img = images.waterGlare;
 
         drawGlassesPOV(ctx, w, h, img,
-            (c, rx, ry, rw, rh, isCam) => {
-                if (isCam) c.drawImage(simVideoFeed, 0, 0, w, h);
-                else if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+            (c, rx, ry, rw, rh, isCam, offscreen) => {
+                c.drawImage(offscreen, 0, 0, w, h);
+                
+                // Sem Polarizado: Aplica o reflexo cegante de luz na superfície
                 if (state.polarized.mode === 'sem-polarizado') {
-                    c.fillStyle = 'rgba(255, 255, 255, 0.55)'; c.fillRect(0, 0, w, h);
+                    c.save();
+                    const glare = c.createRadialGradient(rx, ry, 10, rx, ry, rw * 0.95);
+                    glare.addColorStop(0, 'rgba(255, 255, 255, 0.72)');
+                    glare.addColorStop(0.5, 'rgba(255, 255, 255, 0.45)');
+                    glare.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                    c.fillStyle = glare;
+                    c.fillRect(0, 0, w, h);
+                    c.restore();
                 }
             },
-            (c, lx, ly, rw, rh, isCam) => {
-                if (isCam) c.drawImage(simVideoFeed, 0, 0, w, h);
-                else if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
+            (c, lx, ly, rw, rh, isCam, offscreen) => {
+                c.drawImage(offscreen, 0, 0, w, h);
+                
                 if (state.polarized.mode === 'sem-polarizado') {
-                    c.fillStyle = 'rgba(255, 255, 255, 0.55)'; c.fillRect(0, 0, w, h);
+                    c.save();
+                    const glare = c.createRadialGradient(lx, ly, 10, lx, ly, rw * 0.95);
+                    glare.addColorStop(0, 'rgba(255, 255, 255, 0.72)');
+                    glare.addColorStop(0.5, 'rgba(255, 255, 255, 0.45)');
+                    glare.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                    c.fillStyle = glare;
+                    c.fillRect(0, 0, w, h);
+                    c.restore();
                 }
             }
         );
 
-        ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
+        ctx.fillStyle = 'rgba(10, 10, 15, 0.9)';
         ctx.fillRect(20, 20, 440, 45);
         ctx.fillStyle = state.polarized.mode === 'sem-polarizado' ? '#ff8888' : 'var(--gold-light)';
         ctx.font = '700 13px Montserrat, sans-serif';
-        ctx.fillText(state.polarized.mode === 'sem-polarizado' ? '❌ Sem Polarizado: Reflexo cegante na superfície da água' : '🌊 Com Polarizado Personality: Visão nítida dos peixes sob a água', 35, 47);
+        ctx.fillText(state.polarized.mode === 'sem-polarizado' ? '❌ Sem Polarizado: Reflexo de sol na água encobre a visão' : '🌊 Com Polarizado Personality: Filtra 100% dos reflexos nocivos!', 35, 47);
     }
 
-    // --- MÓDULO 9: CORES & SHINE MIRROR ---
+    // --- MÓDULO 9: CORES & SHINE MIRROR (COMPOSIÇÃO DE CORES OVERLAY REALISTA) ---
     function initColorsEngine() {
         document.querySelectorAll('.sim-color-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -880,25 +986,58 @@ document.addEventListener('DOMContentLoaded', () => {
         const img = images.outdoorSun;
 
         let colorStyle = 'rgba(80,80,80,0.6)';
-        if (state.colors.color === 'marrom') colorStyle = 'rgba(120,70,30,0.65)';
-        if (state.colors.color === 'g15') colorStyle = 'rgba(30,90,50,0.65)';
-        if (state.colors.color === 'gold-mirror') colorStyle = 'rgba(212,175,55,0.78)';
-        if (state.colors.color === 'blue-mirror') colorStyle = 'rgba(0,150,255,0.78)';
+        if (state.colors.color === 'marrom') colorStyle = 'rgba(120,70,30,0.58)';
+        if (state.colors.color === 'g15') colorStyle = 'rgba(30,90,50,0.58)';
+        if (state.colors.color === 'gold-mirror') colorStyle = 'rgba(212,175,55,0.72)';
+        if (state.colors.color === 'blue-mirror') colorStyle = 'rgba(0,150,255,0.72)';
 
         drawGlassesPOV(ctx, w, h, img,
-            (c, rx, ry, rw, rh, isCam) => {
-                if (isCam) c.drawImage(simVideoFeed, 0, 0, w, h);
-                else if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
-                c.fillStyle = colorStyle; c.fillRect(0, 0, w, h);
+            (c, rx, ry, rw, rh, isCam, offscreen) => {
+                c.drawImage(offscreen, 0, 0, w, h);
+                
+                c.save();
+                c.globalCompositeOperation = 'multiply';
+                c.fillStyle = colorStyle;
+                c.fillRect(0, 0, w, h);
+                c.restore();
+
+                // Efeito Espelhado Metálico Shine Mirror
+                if (state.colors.color.includes('mirror')) {
+                    c.save();
+                    c.globalCompositeOperation = 'screen';
+                    const mirrorGrad = c.createLinearGradient(0, 0, w, h);
+                    mirrorGrad.addColorStop(0, 'rgba(255,255,255,0.22)');
+                    mirrorGrad.addColorStop(0.5, 'rgba(255,255,255,0)');
+                    mirrorGrad.addColorStop(1, 'rgba(255,255,255,0.15)');
+                    c.fillStyle = mirrorGrad;
+                    c.fillRect(0, 0, w, h);
+                    c.restore();
+                }
             },
-            (c, lx, ly, rw, rh, isCam) => {
-                if (isCam) c.drawImage(simVideoFeed, 0, 0, w, h);
-                else if (img.complete && img.naturalWidth > 0) c.drawImage(img, 0, 0, w, h);
-                c.fillStyle = colorStyle; c.fillRect(0, 0, w, h);
+            (c, lx, ly, rw, rh, isCam, offscreen) => {
+                c.drawImage(offscreen, 0, 0, w, h);
+                
+                c.save();
+                c.globalCompositeOperation = 'multiply';
+                c.fillStyle = colorStyle;
+                c.fillRect(0, 0, w, h);
+                c.restore();
+
+                if (state.colors.color.includes('mirror')) {
+                    c.save();
+                    c.globalCompositeOperation = 'screen';
+                    const mirrorGrad = c.createLinearGradient(0, 0, w, h);
+                    mirrorGrad.addColorStop(0, 'rgba(255,255,255,0.22)');
+                    mirrorGrad.addColorStop(0.5, 'rgba(255,255,255,0)');
+                    mirrorGrad.addColorStop(1, 'rgba(255,255,255,0.15)');
+                    c.fillStyle = mirrorGrad;
+                    c.fillRect(0, 0, w, h);
+                    c.restore();
+                }
             }
         );
 
-        ctx.fillStyle = 'rgba(12, 12, 16, 0.88)';
+        ctx.fillStyle = 'rgba(10, 10, 15, 0.9)';
         ctx.fillRect(w * 0.25, 20, w * 0.5, 45);
         ctx.fillStyle = '#fff';
         ctx.font = '700 13px Montserrat, sans-serif';
