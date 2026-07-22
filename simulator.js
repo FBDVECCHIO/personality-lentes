@@ -1323,10 +1323,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const lx = w * 0.735;
         const ly = h * 0.40;
 
-        // Proporções exatas da imagem atualizada: 5874x4566 pixels
-        const imgW = 5874;
-        const imgH = 4566;
-        const aspect = imgW / imgH; // 1.286465
+        // Proporções exatas da imagem atualizada: 5876x4576 pixels
+        const imgW = 5876;
+        const imgH = 4576;
+        const aspect = imgW / imgH; // 1.284091
 
         // Largura base estática ampliada para maior destaque na tela
         let drawW = 440; 
