@@ -47,14 +47,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const imgW = images.lenteImg.naturalWidth;
         const imgH = images.lenteImg.naturalHeight;
         
-        // 1. Criar canvas temporário para ler os pixels da imagem com o Chroma Key verde
+        // 1. Criar canvas temporário para o Chroma Key com as dimensões reais da lente (5743 x 4480)
         const chromaCanvas = document.createElement('canvas');
-        chromaCanvas.width = imgW;
-        chromaCanvas.height = imgH;
+        chromaCanvas.width = 5743;
+        chromaCanvas.height = 4480;
         const chromaCtx = chromaCanvas.getContext('2d');
-        chromaCtx.drawImage(images.lenteChromaKey, 0, 0);
+        chromaCtx.drawImage(images.lenteChromaKey, 0, 0, 5743, 4480);
         
-        // 2. Inicializar o canvas final processado com o visual da LENTE.png original
+        // 2. Inicializar o canvas final com LENTE.png original
         processedLenteCanvas = document.createElement('canvas');
         processedLenteCanvas.width = imgW;
         processedLenteCanvas.height = imgH;
@@ -62,19 +62,30 @@ document.addEventListener('DOMContentLoaded', () => {
         pCtx.drawImage(images.lenteImg, 0, 0);
         
         try {
-            const chromaData = chromaCtx.getImageData(0, 0, imgW, imgH).data;
+            const chromaData = chromaCtx.getImageData(0, 0, 5743, 4480).data;
             const pImgData = pCtx.getImageData(0, 0, imgW, imgH);
             const pData = pImgData.data;
             
-            // Varredura de Pixels: Onde a imagem Chroma Key for verde, aplicamos transparência na imagem LENTE.png
-            for (let i = 0; i < chromaData.length; i += 4) {
-                const r = chromaData[i];
-                const g = chromaData[i+1];
-                const b = chromaData[i+2];
-                
-                // Condição para detecção do verde Chroma Key na imagem de referência
-                if (g > 110 && r < 120 && b < 120 && g > r * 1.2 && g > b * 1.2) {
-                    pData[i+3] = 0; // Torna o pixel correspondente da LENTE.png 100% transparente
+            // Offset da lente dentro da LENTE.png: X de 6730 a 12473, Y de 60 a 4540
+            const offsetX = 6730;
+            const offsetY = 60;
+            
+            for (let y = 0; y < 4480; y++) {
+                for (let x = 0; x < 5743; x++) {
+                    const chromaIdx = (5743 * y + x) * 4;
+                    const r = chromaData[chromaIdx];
+                    const g = chromaData[chromaIdx+1];
+                    const b = chromaData[chromaIdx+2];
+                    
+                    // Condição robusta para detecção do verde Chroma Key mint/spring
+                    if (g > 150 && g > r * 1.5 && g > b * 1.5) {
+                        const targetX = offsetX + x;
+                        const targetY = offsetY + y;
+                        if (targetX < imgW && targetY < imgH) {
+                            const targetIdx = (imgW * targetY + targetX) * 4;
+                            pData[targetIdx+3] = 0; // Torna transparente
+                        }
+                    }
                 }
             }
             pCtx.putImageData(pImgData, 0, 0);
