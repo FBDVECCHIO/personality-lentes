@@ -52,8 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
     images.officeScene.src = 'images/sim_office_scene.png';
     images.waterGlare.src = 'images/sim_water_glare.png';
     images.outdoorSun.src = 'images/sim_outdoor_sun.png';
-    images.lenteImg.src = 'images/LENTE.png?v=3.28';
-    images.lenteChromaKey.src = 'images/LENTE_Chroma_Key.png?v=3.28';
+    images.lenteImg.src = 'images/LENTE.png?v=3.29';
+    images.lenteChromaKey.src = 'images/LENTE_Chroma_Key.png?v=3.29';
 
     // Offscreen canvas auxiliar para renderizar efeitos de desfoque ótico (Blur)
     const offscreenCanvas = document.createElement('canvas');
@@ -1357,14 +1357,20 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Passo A: Desenha as silhuetas de lentes primeiro (criando a região combinada sólida)
         if (hasMask) {
+            // Calcula o tamanho da máscara reduzido para 5742 x 4480 pixels de forma proporcional para encaixar na LENTE.png (5881x4591)
+            const maskDrawW = drawW * (5742 / 5881);
+            const maskDrawH = drawH * (4480 / 4591);
+            const maskRw = maskDrawW / 2;
+            const maskRh = maskDrawH / 2;
+
             // Silhueta da lente esquerda (Polarizada)
-            maskCtx.drawImage(images.lenteChromaKey, rx - rw, ry - actualRh, rw * 2, drawH);
+            maskCtx.drawImage(images.lenteChromaKey, rx - maskRw, ry - maskRh, maskDrawW, maskDrawH);
             
             // Silhueta da lente direita (Não Polarizada) espelhada
             maskCtx.save();
             maskCtx.translate(lx, ly);
             maskCtx.scale(-1, 1);
-            maskCtx.drawImage(images.lenteChromaKey, -rw, -actualRh, rw * 2, drawH);
+            maskCtx.drawImage(images.lenteChromaKey, -maskRw, -maskRh, maskDrawW, maskDrawH);
             maskCtx.restore();
         } else {
             // Elipses como fallback caso as imagens de máscara estejam carregando
