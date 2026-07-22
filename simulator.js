@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cameraActive: false,
         videoStream: null,
         
-        progressive: { lensLeft: 'personality-hd', lensRight: 'convencional-padrao', sliderPos: 0.5 },
+        progressive: { lensLeft: 'premium-hd-ia', lensRight: 'convencional-padrao', sliderPos: 0.5 },
         office: { mode: 'office-personality' },
         freeform: { mode: 'freeform-asferica' },
         arDemo: { sliderPos: 0.5 },
@@ -791,13 +791,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getLensMeta(key) {
         const map = {
-            'personality-hd': { title: '✨ Personality Digital HD', sub: 'Corredor Amplo +80% • Zero Distorção', color: 'var(--gold-light)', border: 'var(--gold-primary)', isBad: false, blur: 2 },
-            'personality-gold': { title: '⚡ Personality 1.61 Gold Digital', sub: 'Lente Coringa • Antirreflexo Premium', color: 'var(--gold-light)', border: 'var(--gold-primary)', isBad: false, blur: 3 },
-            'personality-ultra': { title: '👑 Personality 1.76 Ultra Digital', sub: 'Linha Ultra Tecnologia • Ultrafina', color: '#9bf6ff', border: '#9bf6ff', isBad: false, blur: 1 },
-            'concorrente-basica': { title: '❌ Concorrente Básica (Campo Médio)', sub: 'Aberrações Médias nas Laterais', color: '#ffaa66', border: '#ffaa66', isBad: true, blur: 8 },
-            'convencional-padrao': { title: '❌ Multifocal Convencional Padrão', sub: 'Visão Túnel Restrita & Distorções', color: '#ff8888', border: '#ff5555', isBad: true, blur: 14 }
+            // Multifocais IA (Alta Tecnologia)
+            'gold-design-ia': { title: '👑 Gold Design IA', sub: 'Tecnologia Inteligência Artificial', color: 'var(--gold-light)', border: 'var(--gold-primary)', isBad: false, blur: 1.0 },
+            'premium-hd-ia': { title: '✨ Premium HD IA', sub: 'Cálculo por IA de Última Geração', color: 'var(--gold-light)', border: 'var(--gold-primary)', isBad: false, blur: 1.3 },
+            'tecno-line-ia': { title: '⚡ Tecno Line IA', sub: 'Otimização de Linha IA', color: 'var(--gold-light)', border: 'var(--gold-primary)', isBad: false, blur: 1.7 },
+            
+            // Progressivos Digitais
+            'gold-design': { title: '⚡ Gold Design Digital', sub: 'Lente Digital de Alto Padrão', color: 'var(--gold-light)', border: 'var(--gold-primary)', isBad: false, blur: 2.1 },
+            'premium-hd': { title: '⚡ Premium HD Digital', sub: 'Cálculo Digital Otimizado', color: 'var(--gold-light)', border: 'var(--gold-primary)', isBad: false, blur: 2.6 },
+            'tecno-line': { title: '⚡ Tecno Line Digital', sub: 'Corredor Otimizado Digital', color: 'var(--gold-light)', border: 'var(--gold-primary)', isBad: false, blur: 3.6 },
+            'maxvision': { title: '⚡ Maxvision Digital', sub: 'Lente Digital de Entrada', color: 'var(--gold-light)', border: 'var(--gold-primary)', isBad: false, blur: 4.6 },
+            'multi-premium': { title: '⚡ Multi Premium', sub: 'Multifocal Digital Econômica', color: 'var(--gold-light)', border: 'var(--gold-primary)', isBad: false, blur: 5.6 },
+            'gold-line': { title: '⚡ Gold Line', sub: 'Multifocal Básica Econômica', color: 'var(--gold-light)', border: 'var(--gold-primary)', isBad: false, blur: 6.6 },
+            
+            // Comparativos (Concorrente)
+            'concorrente-basica': { title: '❌ Concorrente Básica', sub: 'Aberrações Médias nas Laterais', color: '#ffaa66', border: '#ffaa66', isBad: true, blur: 9.0 },
+            'convencional-padrao': { title: '❌ Convencional Padrão', sub: 'Visão Túnel Restrita & Distorções', color: '#ff8888', border: '#ff5555', isBad: true, blur: 14.0 }
         };
-        return map[key] || map['personality-hd'];
+        return map[key] || map['premium-hd-ia'];
     }
 
     function drawProgressive() {

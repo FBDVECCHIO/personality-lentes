@@ -832,23 +832,46 @@
                     <!-- Controles Progressivos -->
                     <div id="dock-controls-progressivos" class="dock-controls-block" style="display: flex; align-items: center; gap: 12px;">
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <label style="font-size: 9px; font-weight: 700; color: var(--gold-light); white-space: nowrap;">ESQ:</label>
-                            <select id="selectLensLeft" class="sim-select-custom" style="width: 160px; padding: 6px 12px; font-size: 11px; border-radius: 8px; height: 34px; background: rgba(20, 20, 26, 0.95); border: 1px solid rgba(255,255,255,0.15); color: #fff;">
-                                <option value="personality-hd" selected>✨ Personality Digital HD</option>
-                                <option value="personality-gold">⚡ Personality 1.61 Gold</option>
-                                <option value="personality-ultra">👑 Personality 1.76 Ultra</option>
-                                <option value="concorrente-basica">❌ Concorrente Básica</option>
-                                <option value="convencional-padrao">❌ Convencional Padrão</option>
+                            <select id="selectLensLeft" class="sim-select-custom" style="width: 175px; padding: 6px 12px; font-size: 11px; border-radius: 8px; height: 34px; background: rgba(20, 20, 26, 0.35); border: 1px solid rgba(255,255,255,0.1); color: #fff;">
+                                <optgroup label="Multifocais IA (Alta Tecnologia)">
+                                    <option value="gold-design-ia">👑 Gold Design IA</option>
+                                    <option value="premium-hd-ia" selected>✨ Premium HD IA</option>
+                                    <option value="tecno-line-ia">⚡ Tecno Line IA</option>
+                                </optgroup>
+                                <optgroup label="Progressivos Digitais">
+                                    <option value="gold-design">⚡ Gold Design</option>
+                                    <option value="premium-hd">⚡ Premium HD</option>
+                                    <option value="tecno-line">⚡ Tecno Line</option>
+                                    <option value="maxvision">⚡ Maxvision</option>
+                                    <option value="multi-premium">⚡ Multi Premium</option>
+                                    <option value="gold-line">⚡ Gold Line</option>
+                                </optgroup>
+                                <optgroup label="Comparativos (Concorrente)">
+                                    <option value="concorrente-basica">❌ Concorrente Básica</option>
+                                    <option value="convencional-padrao">❌ Convencional Padrão</option>
+                                </optgroup>
                             </select>
                         </div>
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <label style="font-size: 9px; font-weight: 700; color: #ff8888; white-space: nowrap;">DIR:</label>
-                            <select id="selectLensRight" class="sim-select-custom" style="width: 160px; padding: 6px 12px; font-size: 11px; border-radius: 8px; height: 34px; background: rgba(20, 20, 26, 0.95); border: 1px solid rgba(255,255,255,0.15); color: #fff;">
-                                <option value="convencional-padrao" selected>❌ Convencional Padrão</option>
-                                <option value="concorrente-basica">❌ Concorrente Básica</option>
-                                <option value="personality-hd">✨ Personality Digital HD</option>
-                                <option value="personality-gold">⚡ Personality 1.61 Gold</option>
-                                <option value="personality-ultra">👑 Personality 1.76 Ultra</option>
+                            <select id="selectLensRight" class="sim-select-custom" style="width: 175px; padding: 6px 12px; font-size: 11px; border-radius: 8px; height: 34px; background: rgba(20, 20, 26, 0.35); border: 1px solid rgba(255,255,255,0.1); color: #fff;">
+                                <optgroup label="Multifocais IA (Alta Tecnologia)">
+                                    <option value="gold-design-ia">👑 Gold Design IA</option>
+                                    <option value="premium-hd-ia">✨ Premium HD IA</option>
+                                    <option value="tecno-line-ia">⚡ Tecno Line IA</option>
+                                </optgroup>
+                                <optgroup label="Progressivos Digitais">
+                                    <option value="gold-design">⚡ Gold Design</option>
+                                    <option value="premium-hd">⚡ Premium HD</option>
+                                    <option value="tecno-line">⚡ Tecno Line</option>
+                                    <option value="maxvision">⚡ Maxvision</option>
+                                    <option value="multi-premium">⚡ Multi Premium</option>
+                                    <option value="gold-line">⚡ Gold Line</option>
+                                </optgroup>
+                                <optgroup label="Comparativos (Concorrente)">
+                                    <option value="concorrente-basica">❌ Concorrente Básica</option>
+                                    <option value="convencional-padrao" selected>❌ Convencional Padrão</option>
+                                </optgroup>
                             </select>
                         </div>
                         <button class="btn btn-gold btn-sm btn-add-trail" data-category="Campo Visual" data-item="Personality Digital HD (Multifocal)" style="font-size: 10px; padding: 0 16px; height: 34px; font-weight: 700; border-radius: 8px;">➕ Recomendar</button>
