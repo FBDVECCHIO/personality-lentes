@@ -34,41 +34,52 @@ document.addEventListener('DOMContentLoaded', () => {
         officeScene: new Image(),
         waterGlare: new Image(),
         outdoorSun: new Image(),
-        lenteImg: new Image()
+        lenteImg: new Image(),
+        lenteChromaKey: new Image()
     };
 
-    let maskedLenteCanvas = null;
+    let processedLenteCanvas = null;
 
-    function processChromaKey() {
+    function processLenteMask() {
         if (!images.lenteImg || !images.lenteImg.complete || images.lenteImg.naturalWidth === 0) return;
+        if (!images.lenteChromaKey || !images.lenteChromaKey.complete || images.lenteChromaKey.naturalWidth === 0) return;
         
         const imgW = images.lenteImg.naturalWidth;
         const imgH = images.lenteImg.naturalHeight;
         
-        maskedLenteCanvas = document.createElement('canvas');
-        maskedLenteCanvas.width = imgW;
-        maskedLenteCanvas.height = imgH;
-        const mCtx = maskedLenteCanvas.getContext('2d');
-        mCtx.drawImage(images.lenteImg, 0, 0);
+        // 1. Criar canvas temporário para ler os pixels da imagem com o Chroma Key verde
+        const chromaCanvas = document.createElement('canvas');
+        chromaCanvas.width = imgW;
+        chromaCanvas.height = imgH;
+        const chromaCtx = chromaCanvas.getContext('2d');
+        chromaCtx.drawImage(images.lenteChromaKey, 0, 0);
+        
+        // 2. Inicializar o canvas final processado com o visual da LENTE.png original
+        processedLenteCanvas = document.createElement('canvas');
+        processedLenteCanvas.width = imgW;
+        processedLenteCanvas.height = imgH;
+        const pCtx = processedLenteCanvas.getContext('2d');
+        pCtx.drawImage(images.lenteImg, 0, 0);
         
         try {
-            const imgData = mCtx.getImageData(0, 0, imgW, imgH);
-            const data = imgData.data;
+            const chromaData = chromaCtx.getImageData(0, 0, imgW, imgH).data;
+            const pImgData = pCtx.getImageData(0, 0, imgW, imgH);
+            const pData = pImgData.data;
             
-            // Varredura de Pixels: Remove tons de verde puro (Chroma Key) e torna transparentes
-            for (let i = 0; i < data.length; i += 4) {
-                const r = data[i];
-                const g = data[i+1];
-                const b = data[i+2];
+            // Varredura de Pixels: Onde a imagem Chroma Key for verde, aplicamos transparência na imagem LENTE.png
+            for (let i = 0; i < chromaData.length; i += 4) {
+                const r = chromaData[i];
+                const g = chromaData[i+1];
+                const b = chromaData[i+2];
                 
-                // Condição para detecção de verde puro com tolerância a sombreamento
+                // Condição para detecção do verde Chroma Key na imagem de referência
                 if (g > 110 && r < 120 && b < 120 && g > r * 1.2 && g > b * 1.2) {
-                    data[i+3] = 0; // Transparência total
+                    pData[i+3] = 0; // Torna o pixel correspondente da LENTE.png 100% transparente
                 }
             }
-            mCtx.putImageData(imgData, 0, 0);
+            pCtx.putImageData(pImgData, 0, 0);
         } catch (e) {
-            console.error("Erro no processamento do Chroma Key local:", e);
+            console.error("Erro no processamento da máscara de lente local:", e);
         }
     }
 
@@ -76,8 +87,8 @@ document.addEventListener('DOMContentLoaded', () => {
     Object.keys(images).forEach(key => {
         const img = images[key];
         img.onload = () => {
-            if (key === 'lenteImg') {
-                processChromaKey();
+            if (key === 'lenteImg' || key === 'lenteChromaKey') {
+                processLenteMask();
             }
             if (state && state.authenticated) {
                 renderActiveCanvas(state.activeTab);
@@ -89,7 +100,8 @@ document.addEventListener('DOMContentLoaded', () => {
     images.officeScene.src = 'images/sim_office_scene.png';
     images.waterGlare.src = 'images/sim_water_glare.png';
     images.outdoorSun.src = 'images/sim_outdoor_sun.png';
-    images.lenteImg.src = 'images/LENTE Chroma Key.png';
+    images.lenteImg.src = 'images/LENTE.png';
+    images.lenteChromaKey.src = 'images/LENTE Chroma Key.png';
 
     // Offscreen canvas auxiliar para renderizar efeitos de desfoque ótico (Blur)
     const offscreenCanvas = document.createElement('canvas');
@@ -1379,12 +1391,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const actualRh = drawH / 2;
 
         // Garante que o processamento do Chroma Key foi executado
-        if (!maskedLenteCanvas) {
-            processChromaKey();
+        if (!processedLenteCanvas) {
+            processLenteMask();
         }
 
-        // Determina o elemento visual a ser desenhado (usa o canvas com chroma key removido ou a imagem original como fallback)
-        const renderTarget = maskedLenteCanvas || images.lenteImg;
+        // Determina o elemento visual a ser desenhado (usa o canvas com o miolo transparente processado ou a imagem original como fallback)
+        const renderTarget = processedLenteCanvas || images.lenteImg;
 
         // 2. VISÃO INTERNA DA LENTE ESQUERDA (DENTRO DA IMAGEM LENS/FRAME - MIOLO CLARO - SEMPRE POLARIZADA)
         ctx.save();
