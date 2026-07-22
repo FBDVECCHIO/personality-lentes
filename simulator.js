@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 btnToggleCamera.style.borderColor = 'var(--success)';
             }
             if (btnFloatCamera) {
-                btnFloatCamera.style.background = 'rgba(40, 199, 111, 0.25)';
+                btnFloatCamera.style.background = 'rgba(40, 199, 111, 0.2)';
                 btnFloatCamera.style.borderColor = 'var(--success)';
             }
         } catch (err) {
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btnToggleCamera.style.borderColor = 'var(--gold-primary)';
         }
         if (btnFloatCamera) {
-            btnFloatCamera.style.background = 'rgba(10, 10, 15, 0.65)';
+            btnFloatCamera.style.background = 'rgba(10, 10, 15, 0.35)';
             btnFloatCamera.style.borderColor = 'rgba(255, 255, 255, 0.15)';
         }
         renderActiveCanvas(state.activeTab);
@@ -265,11 +265,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // -------------------------------------------------------------
-    // 7. CONTROLES PREMIUM PARA TABLET (ABAS EM CASCATA & DOCK INFERIOR)
+    // 7. CONTROLES PREMIUM PARA TABLET (POPUP VERTICAL & DOCK INFERIOR)
     // -------------------------------------------------------------
     function initTabletControllers() {
         
-        // 1. Câmera Flutuante (Canto Superior Direito)
+        // 1. Câmera (Canto Superior Direito)
         if (btnFloatCamera) {
             btnFloatCamera.addEventListener('click', async () => {
                 if (state.cameraActive) {
@@ -280,38 +280,44 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // 2. Abrir Menu de Módulos (Canto Inferior Esquerdo)
-        if (btnFloatMenu && simMenuOverlay) {
-            btnFloatMenu.addEventListener('click', () => {
-                simMenuOverlay.style.display = 'flex';
+        // 2. Abrir Menu de Módulos (Canto Inferior Esquerdo - Popup Vertical que sobe)
+        const simModulesPopupMenu = document.getElementById('simModulesPopupMenu');
+        if (btnFloatMenu && simModulesPopupMenu) {
+            btnFloatMenu.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (simModulesPopupMenu.style.display === 'flex') {
+                    simModulesPopupMenu.style.display = 'none';
+                } else {
+                    simModulesPopupMenu.style.display = 'flex';
+                }
             });
         }
 
-        // 3. Fechar Menu de Módulos
-        if (btnCloseMenuOverlay && simMenuOverlay) {
-            btnCloseMenuOverlay.addEventListener('click', () => {
-                simMenuOverlay.style.display = 'none';
-            });
-        }
+        // Fechar popup de módulos se clicar fora
+        document.addEventListener('click', (e) => {
+            if (simModulesPopupMenu && !simModulesPopupMenu.contains(e.target) && e.target !== btnFloatMenu) {
+                simModulesPopupMenu.style.display = 'none';
+            }
+        });
 
-        // 4. Seleção de Abas via Menu Cascata (Overlay)
-        const menuCards = document.querySelectorAll('.sim-menu-card');
-        menuCards.forEach(card => {
-            card.addEventListener('click', () => {
-                const targetTab = card.getAttribute('data-tab');
+        // 3. Seleção de Abas via Popup de Módulos Vertical
+        const popupBtns = document.querySelectorAll('.sim-menu-popup-btn');
+        popupBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetTab = btn.getAttribute('data-tab');
                 const targetBtn = document.querySelector(`.sim-tab-btn[data-tab="${targetTab}"]`);
                 if (targetBtn) {
                     targetBtn.click(); // Troca de aba real
                 }
-                if (simMenuOverlay) {
-                    simMenuOverlay.style.display = 'none'; // Auto-recolhe ao selecionar!
+                if (simModulesPopupMenu) {
+                    simModulesPopupMenu.style.display = 'none'; // Auto-recolhe ao selecionar!
                 }
-                menuCards.forEach(c => c.classList.remove('active'));
-                card.classList.add('active');
+                popupBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
             });
         });
 
-        // 5. Botão Flutuante de Trilha
+        // 4. Botão Flutuante de Trilha
         if (btnFloatTrail && simTrailPanel) {
             btnFloatTrail.addEventListener('click', () => {
                 if (simTrailPanel.style.display === 'block') {
@@ -725,6 +731,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const metaLeft = getLensMeta(state.progressive.lensLeft);
         const metaRight = getLensMeta(state.progressive.lensRight);
 
+        // Atualiza crachás flutuantes HTML no topo esquerdo/direito
+        const badgeL = document.getElementById('badgeProgressiveLeft');
+        if (badgeL) {
+            badgeL.innerHTML = `
+                <strong>👈 LENTE ESQUERDA (LENTE 1)</strong>
+                <span>${metaLeft.title}</span>
+                <small>${metaLeft.sub}</small>
+            `;
+            badgeL.style.borderColor = metaLeft.border;
+        }
+
+        const badgeR = document.getElementById('badgeProgressiveRight');
+        if (badgeR) {
+            badgeR.innerHTML = `
+                <strong>👉 LADO DIREITO (LENTE 2)</strong>
+                <span>${metaRight.title}</span>
+                <small>${metaRight.sub}</small>
+            `;
+            badgeR.style.borderColor = metaRight.border;
+        }
+
         drawGlassesPOV(ctx, w, h, img, 
             (c, rx, ry, rw, rh, isCam, offscreen) => {
                 c.drawImage(offscreen, 0, 0, w, h);
@@ -777,25 +804,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         );
-
-        // Badges de Identificação das Lentes
-        ctx.fillStyle = 'rgba(10, 10, 15, 0.9)';
-        ctx.fillRect(15, 15, 290, 48);
-        ctx.strokeStyle = metaLeft.border; ctx.lineWidth = 1.5;
-        ctx.strokeRect(15, 15, 290, 48);
-        ctx.fillStyle = metaLeft.color; ctx.font = '700 12.5px Montserrat, sans-serif';
-        ctx.fillText(metaLeft.title, 25, 34);
-        ctx.fillStyle = '#fff'; ctx.font = '500 10.5px Montserrat, sans-serif';
-        ctx.fillText(metaLeft.sub, 25, 50);
-
-        ctx.fillStyle = 'rgba(10, 10, 15, 0.9)';
-        ctx.fillRect(w - 305, 15, 290, 48);
-        ctx.strokeStyle = metaRight.border;
-        ctx.strokeRect(w - 305, 15, 290, 48);
-        ctx.fillStyle = metaRight.color; ctx.font = '700 12.5px Montserrat, sans-serif';
-        ctx.fillText(metaRight.title, w - 295, 34);
-        ctx.fillStyle = '#fff'; ctx.font = '500 10.5px Montserrat, sans-serif';
-        ctx.fillText(metaRight.sub, w - 295, 50);
     }
 
     // --- MÓDULO 2: OFFICE VS PERTO ---
@@ -821,10 +829,26 @@ document.addEventListener('DOMContentLoaded', () => {
         if (w <= 0 || h <= 0) return;
 
         const img = images.officeScene;
+        const isPersonality = state.office.mode !== 'perto-simples';
+
+        // Atualiza crachá flutuante HTML
+        const badgeOffice = document.getElementById('badgeOffice');
+        if (badgeOffice) {
+            badgeOffice.innerHTML = isPersonality ? `
+                <strong>💼 PERSONALITY OFFICE</strong>
+                <span>Foco Dinâmico e Contínuo (40cm a 4 metros)</span>
+                <small>Campo intermediário ampliado e perto confortável</small>
+            ` : `
+                <strong style="color: #ff8888;">❌ LENTE DE PERTO SIMPLES</strong>
+                <span>Visão Fina Limitada a Apenas 40cm</span>
+                <small>Tudo além de 40cm fica completamente embaçado</small>
+            `;
+            badgeOffice.style.borderColor = isPersonality ? 'var(--gold-primary)' : '#ff5555';
+        }
 
         drawGlassesPOV(ctx, w, h, img,
             (c, rx, ry, rw, rh, isCam, offscreen) => {
-                if (state.office.mode === 'perto-simples') {
+                if (!isPersonality) {
                     c.save();
                     c.filter = 'blur(10px)';
                     c.drawImage(offscreen, 0, 0, w, h);
@@ -841,7 +865,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             },
             (c, lx, ly, rw, rh, isCam, offscreen) => {
-                if (state.office.mode === 'perto-simples') {
+                if (!isPersonality) {
                     c.save();
                     c.filter = 'blur(10px)';
                     c.drawImage(offscreen, 0, 0, w, h);
@@ -858,12 +882,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         );
-
-        ctx.fillStyle = 'rgba(10, 10, 15, 0.9)';
-        ctx.fillRect(20, 20, 440, 45);
-        ctx.fillStyle = state.office.mode === 'perto-simples' ? '#ff8888' : 'var(--gold-light)';
-        ctx.font = '700 13px Montserrat, sans-serif';
-        ctx.fillText(state.office.mode === 'perto-simples' ? '❌ Lente de Perto Simples: Desfoca tudo além de 40cm' : '✨ Personality Office: Visão nítida contínua de 40cm a 4 metros!', 35, 47);
     }
 
     // --- MÓDULO 3: VS FREEFORM VS PRONTAS ---
@@ -889,10 +907,26 @@ document.addEventListener('DOMContentLoaded', () => {
         if (w <= 0 || h <= 0) return;
 
         const img = images.officeScene;
+        const isFreeform = state.freeform.mode !== 'pronta-esferica';
+
+        // Atualiza crachá flutuante HTML
+        const badgeFreeform = document.getElementById('badgeFreeform');
+        if (badgeFreeform) {
+            badgeFreeform.innerHTML = isFreeform ? `
+                <strong>✨ PERSONALITY VS FREEFORM ASFERICA</strong>
+                <span>Nitidez Absoluta de Ponta a Ponta</span>
+                <small>Asfericidade premium elimina distorções nas bordas</small>
+            ` : `
+                <strong style="color: #ff8888;">❌ LENTE PRONTA COMUM (ESFÉRICA)</strong>
+                <span>Distorção "Olho de Peixe" Periférica</span>
+                <small>Nitidez restrita ao centro óptico da lente</small>
+            `;
+            badgeFreeform.style.borderColor = isFreeform ? 'var(--gold-primary)' : '#ff5555';
+        }
 
         drawGlassesPOV(ctx, w, h, img,
             (c, rx, ry, rw, rh, isCam, offscreen) => {
-                if (state.freeform.mode === 'pronta-esferica') {
+                if (!isFreeform) {
                     c.save();
                     c.filter = 'blur(9px)';
                     c.drawImage(offscreen, 0, 0, w, h);
@@ -909,7 +943,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             },
             (c, lx, ly, rw, rh, isCam, offscreen) => {
-                if (state.freeform.mode === 'pronta-esferica') {
+                if (!isFreeform) {
                     c.save();
                     c.filter = 'blur(9px)';
                     c.drawImage(offscreen, 0, 0, w, h);
@@ -926,12 +960,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         );
-
-        ctx.fillStyle = 'rgba(10, 10, 15, 0.9)';
-        ctx.fillRect(20, 20, 450, 45);
-        ctx.fillStyle = state.freeform.mode === 'pronta-esferica' ? '#ff8888' : 'var(--gold-light)';
-        ctx.font = '700 13px Montserrat, sans-serif';
-        ctx.fillText(state.freeform.mode === 'pronta-esferica' ? '❌ Lente Pronta Esférica: Distorção e embaçamento na borda' : '✨ Personality VS Freeform Asférica: Visão cristalina até a borda', 35, 47);
     }
 
     // --- MÓDULO 4: COM VS SEM ANTIRREFLEXO ---
@@ -975,16 +1003,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 c.restore();
             }
         );
-
-        ctx.fillStyle = 'rgba(10, 10, 15, 0.9)';
-        ctx.fillRect(15, 15, 310, 45);
-        ctx.fillStyle = 'var(--gold-light)'; ctx.font = '700 13px Montserrat, sans-serif';
-        ctx.fillText('✨ Lente Esquerda: Com Antirreflexo Gold', 25, 42);
-
-        ctx.fillStyle = 'rgba(10, 10, 15, 0.9)';
-        ctx.fillRect(w - 325, 15, 310, 45);
-        ctx.fillStyle = '#ff8888'; ctx.font = '700 13px Montserrat, sans-serif';
-        ctx.fillText('❌ Lente Direita: Sem Antirreflexo', w - 315, 42);
     }
 
     // --- MÓDULO 6: FOTOSSENSÍVEIS ---
@@ -1018,6 +1036,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const img = images.outdoorSun;
         const opacity = (state.photo.uvLevel / 100) * 0.78;
+        const isGenS = state.photo.mode === 'gen-s';
+
+        // Atualiza crachá flutuante HTML
+        const badgePhoto = document.getElementById('badgePhoto');
+        if (badgePhoto) {
+            badgePhoto.innerHTML = `
+                <strong>☀️ TECNOLOGIA TRANSITIONS</strong>
+                <span>${isGenS ? 'Transitions GEN S (Ativação Ultrarrápida)' : 'Transitions Xtractive (Ativação no Carro)'}</span>
+                <small>Intensidade da Radiação UV: ${state.photo.uvLevel}%</small>
+            `;
+            badgePhoto.style.borderColor = 'var(--gold-primary)';
+        }
 
         drawGlassesPOV(ctx, w, h, img,
             (c, rx, ry, rw, rh, isCam, offscreen) => {
@@ -1031,14 +1061,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 c.fillRect(0, 0, w, h);
             }
         );
-
-        ctx.fillStyle = 'rgba(10, 10, 15, 0.9)';
-        ctx.fillRect(20, 20, 440, 45);
-        ctx.fillStyle = 'var(--gold-light)'; ctx.font = '700 13px Montserrat, sans-serif';
-        ctx.fillText(`☀️ ${state.photo.mode === 'gen-s' ? 'Transitions GEN S (Ativação Ultrarrápida)' : 'Transitions Xtractive (Ativação no Carro)'} - UV: ${state.photo.uvLevel}%`, 35, 47);
     }
 
     // --- MÓDULO 7: CALCULADORA DE ESPESSURA DE BORDA ---
+    initThicknessEngine(); // Inicia a escuta da dioptria de imediato
+
     function initThicknessEngine() {
         const rangeDiopter = document.getElementById('rangeDiopter');
         const valDiopter = document.getElementById('valDiopter');
@@ -1124,12 +1151,28 @@ document.addEventListener('DOMContentLoaded', () => {
         if (w <= 0 || h <= 0) return;
 
         const img = images.waterGlare;
+        const isPolarized = state.polarized.mode !== 'sem-polarizado';
+
+        // Atualiza crachá flutuante HTML
+        const badgePolarized = document.getElementById('badgePolarized');
+        if (badgePolarized) {
+            badgePolarized.innerHTML = isPolarized ? `
+                <strong>🌊 LENTE POLARIZADA PERSONALITY</strong>
+                <span>Filtração de Reflexos Ofuscantes na Água</span>
+                <small>Visão nítida do fundo da água e cores de alta definição</small>
+            ` : `
+                <strong style="color: #ff8888;">❌ LENTE SOLAR SEM POLARIZADO</strong>
+                <span>Ofuscamento Intenso Enobre a Visão</span>
+                <small>Dificuldade extrema para ver sob a superfície da água</small>
+            `;
+            badgePolarized.style.borderColor = isPolarized ? 'var(--gold-primary)' : '#ff5555';
+        }
 
         drawGlassesPOV(ctx, w, h, img,
             (c, rx, ry, rw, rh, isCam, offscreen) => {
                 c.drawImage(offscreen, 0, 0, w, h);
                 
-                if (state.polarized.mode === 'sem-polarizado') {
+                if (!isPolarized) {
                     c.save();
                     const glare = c.createRadialGradient(rx, ry, 10, rx, ry, rw * 0.95);
                     glare.addColorStop(0, 'rgba(255, 255, 255, 0.72)');
@@ -1143,7 +1186,7 @@ document.addEventListener('DOMContentLoaded', () => {
             (c, lx, ly, rw, rh, isCam, offscreen) => {
                 c.drawImage(offscreen, 0, 0, w, h);
                 
-                if (state.polarized.mode === 'sem-polarizado') {
+                if (!isPolarized) {
                     c.save();
                     const glare = c.createRadialGradient(lx, ly, 10, lx, ly, rw * 0.95);
                     glare.addColorStop(0, 'rgba(255, 255, 255, 0.72)');
@@ -1155,12 +1198,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         );
-
-        ctx.fillStyle = 'rgba(10, 10, 15, 0.9)';
-        ctx.fillRect(20, 20, 440, 45);
-        ctx.fillStyle = state.polarized.mode === 'sem-polarizado' ? '#ff8888' : 'var(--gold-light)';
-        ctx.font = '700 13px Montserrat, sans-serif';
-        ctx.fillText(state.polarized.mode === 'sem-polarizado' ? '❌ Sem Polarizado: Reflexo de sol na água encobre a visão' : '🌊 Com Polarizado Personality: Filtra 100% dos reflexos nocivos!', 35, 47);
     }
 
     // --- MÓDULO 9: CORES & SHINE MIRROR ---
@@ -1193,6 +1230,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (state.colors.color === 'gold-mirror') colorStyle = 'rgba(212,175,55,0.72)';
         if (state.colors.color === 'blue-mirror') colorStyle = 'rgba(0,150,255,0.72)';
 
+        // Atualiza crachá flutuante HTML
+        const badgeColors = document.getElementById('badgeColors');
+        if (badgeColors) {
+            badgeColors.innerHTML = `
+                <strong>🎨 ACABAMENTO ESPELHADO / SOLAR</strong>
+                <span>Tonalidade: ${state.colors.color.toUpperCase()}</span>
+                <small>${state.colors.color.includes('mirror') ? 'Tecnologia Shine Mirror Reflexiva' : 'Filtro Solar de Conforto Clássico'}</small>
+            `;
+            badgeColors.style.borderColor = 'var(--gold-primary)';
+        }
+
         drawGlassesPOV(ctx, w, h, img,
             (c, rx, ry, rw, rh, isCam, offscreen) => {
                 c.drawImage(offscreen, 0, 0, w, h);
@@ -1237,14 +1285,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         );
-
-        ctx.fillStyle = 'rgba(10, 10, 15, 0.9)';
-        ctx.fillRect(w * 0.25, 20, w * 0.5, 45);
-        ctx.fillStyle = '#fff';
-        ctx.font = '700 13px Montserrat, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(`🎨 Tonalidade / Espelhado: ${state.colors.color.toUpperCase()}`, w / 2, 47);
-        ctx.textAlign = 'left';
     }
 
     // -------------------------------------------------------------

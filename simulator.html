@@ -587,6 +587,118 @@
             display: none;
             animation: slideUpFade 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
+
+        /* Painel Dock Inferior Zeiss Style com fundo mais transparente */
+        #simBottomDock {
+            background: rgba(10, 10, 15, 0.42) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border: 1.5px solid rgba(255, 255, 255, 0.12) !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+        }
+
+        /* Menu Cascata Vertical Popup que sobe do botão de módulos */
+        .sim-menu-popup {
+            position: fixed;
+            bottom: 135px;
+            left: 24px;
+            width: 280px;
+            max-height: 480px;
+            overflow-y: auto;
+            background: rgba(10, 10, 15, 0.78);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1.5px solid rgba(255, 255, 255, 0.12);
+            border-radius: 18px;
+            padding: 12px;
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            z-index: 180;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+            animation: popupSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes popupSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .sim-menu-popup-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 11.5px;
+            font-weight: 700;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sim-menu-popup-btn:hover {
+            background: rgba(212, 175, 55, 0.15);
+            border-color: var(--gold-primary);
+            color: var(--gold-light);
+        }
+
+        .sim-menu-popup-btn.active {
+            background: var(--gold-primary);
+            border-color: var(--gold-light);
+            color: #000;
+        }
+
+        /* Crachás (Badges) Flutuantes 3D no Canto Superior */
+        .sim-canvas-badge {
+            position: absolute;
+            z-index: 10;
+            background: rgba(10, 10, 15, 0.72);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1.5px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            padding: 10px 16px;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+            pointer-events: none;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .sim-canvas-badge strong {
+            color: var(--gold-light);
+            display: block;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .sim-canvas-badge span {
+            color: #fff;
+            font-size: 12.5px;
+            font-weight: 800;
+        }
+
+        .sim-canvas-badge small {
+            display: block;
+            color: rgba(255, 255, 255, 0.65);
+            font-size: 9.5px;
+            margin-top: 2px;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -776,6 +888,20 @@
             </div>
         </div>
 
+        <!-- MENU CASCATA POPUP VERTICAL (Sobe do botão MÓDULOS) -->
+        <div id="simModulesPopupMenu" class="sim-menu-popup">
+            <button class="sim-menu-popup-btn active" data-tab="tab-progressivos">⚔️ Batalha de Progressivos</button>
+            <button class="sim-menu-popup-btn" data-tab="tab-office">💼 Office vs. Perto</button>
+            <button class="sim-menu-popup-btn" data-tab="tab-freeform">🔬 VS Freeform vs. Prontas</button>
+            <button class="sim-menu-popup-btn" data-tab="tab-ar-demo">✨ Com vs. Sem Antirreflexo</button>
+            <button class="sim-menu-popup-btn" data-tab="tab-ar-benefits">🛡️ Benefícios do AR</button>
+            <button class="sim-menu-popup-btn" data-tab="tab-photo">☀️ Fotossensíveis (Transitions)</button>
+            <button class="sim-menu-popup-btn" data-tab="tab-thickness">📐 Calculadora de Espessura</button>
+            <button class="sim-menu-popup-btn" data-tab="tab-polarized">🌊 Lentes Polarizadas</button>
+            <button class="sim-menu-popup-btn" data-tab="tab-colors">🎨 Cores & Espelhados</button>
+            <button class="sim-menu-popup-btn" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px; margin-top: 6px; border-color: var(--border-gold); color: var(--gold-light);" data-tab="tab-summary">📋 Ficha de Recomendação</button>
+        </div>
+
         <!-- Painel Lateral de Trilha (Popup Lateral) -->
         <div id="simTrailPanel" class="sim-trail-panel" style="position: fixed; bottom: 135px; right: 12px; z-index: 155; width: 320px; background: rgba(10, 10, 15, 0.9); border: 1.5px solid var(--border-gold); border-radius: 16px; padding: 16px; display: none; backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 12px;">
@@ -854,6 +980,12 @@
             <!-- MÓDULO 1: BATALHA DE PROGRESSIVOS -->
             <div class="sim-tab-content" id="tab-progressivos">
                 <div class="sim-canvas-wrapper" id="wrapperProgressive">
+                    <div id="badgeProgressiveLeft" class="sim-canvas-badge" style="left: 24px; top: 24px;">
+                        <!-- Inserido dinamicamente via JS -->
+                    </div>
+                    <div id="badgeProgressiveRight" class="sim-canvas-badge" style="right: 24px; top: 24px;">
+                        <!-- Inserido dinamicamente via JS -->
+                    </div>
                     <canvas id="canvasProgressive" class="sim-canvas"></canvas>
                     <div class="split-slider-handle" id="sliderHandleProgressive" style="left: 50%;">
                         <div class="split-slider-button">↔</div>
@@ -864,6 +996,9 @@
             <!-- MÓDULO 2: OFFICE VS PERTO -->
             <div class="sim-tab-content" id="tab-office" style="display: none;">
                 <div class="sim-canvas-wrapper" id="wrapperOffice">
+                    <div id="badgeOffice" class="sim-canvas-badge" style="left: 24px; top: 24px;">
+                        <!-- Inserido dinamicamente via JS -->
+                    </div>
                     <canvas id="canvasOffice" class="sim-canvas"></canvas>
                 </div>
             </div>
@@ -871,6 +1006,9 @@
             <!-- MÓDULO 3: VS FREEFORM VS PRONTAS -->
             <div class="sim-tab-content" id="tab-freeform" style="display: none;">
                 <div class="sim-canvas-wrapper" id="wrapperFreeform">
+                    <div id="badgeFreeform" class="sim-canvas-badge" style="left: 24px; top: 24px;">
+                        <!-- Inserido dinamicamente via JS -->
+                    </div>
                     <canvas id="canvasFreeform" class="sim-canvas"></canvas>
                 </div>
             </div>
@@ -878,6 +1016,16 @@
             <!-- MÓDULO 4: COM VS SEM ANTIRREFLEXO -->
             <div class="sim-tab-content" id="tab-ar-demo" style="display: none;">
                 <div class="sim-canvas-wrapper" id="wrapperArDemo">
+                    <div id="badgeArLeft" class="sim-canvas-badge" style="left: 24px; top: 24px; border-color: var(--border-gold);">
+                        <strong>✨ LENTE ESQUERDA (COM ANTIRREFLEXO)</strong>
+                        <span>Personality Gold Premium</span>
+                        <small>Reflexo Noturno 100% Mitigado</small>
+                    </div>
+                    <div id="badgeArRight" class="sim-canvas-badge" style="right: 24px; top: 24px; border-color: #ff5555;">
+                        <strong style="color: #ff8888;">❌ LENTE DIREITA (SEM ANTIRREFLEXO)</strong>
+                        <span>Acabamento Comum</span>
+                        <small>Ofuscamento e Fadiga Visual Noturna</small>
+                    </div>
                     <canvas id="canvasArDemo" class="sim-canvas"></canvas>
                     <div class="split-slider-handle" id="sliderHandleAr" style="left: 50%;">
                         <div class="split-slider-button">↔</div>
@@ -929,6 +1077,9 @@
             <!-- MÓDULO 6: FOTOSSENSÍVEIS -->
             <div class="sim-tab-content" id="tab-photo" style="display: none;">
                 <div class="sim-canvas-wrapper" id="wrapperPhoto">
+                    <div id="badgePhoto" class="sim-canvas-badge" style="left: 24px; top: 24px;">
+                        <!-- Inserido dinamicamente via JS -->
+                    </div>
                     <canvas id="canvasPhoto" class="sim-canvas"></canvas>
                 </div>
             </div>
@@ -948,6 +1099,9 @@
             <!-- MÓDULO 8: LENTES POLARIZADAS -->
             <div class="sim-tab-content" id="tab-polarized" style="display: none;">
                 <div class="sim-canvas-wrapper" id="wrapperPolarized">
+                    <div id="badgePolarized" class="sim-canvas-badge" style="left: 24px; top: 24px;">
+                        <!-- Inserido dinamicamente via JS -->
+                    </div>
                     <canvas id="canvasPolarized" class="sim-canvas"></canvas>
                 </div>
             </div>
@@ -955,6 +1109,9 @@
             <!-- MÓDULO 9: CORES & SHINE MIRROR -->
             <div class="sim-tab-content" id="tab-colors" style="display: none;">
                 <div class="sim-canvas-wrapper" id="wrapperColors">
+                    <div id="badgeColors" class="sim-canvas-badge" style="left: 50%; top: 24px; transform: translateX(-50%); text-align: center;">
+                        <!-- Inserido dinamicamente via JS -->
+                    </div>
                     <canvas id="canvasColors" class="sim-canvas"></canvas>
                 </div>
             </div>
@@ -987,6 +1144,6 @@
     <video id="simVideoFeed" autoplay playsinline muted style="display: none;"></video>
 
     <!-- Scripts da Aplicação -->
-    <script src="simulator.js?v=2.6"></script>
+    <script src="simulator.js?v=2.7"></script>
 </body>
 </html>
