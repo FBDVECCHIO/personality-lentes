@@ -285,14 +285,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnFullscreen) {
             btnFullscreen.addEventListener('click', () => {
                 const doc = window.document;
-                const docEl = doc.documentElement;
+                // Prefere rodar fullscreen no contêiner do simulador ou no body
+                const targetEl = doc.getElementById('simAppContent') || doc.body || doc.documentElement;
 
                 // Mapeia métodos de entrada em tela cheia cross-browser
-                const requestFS = docEl.requestFullscreen || 
-                                  docEl.webkitRequestFullscreen || 
-                                  docEl.webkitRequestFullScreen || 
-                                  docEl.mozRequestFullScreen || 
-                                  docEl.msRequestFullscreen;
+                const requestFS = targetEl.requestFullscreen || 
+                                  targetEl.webkitRequestFullscreen || 
+                                  targetEl.webkitRequestFullScreen || 
+                                  targetEl.mozRequestFullScreen || 
+                                  targetEl.msRequestFullscreen;
 
                 // Mapeia métodos de saída de tela cheia
                 const exitFS = doc.exitFullscreen || 
@@ -310,9 +311,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (!isFS) {
                     if (requestFS) {
-                        requestFS.call(docEl).catch(err => {
-                            console.error(`Erro ao ativar Tela Cheia: ${err.message}`);
-                        });
+                        try {
+                            requestFS.call(targetEl);
+                        } catch (err) {
+                            // Fallback caso falhe no contêiner
+                            const fallbackFS = doc.documentElement.requestFullscreen || 
+                                               doc.documentElement.webkitRequestFullscreen || 
+                                               doc.documentElement.mozRequestFullScreen || 
+                                               doc.documentElement.msRequestFullscreen;
+                            if (fallbackFS) {
+                                fallbackFS.call(doc.documentElement);
+                            }
+                        }
+                    } else {
+                        // Alerta instrutivo para iOS/iPad se o Safari do usuário estiver com o recurso desativado
+                        alert("A API de Tela Cheia não foi permitida ou não é suportada diretamente pelo Safari neste dispositivo.\n\nPara usar em Tela Cheia no balcão sem barra de endereços:\n1. Toque no ícone de Compartilhar (seta para cima) no Safari.\n2. Escolha 'Adicionar à Tela de Início'.\n3. Abra o ícone criado na tela inicial do seu iPad.");
                     }
                 } else {
                     if (exitFS) {
