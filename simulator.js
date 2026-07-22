@@ -312,7 +312,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const isCamActive = state.cameraActive && simVideoFeed && simVideoFeed.readyState >= 2;
 
-        // Atualiza tamanho do offscreen canvas para renderização paralela de blurs
         offscreenCanvas.width = w;
         offscreenCanvas.height = h;
 
@@ -326,15 +325,12 @@ document.addEventListener('DOMContentLoaded', () => {
             offscreenCtx.fillStyle = '#111'; offscreenCtx.fillRect(0, 0, w, h);
         }
 
-        // Desenha a cena geral no canvas principal
         ctx.drawImage(offscreenCanvas, 0, 0, w, h);
 
-        // Aplica o desfoque periférico do olho sem óculos
         ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
         ctx.fillRect(0, 0, w, h);
         ctx.restore();
 
-        // Parâmetros de Posição da Armação em 1ª Pessoa
         const rx = w * 0.28;
         const ry = h * 0.48;
         const rw = w * 0.21;
@@ -350,7 +346,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.clip();
         renderLeftLens(ctx, rx, ry, rw, rh, isCamActive, offscreenCanvas);
 
-        // Brilho realista de reflexo de vidro na borda da lente
         const gradL = ctx.createLinearGradient(rx - rw, ry - rh, rx + rw, ry + rh);
         gradL.addColorStop(0, 'rgba(255, 255, 255, 0.18)');
         gradL.addColorStop(0.3, 'rgba(255, 255, 255, 0.02)');
@@ -366,7 +361,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.clip();
         renderRightLens(ctx, lx, ly, rw, rh, isCamActive, offscreenCanvas);
 
-        // Brilho realista de reflexo de vidro na borda da lente
         const gradR = ctx.createLinearGradient(lx - rw, ly - rh, lx + rw, ly + rh);
         gradR.addColorStop(0, 'rgba(255, 255, 255, 0.18)');
         gradR.addColorStop(0.3, 'rgba(255, 255, 255, 0.02)');
@@ -413,19 +407,48 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // -------------------------------------------------------------
-    // 9. RENDERIZADORES DOS MÓDULOS DE SIMULAÇÃO
+    // 9. FUNÇÃO PARA DESENHAR MAPA DE ABERRAÇÃO PEDAGÓGICA (HEATMAP)
     // -------------------------------------------------------------
+    function drawAberrationHeatmap(ctx, cx, cy, rw, rh, meta) {
+        if (!meta.isBad && meta.blur <= 3) return; // Lentes excelentes não têm aberração perceptível
 
-    function initAllCanvasEngines() {
-        initProgressiveEngine();
-        initOfficeEngine();
-        initFreeformEngine();
-        initArDemoEngine();
-        initPhotoEngine();
-        initThicknessEngine();
-        initPolarizedEngine();
-        initColorsEngine();
+        ctx.save();
+        ctx.globalCompositeOperation = 'source-over';
+
+        // Escala da aberração baseada na qualidade da lente
+        const radius = rw * (meta.blur / 16);
+        const opacity = meta.isBad ? 0.45 : 0.25;
+
+        // Gradiente da asa lateral esquerda
+        const gradL = ctx.createRadialGradient(cx - rw * 0.7, cy + rh * 0.45, 5, cx - rw * 0.7, cy + rh * 0.45, radius);
+        gradL.addColorStop(0, `rgba(255, 50, 50, ${opacity})`);
+        gradL.addColorStop(0.4, `rgba(255, 140, 0, ${opacity * 0.6})`);
+        gradL.addColorStop(0.7, `rgba(255, 230, 0, ${opacity * 0.3})`);
+        gradL.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+        ctx.fillStyle = gradL;
+        ctx.beginPath();
+        ctx.arc(cx - rw * 0.7, cy + rh * 0.45, radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Gradiente da asa lateral direita
+        const gradR = ctx.createRadialGradient(cx + rw * 0.7, cy + rh * 0.45, 5, cx + rw * 0.7, cy + rh * 0.45, radius);
+        gradR.addColorStop(0, `rgba(255, 50, 50, ${opacity})`);
+        gradR.addColorStop(0.4, `rgba(255, 140, 0, ${opacity * 0.6})`);
+        gradR.addColorStop(0.7, `rgba(255, 230, 0, ${opacity * 0.3})`);
+        gradR.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+        ctx.fillStyle = gradR;
+        ctx.beginPath();
+        ctx.arc(cx + rw * 0.7, cy + rh * 0.45, radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
     }
+
+    // -------------------------------------------------------------
+    // 10. RENDERIZADORES DOS MÓDULOS DE SIMULAÇÃO
+    // -------------------------------------------------------------
 
     function renderActiveCanvas(tabId) {
         if (tabId === 'tab-progressivos') drawProgressive();
@@ -438,7 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tabId === 'tab-colors') drawColors();
     }
 
-    // --- MÓDULO 1: BATALHA DE PROGRESSIVOS (DESFOQUE ÓTICO REAL) ---
+    // --- MÓDULO 1: BATALHA DE PROGRESSIVOS (COM HEATMAP DE DISTORÇÃO) ---
     function initProgressiveEngine() {
         const canvas = document.getElementById('canvasProgressive');
         const handle = document.getElementById('sliderHandleProgressive');
@@ -506,20 +529,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         drawGlassesPOV(ctx, w, h, img, 
             (c, rx, ry, rw, rh, isCam, offscreen) => {
-                // Desenha imagem nítida no fundo da lente
                 c.drawImage(offscreen, 0, 0, w, h);
                 
-                // Simulação de Aberração de Desfoque Ótico Real (Gaussian Blur)
                 if (metaLeft.blur > 2) {
                     c.save();
-                    // Cria uma máscara para manter apenas o canal central (corredor progressivo) nítido
                     c.beginPath();
                     c.ellipse(rx, ry + 20, rw * 0.45, rh * 0.9, 0, 0, Math.PI * 2);
                     c.clip();
                     c.drawImage(offscreen, 0, 0, w, h);
                     c.restore();
 
-                    // Aplica desfoque nas laterais
                     c.save();
                     c.globalCompositeOperation = 'destination-over';
                     c.filter = `blur(${metaLeft.blur}px)`;
@@ -527,7 +546,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     c.restore();
                 }
 
-                // Película de reflexo dourado suave nas lentes premium
+                // Desenha o mapa de calor da aberração ótica do progressivo (Heatmap)
+                drawAberrationHeatmap(c, rx, ry, rw, rh, metaLeft);
+
                 if (!metaLeft.isBad) {
                     c.fillStyle = 'rgba(212, 175, 55, 0.06)';
                     c.fillRect(0, 0, w, h);
@@ -550,6 +571,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     c.drawImage(offscreen, 0, 0, w, h);
                     c.restore();
                 }
+
+                drawAberrationHeatmap(c, lx, ly, rw, rh, metaRight);
 
                 if (!metaRight.isBad) {
                     c.fillStyle = 'rgba(212, 175, 55, 0.06)';
@@ -578,18 +601,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillText(metaRight.sub, w - 295, 50);
     }
 
-    // --- MÓDULO 2: OFFICE VS PERTO (DESFOQUE DE PROFUNDIDADE DE CAMPO REAL) ---
-    function initOfficeEngine() {
-        document.querySelectorAll('[data-type="office"]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('[data-type="office"]').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                state.office.mode = btn.getAttribute('data-val');
-                drawOffice();
-            });
-        });
-    }
-
+    // --- MÓDULO 2: OFFICE VS PERTO ---
     function drawOffice() {
         const canvas = document.getElementById('canvasOffice');
         if (!canvas) return;
@@ -602,13 +614,11 @@ document.addEventListener('DOMContentLoaded', () => {
         drawGlassesPOV(ctx, w, h, img,
             (c, rx, ry, rw, rh, isCam, offscreen) => {
                 if (state.office.mode === 'perto-simples') {
-                    // Desfoca o fundo (Monitor e Sala de Reunião distante)
                     c.save();
                     c.filter = 'blur(10px)';
                     c.drawImage(offscreen, 0, 0, w, h);
                     c.restore();
 
-                    // Mantém apenas foco de perto nítido (porção inferior da lente)
                     c.save();
                     c.beginPath();
                     c.ellipse(rx, ry + rh * 0.4, rw * 0.8, rh * 0.5, 0, 0, Math.PI * 2);
@@ -645,18 +655,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillText(state.office.mode === 'perto-simples' ? '❌ Lente de Perto Simples: Desfoca tudo além de 40cm' : '✨ Personality Office: Visão nítida contínua de 40cm a 4 metros!', 35, 47);
     }
 
-    // --- MÓDULO 3: VS FREEFORM VS PRONTAS (DESFOQUE DE ASTIGMATISMO OBLÍQUO) ---
-    function initFreeformEngine() {
-        document.querySelectorAll('[data-type="freeform"]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('[data-type="freeform"]').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                state.freeform.mode = btn.getAttribute('data-val');
-                drawFreeform();
-            });
-        });
-    }
-
+    // --- MÓDULO 3: VS FREEFORM VS PRONTAS ---
     function drawFreeform() {
         const canvas = document.getElementById('canvasFreeform');
         if (!canvas) return;
@@ -669,13 +668,11 @@ document.addEventListener('DOMContentLoaded', () => {
         drawGlassesPOV(ctx, w, h, img,
             (c, rx, ry, rw, rh, isCam, offscreen) => {
                 if (state.freeform.mode === 'pronta-esferica') {
-                    // Desfoca a periferia da lente (astigmatismo marginal)
                     c.save();
                     c.filter = 'blur(9px)';
                     c.drawImage(offscreen, 0, 0, w, h);
                     c.restore();
 
-                    // Mantém apenas o centro perfeito
                     c.save();
                     c.beginPath();
                     c.ellipse(rx, ry, rw * 0.5, rh * 0.5, 0, 0, Math.PI * 2);
@@ -712,32 +709,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillText(state.freeform.mode === 'pronta-esferica' ? '❌ Lente Pronta Esférica: Distorção e embaçamento na borda' : '✨ Personality VS Freeform Asférica: Visão cristalina até a borda', 35, 47);
     }
 
-    // --- MÓDULO 4: COM VS SEM ANTIRREFLEXO (HALOS DE LUZ REALISTAS) ---
-    function initArDemoEngine() {
-        const canvas = document.getElementById('canvasArDemo');
-        const handle = document.getElementById('sliderHandleAr');
-        const wrapper = document.getElementById('wrapperArDemo');
-        if (!canvas) return;
-
-        let isDragging = false;
-        const updatePos = (clientX) => {
-            const rect = wrapper.getBoundingClientRect();
-            let pos = (clientX - rect.left) / rect.width;
-            pos = Math.max(0.05, Math.min(0.95, pos));
-            state.arDemo.sliderPos = pos;
-            handle.style.left = `${pos * 100}%`;
-            drawArDemo();
-        };
-
-        wrapper.addEventListener('mousedown', (e) => { isDragging = true; updatePos(e.clientX); });
-        window.addEventListener('mousemove', (e) => { if (isDragging) updatePos(e.clientX); });
-        window.addEventListener('mouseup', () => { isDragging = false; });
-
-        wrapper.addEventListener('touchstart', (e) => { isDragging = true; updatePos(e.touches[0].clientX); });
-        window.addEventListener('touchmove', (e) => { if (isDragging) updatePos(e.touches[0].clientX); });
-        window.addEventListener('touchend', () => { isDragging = false; });
-    }
-
+    // --- MÓDULO 4: COM VS SEM ANTIRREFLEXO ---
     function drawArDemo() {
         const canvas = document.getElementById('canvasArDemo');
         if (!canvas) return;
@@ -751,17 +723,14 @@ document.addEventListener('DOMContentLoaded', () => {
         drawGlassesPOV(ctx, w, h, img,
             (c, rx, ry, rw, rh, isCam, offscreen) => {
                 c.drawImage(offscreen, 0, 0, w, h);
-                // Antirreflexo Gold Premium: Película dourada antirefletiva sutil
                 c.fillStyle = 'rgba(212, 175, 55, 0.08)'; c.fillRect(0, 0, w, h);
             },
             (c, lx, ly, rw, rh, isCam, offscreen) => {
                 c.drawImage(offscreen, 0, 0, w, h);
                 
-                // Simulação fotorrealista de ofuscamento noturno (Halos sobre faróis)
                 c.save();
                 c.globalCompositeOperation = 'screen';
                 
-                // Farol 1
                 const flare1 = c.createRadialGradient(w * 0.72 - 30, h * 0.44, 2, w * 0.72 - 30, h * 0.44, 75);
                 flare1.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
                 flare1.addColorStop(0.2, 'rgba(255, 240, 200, 0.55)');
@@ -769,7 +738,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 c.fillStyle = flare1;
                 c.beginPath(); c.arc(w * 0.72 - 30, h * 0.44, 75, 0, Math.PI * 2); c.fill();
 
-                // Farol 2
                 const flare2 = c.createRadialGradient(w * 0.72 + 60, h * 0.46, 2, w * 0.72 + 60, h * 0.46, 60);
                 flare2.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
                 flare2.addColorStop(0.3, 'rgba(255, 220, 180, 0.45)');
@@ -792,26 +760,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillText('❌ Lente Direita: Sem Antirreflexo', w - 315, 42);
     }
 
-    // --- MÓDULO 6: FOTOSSENSÍVEIS (TRANSITIONS E FILTRO DE MULTIPLY) ---
-    function initPhotoEngine() {
-        const rangeUv = document.getElementById('rangeUv');
-        if (rangeUv) {
-            rangeUv.addEventListener('input', (e) => {
-                state.photo.uvLevel = parseInt(e.target.value);
-                drawPhoto();
-            });
-        }
-
-        document.querySelectorAll('[data-type="photo"]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('[data-type="photo"]').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                state.photo.mode = btn.getAttribute('data-val');
-                drawPhoto();
-            });
-        });
-    }
-
+    // --- MÓDULO 6: FOTOSSENSÍVEIS ---
     function drawPhoto() {
         const canvas = document.getElementById('canvasPhoto');
         if (!canvas) return;
@@ -825,7 +774,6 @@ document.addEventListener('DOMContentLoaded', () => {
         drawGlassesPOV(ctx, w, h, img,
             (c, rx, ry, rw, rh, isCam, offscreen) => {
                 c.drawImage(offscreen, 0, 0, w, h);
-                // Transitions: Efeito realista de escurecimento (Multiply)
                 c.fillStyle = `rgba(32, 28, 30, ${opacity})`;
                 c.fillRect(0, 0, w, h);
             },
@@ -843,19 +791,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- MÓDULO 7: CALCULADORA DE ESPESSURA DE BORDA ---
-    function initThicknessEngine() {
-        const rangeDiopter = document.getElementById('rangeDiopter');
-        const valDiopter = document.getElementById('valDiopter');
-
-        if (rangeDiopter) {
-            rangeDiopter.addEventListener('input', (e) => {
-                state.thickness.diopter = parseFloat(e.target.value);
-                if (valDiopter) valDiopter.textContent = `${state.thickness.diopter.toFixed(2)} D`;
-                drawThickness();
-            });
-        }
-    }
-
     function drawThickness() {
         const canvas = document.getElementById('canvasThickness');
         if (!canvas) return;
@@ -904,18 +839,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- MÓDULO 8: LENTES POLARIZADAS (REMOÇÃO FOTORREALISTA DE BRILHO) ---
-    function initPolarizedEngine() {
-        document.querySelectorAll('[data-type="polar"]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('[data-type="polar"]').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                state.polarized.mode = btn.getAttribute('data-val');
-                drawPolarized();
-            });
-        });
-    }
-
+    // --- MÓDULO 8: LENTES POLARIZADAS ---
     function drawPolarized() {
         const canvas = document.getElementById('canvasPolarized');
         if (!canvas) return;
@@ -929,7 +853,6 @@ document.addEventListener('DOMContentLoaded', () => {
             (c, rx, ry, rw, rh, isCam, offscreen) => {
                 c.drawImage(offscreen, 0, 0, w, h);
                 
-                // Sem Polarizado: Aplica o reflexo cegante de luz na superfície
                 if (state.polarized.mode === 'sem-polarizado') {
                     c.save();
                     const glare = c.createRadialGradient(rx, ry, 10, rx, ry, rw * 0.95);
@@ -964,18 +887,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillText(state.polarized.mode === 'sem-polarizado' ? '❌ Sem Polarizado: Reflexo de sol na água encobre a visão' : '🌊 Com Polarizado Personality: Filtra 100% dos reflexos nocivos!', 35, 47);
     }
 
-    // --- MÓDULO 9: CORES & SHINE MIRROR (COMPOSIÇÃO DE CORES OVERLAY REALISTA) ---
-    function initColorsEngine() {
-        document.querySelectorAll('.sim-color-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.sim-color-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                state.colors.color = btn.getAttribute('data-color');
-                drawColors();
-            });
-        });
-    }
-
+    // --- MÓDULO 9: CORES & SHINE MIRROR ---
     function drawColors() {
         const canvas = document.getElementById('canvasColors');
         if (!canvas) return;
@@ -1001,7 +913,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 c.fillRect(0, 0, w, h);
                 c.restore();
 
-                // Efeito Espelhado Metálico Shine Mirror
                 if (state.colors.color.includes('mirror')) {
                     c.save();
                     c.globalCompositeOperation = 'screen';
