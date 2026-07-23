@@ -40,7 +40,13 @@
                     </div>
                 </div>
                 
-                <a href="#lojas" class="nav-link">LICENCIADOS</a>
+                <div class="nav-item-dropdown">
+                    <a href="#lojas" class="nav-link dropdown-toggle">LICENCIADOS ▾</a>
+                    <div class="dropdown-menu">
+                        <a href="#profissionais-saude" class="dropdown-item">Profissionais da Saúde</a>
+                        <a href="#lojas" class="dropdown-item">Ópticas Licenciadas</a>
+                    </div>
+                </div>
                 <a href="#assistencia" class="nav-link">ASSISTÊNCIA & GARANTIA</a>
                 <a href="#contato" class="nav-link">CUPOM 15% OFF</a>
                 <a href="simulator.html" class="btn btn-gold btn-sm" style="font-size: 11px; padding: 6px 12px; font-weight: 700; margin-left: 8px;">✨ DEMONSTRADOR DIGITAL</a>
@@ -67,7 +73,9 @@
             <a href="#produtos" class="mobile-link submenu-link" data-tab="antirreflexos">└ Antirreflexos</a>
             <a href="#tecnologias-materiais" class="mobile-link submenu-link">└ Tecnologias & Materiais</a>
             <a href="#downloads" class="mobile-link submenu-link">└ Central de Downloads</a>
-            <a href="#lojas" class="mobile-link">LICENCIADOS</a>
+            <div class="mobile-dropdown-header">LICENCIADOS:</div>
+            <a href="#profissionais-saude" class="mobile-link submenu-link">└ Profissionais da Saúde</a>
+            <a href="#lojas" class="mobile-link submenu-link">└ Ópticas Licenciadas</a>
             <a href="#assistencia" class="mobile-link">ASSISTÊNCIA & GARANTIA</a>
             <a href="#contato" class="mobile-link">CUPOM 15% OFF</a>
         </nav>
@@ -1525,6 +1533,92 @@
             <!-- Grid de Cards de Materiais para Download -->
             <div class="downloads-grid" id="downloadsGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
                 <!-- Preenchido via Javascript (script.js) com fallback e Supabase -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Seção PROFISSIONAIS DA SAÚDE -->
+    <section id="profissionais-saude" class="section-padding profissionais-section">
+        <div class="container">
+            <div class="section-header text-center">
+                <h2 class="section-title">Profissionais da <span class="gold-text">Saúde</span></h2>
+                <div class="gold-divider"></div>
+                <p class="section-subtitle">Cadastre-se para prescrever as lentes personalizadas Personality em seu consultório ou clínica.</p>
+            </div>
+
+            <div class="professional-registration-container">
+                <div class="professional-registration-card glass-card">
+                    <form id="professionalForm" class="custom-form">
+                        <div class="form-grid">
+                            <!-- Nome Completo -->
+                            <div class="form-group full-width">
+                                <label for="profName">Nome Completo</label>
+                                <input type="text" id="profName" name="nome" placeholder="Digite seu nome completo" required>
+                                <span class="error-msg" id="profNameError">Por favor, digite seu nome completo.</span>
+                            </div>
+
+                            <!-- CPF / CNPJ -->
+                            <div class="form-group">
+                                <label for="profCpfCnpj">CPF ou CNPJ</label>
+                                <input type="text" id="profCpfCnpj" name="cpf_cnpj" placeholder="Digite o documento" required>
+                                <span class="error-msg" id="profCpfCnpjError">Por favor, informe um CPF ou CNPJ válido.</span>
+                            </div>
+
+                            <!-- E-mail -->
+                            <div class="form-group">
+                                <label for="profEmail">E-mail Profissional</label>
+                                <input type="email" id="profEmail" name="email" placeholder="exemplo@email.com" required>
+                                <span class="error-msg" id="profEmailError">Por favor, informe um e-mail válido.</span>
+                            </div>
+
+                            <!-- WhatsApp -->
+                            <div class="form-group">
+                                <label for="profWhatsapp">WhatsApp</label>
+                                <input type="tel" id="profWhatsapp" name="whatsapp" placeholder="(00) 00000-0000" required>
+                                <span class="error-msg" id="profWhatsappError">WhatsApp inválido. Use DDD + número.</span>
+                            </div>
+
+                            <!-- Telefone -->
+                            <div class="form-group">
+                                <label for="profPhone" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                    <span>Telefone Fixo / Comercial</span>
+                                    <label style="font-weight: normal; font-size: 11px; color: var(--gold-light); display: flex; align-items: center; gap: 4px; cursor: pointer; margin: 0;">
+                                        <input type="checkbox" id="profSameAsWhatsapp" style="cursor: pointer; accent-color: var(--gold-primary); margin: 0; position: relative; top: -1px;">
+                                        Mesmo do WhatsApp
+                                    </label>
+                                </label>
+                                <input type="text" id="profPhone" name="telefone" placeholder="(00) 00000-0000">
+                            </div>
+
+                            <!-- Clínica / Consultório -->
+                            <div class="form-group full-width">
+                                <label for="profClinic">Clínica / Consultório onde trabalha</label>
+                                <input type="text" id="profClinic" name="clinica" placeholder="Nome da clínica ou consultório" required>
+                                <span class="error-msg" id="profClinicError">Por favor, informe a clínica onde trabalha.</span>
+                            </div>
+
+                            <!-- Checkbox Newsletter -->
+                            <div class="form-group full-width" style="flex-direction: row; align-items: flex-start; gap: 10px; margin-top: 10px;">
+                                <input type="checkbox" id="profNewsletter" name="newsletter" checked style="margin-top: 4px; accent-color: var(--gold-primary); cursor: pointer; width: 16px; height: 16px;">
+                                <label for="profNewsletter" style="font-size: 13.5px; color: var(--text-muted); cursor: pointer; line-height: 1.4; font-weight: normal; margin: 0;">Autorizo a Personality a enviar newsletters, novidades e atualizações científicas da marca.</label>
+                            </div>
+                        </div>
+
+                        <!-- Botão Enviar -->
+                        <button type="submit" id="btnSubmitProf" class="btn btn-gold" style="width: 100%; margin-top: 30px; display: flex; justify-content: center; align-items: center; gap: 8px; font-weight: 700; text-transform: uppercase;">
+                            <span class="btn-text">Cadastrar no Credenciamento</span>
+                            <span class="btn-spinner" id="profSpinner" style="display: none; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite;"></span>
+                        </button>
+                    </form>
+
+                    <!-- Alerta de Sucesso -->
+                    <div id="profSuccessAlert" class="glass-card text-center" style="display: none; padding: 20px; border-color: var(--gold-primary); margin-top: 20px;">
+                        <span style="font-size: 40px; display: block; margin-bottom: 12px;">✅</span>
+                        <h4 class="gold-text" style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Cadastro Realizado com Sucesso!</h4>
+                        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">Agradecemos seu interesse. Nossa equipe de relacionamento entrará em contato via WhatsApp/E-mail para formalizar o seu credenciamento.</p>
+                        <button type="button" id="btnResetProfForm" class="btn btn-gold btn-sm" style="font-size: 12px; margin: 0 auto; display: block;">Fazer Outro Cadastro</button>
+                    </div>
+                </div>
             </div>
         </div>
     </section>

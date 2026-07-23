@@ -64,6 +64,7 @@
                 <button class="side-btn" data-section="dominio">🌐 Domínio e Vercel</button>
                 <button class="side-btn" data-section="imagens">📸 Banco de Imagens</button>
                 <button class="side-btn" data-section="leads">📥 Leads Recebidos</button>
+                <button class="side-btn" data-section="profissionais">🩺 Profissionais da Saúde</button>
             </nav>
             <div class="sidebar-footer" style="display: flex; flex-direction: column; gap: 8px;">
                 <a href="index.html" class="btn btn-outline-gold btn-full btn-sm">← Voltar para o Site</a>
@@ -105,6 +106,12 @@
                             <label for="sbStoresTable">Nome da Tabela de Lojas</label>
                             <input type="text" id="sbStoresTable" value="lojas_licenciadas" required>
                             <p class="input-hint">Tabela no banco de dados que irá receber as óticas: `nome`, `endereco`, `telefone`.</p>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="sbProfsTable">Nome da Tabela de Profissionais da Saúde</label>
+                            <input type="text" id="sbProfsTable" value="profissionais_personality" required>
+                            <p class="input-hint">Tabela no banco de dados que irá receber os cadastros dos profissionais: `nome`, `cpf_cnpj`, `email`, `whatsapp`, `telefone`, `clinica`, `newsletter`.</p>
                         </div>
 
                         <div class="input-group">
@@ -214,9 +221,23 @@ create table if not exists motivos_assistencia (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- 7. Habilitar RLS (Row Level Security) e Criar Políticas de Acesso Nativas
+-- 7. Tabela de Profissionais da Saúde Cadastrados
+create table if not exists profissionais_personality (
+  id uuid default gen_random_uuid() primary key,
+  nome text not null,
+  cpf_cnpj text not null,
+  email text not null,
+  whatsapp text not null,
+  telefone text,
+  clinica text not null,
+  newsletter boolean default false,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 8. Habilitar RLS (Row Level Security) e Criar Políticas de Acesso Nativas
 alter table leads_personality enable row level security;
 alter table lojas_licenciadas enable row level security;
+alter table profissionais_personality enable row level security;
 alter table acessos_lojas enable row level security;
 alter table tecnicos_personality enable row level security;
 alter table chamados_assistencia enable row level security;
@@ -231,6 +252,15 @@ create policy "Permitir select em leads_personality" on leads_personality for se
 create policy "Permitir insert em leads_personality" on leads_personality for insert with check (true);
 create policy "Permitir update em leads_personality" on leads_personality for update using (true);
 create policy "Permitir delete em leads_personality" on leads_personality for delete using (true);
+
+drop policy if exists "Permitir select em profissionais_personality" on profissionais_personality;
+drop policy if exists "Permitir insert em profissionais_personality" on profissionais_personality;
+drop policy if exists "Permitir update em profissionais_personality" on profissionais_personality;
+drop policy if exists "Permitir delete em profissionais_personality" on profissionais_personality;
+create policy "Permitir select em profissionais_personality" on profissionais_personality for select using (true);
+create policy "Permitir insert em profissionais_personality" on profissionais_personality for insert with check (true);
+create policy "Permitir update em profissionais_personality" on profissionais_personality for update using (true);
+create policy "Permitir delete em profissionais_personality" on profissionais_personality for delete using (true);
 
 drop policy if exists "Permitir select em lojas_licenciadas" on lojas_licenciadas;
 drop policy if exists "Permitir insert em lojas_licenciadas" on lojas_licenciadas;
@@ -756,6 +786,43 @@ create policy "Permitir delete em motivos_assistencia" on motivos_assistencia fo
                                 </tr>
                             </thead>
                             <tbody id="leadsTableBody">
+                                <!-- Preenchido via Javascript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção: Profissionais da Saúde Cadastrados -->
+            <div class="admin-section" id="sec-profissionais">
+                <div class="glass-card section-card">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                        <div>
+                            <h2>Profissionais da Saúde <span class="gold-text">Cadastrados</span></h2>
+                            <p>Lista de profissionais da saúde (CRM, CRO, etc.) interessados no credenciamento Personality.</p>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <div class="stats-badge">Cadastrados: <span id="profCount">0</span></div>
+                            <button class="btn btn-success btn-sm" id="btnExportProfs">📊 Exportar Planilha</button>
+                            <button class="btn btn-danger btn-sm" id="btnClearProfs">🗑️ Limpar Banco</button>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="leads-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>CPF / CNPJ</th>
+                                    <th>E-mail</th>
+                                    <th>WhatsApp</th>
+                                    <th>Telefone</th>
+                                    <th>Clínica / Consultório</th>
+                                    <th>Newsletter</th>
+                                    <th>Data Cadastro</th>
+                                </tr>
+                            </thead>
+                            <tbody id="profTableBody">
                                 <!-- Preenchido via Javascript -->
                             </tbody>
                         </table>

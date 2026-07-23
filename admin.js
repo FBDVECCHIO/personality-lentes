@@ -97,6 +97,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Ações específicas ao abrir seção
             if (sectionId === 'leads') {
                 loadLeads();
+            } else if (sectionId === 'profissionais') {
+                loadProfessionals();
             } else if (sectionId === 'lojas') {
                 loadStores();
             } else if (sectionId === 'acessos') {
@@ -121,6 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sbKeyInput = document.getElementById('sbKey');
     const sbTableInput = document.getElementById('sbTable');
     const sbStoresTableInput = document.getElementById('sbStoresTable');
+    const sbProfsTableInput = document.getElementById('sbProfsTable');
     const makeWebhookUrlInput = document.getElementById('makeWebhookUrl');
     const connStatus = document.getElementById('sbConnectionStatus');
 
@@ -139,36 +142,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Carrega configurações existentes do localStorage ou valores padrão
-    sbUrlInput.value = localStorage.getItem('personality_sb_url') || DEFAULT_SB_URL;
-    sbKeyInput.value = localStorage.getItem('personality_sb_key') || DEFAULT_SB_KEY;
-    sbTableInput.value = localStorage.getItem('personality_sb_table') || 'leads_personality';
-    sbStoresTableInput.value = localStorage.getItem('personality_sb_stores_table') || 'lojas_licenciadas';
-    makeWebhookUrlInput.value = localStorage.getItem('personality_make_webhook') || '';
+    if (sbUrlInput) sbUrlInput.value = localStorage.getItem('personality_sb_url') || DEFAULT_SB_URL;
+    if (sbKeyInput) sbKeyInput.value = localStorage.getItem('personality_sb_key') || DEFAULT_SB_KEY;
+    if (sbTableInput) sbTableInput.value = localStorage.getItem('personality_sb_table') || 'leads_personality';
+    if (sbStoresTableInput) sbStoresTableInput.value = localStorage.getItem('personality_sb_stores_table') || 'lojas_licenciadas';
+    if (sbProfsTableInput) sbProfsTableInput.value = localStorage.getItem('personality_sb_profs_table') || 'profissionais_personality';
+    if (makeWebhookUrlInput) makeWebhookUrlInput.value = localStorage.getItem('personality_make_webhook') || '';
 
     // Testa a conexão ao carregar a página se houver dados salvos
-    if (sbUrlInput.value && sbKeyInput.value) {
-        testConnection(sbUrlInput.value, sbKeyInput.value, sbTableInput.value, sbStoresTableInput.value);
+    if (sbUrlInput && sbUrlInput.value && sbKeyInput && sbKeyInput.value) {
+        testConnection(
+            sbUrlInput.value, 
+            sbKeyInput.value, 
+            sbTableInput ? sbTableInput.value : 'leads_personality', 
+            sbStoresTableInput ? sbStoresTableInput.value : 'lojas_licenciadas',
+            sbProfsTableInput ? sbProfsTableInput.value : 'profissionais_personality'
+        );
     }
 
-    configForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        
-        const url = sbUrlInput.value.trim();
-        const key = sbKeyInput.value.trim();
-        const table = sbTableInput.value.trim();
-        const storesTable = sbStoresTableInput.value.trim();
-        const makeWebhook = makeWebhookUrlInput.value.trim();
+    if (configForm) {
+        configForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const url = sbUrlInput.value.trim();
+            const key = sbKeyInput.value.trim();
+            const table = sbTableInput.value.trim();
+            const storesTable = sbStoresTableInput.value.trim();
+            const profsTable = sbProfsTableInput.value.trim();
+            const makeWebhook = makeWebhookUrlInput.value.trim();
 
-        // Salva no localStorage
-        localStorage.setItem('personality_sb_url', url);
-        localStorage.setItem('personality_sb_key', key);
-        localStorage.setItem('personality_sb_table', table);
-        localStorage.setItem('personality_sb_stores_table', storesTable);
-        localStorage.setItem('personality_make_webhook', makeWebhook);
+            // Salva no localStorage
+            localStorage.setItem('personality_sb_url', url);
+            localStorage.setItem('personality_sb_key', key);
+            localStorage.setItem('personality_sb_table', table);
+            localStorage.setItem('personality_sb_stores_table', storesTable);
+            localStorage.setItem('personality_sb_profs_table', profsTable);
+            localStorage.setItem('personality_make_webhook', makeWebhook);
 
-        alert('Configurações salvas com sucesso! Testando conexão...');
-        testConnection(url, key, table, storesTable);
-    });
+            alert('Configurações salvas com sucesso! Testando conexão...');
+            testConnection(url, key, table, storesTable, profsTable);
+        });
+    }
 
     const btnTestMakeWebhook = document.getElementById('btnTestMakeWebhook');
     if (btnTestMakeWebhook) {
@@ -246,7 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    async function testConnection(url, key, table, storesTable) {
+    async function testConnection(url, key, table, storesTable, profsTable) {
         connStatus.className = 'status-box loading';
         connStatus.querySelector('.status-text').textContent = 'Testando conexão com o banco Supabase...';
 
@@ -255,6 +269,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const endpointLeads = `${cleanUrl}/rest/v1/${table}?select=*&limit=1`;
             const endpointStores = `${cleanUrl}/rest/v1/${storesTable}?select=*&limit=1`;
             const endpointAccess = `${cleanUrl}/rest/v1/acessos_lojas?select=*&limit=1`;
+            
+            const activeProfsTable = profsTable || localStorage.getItem('personality_sb_profs_table') || 'profissionais_personality';
+            const endpointProfs = `${cleanUrl}/rest/v1/${activeProfsTable}?select=*&limit=1`;
 
             // Testa tabela de Leads
             const resLeads = await fetch(endpointLeads, {
@@ -288,8 +305,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.warn("Tabela de Acessos não encontrada ou inválida. Crie a tabela 'acessos_lojas' no Supabase.");
             }
 
+            // Testa tabela de Profissionais
+            const resProfs = await fetch(endpointProfs, {
+                method: 'GET',
+                headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+            });
+
+            if (!resProfs.ok) {
+                console.warn(`Tabela de Profissionais (${activeProfsTable}) não encontrada ou inválida.`);
+            }
+
             connStatus.className = 'status-box connected';
-            connStatus.querySelector('.status-text').textContent = 'Conectado ao Supabase ( Leads, Lojas e Acessos ativos)! ✅';
+            connStatus.querySelector('.status-text').textContent = 'Conectado ao Supabase (Leads, Lojas, Acessos e Profissionais configurados)! ✅';
         } catch (error) {
             console.error('Erro de conexão:', error);
             connStatus.className = 'status-box error';
@@ -1015,6 +1042,194 @@ document.addEventListener('DOMContentLoaded', () => {
         link.click();
         document.body.removeChild(link);
     });
+
+    // -------------------------------------------------------------
+    // Carregamento e Visualização de Profissionais da Saúde Cadastrados
+    // -------------------------------------------------------------
+    const profTableBody = document.getElementById('profTableBody');
+    const profCountSpan = document.getElementById('profCount');
+    const btnExportProfs = document.getElementById('btnExportProfs');
+    const btnClearProfs = document.getElementById('btnClearProfs');
+
+    async function loadProfessionals() {
+        if (!profTableBody) return;
+        const url = localStorage.getItem('personality_sb_url');
+        const key = localStorage.getItem('personality_sb_key');
+        const table = localStorage.getItem('personality_sb_profs_table') || 'profissionais_personality';
+
+        let profs = [];
+
+        if (url && key) {
+            profTableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Buscando cadastros no Supabase...</td></tr>`;
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const endpoint = `${cleanUrl}/rest/v1/${table}?select=*&order=created_at.desc`;
+
+                const response = await fetch(endpoint, {
+                    method: 'GET',
+                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                });
+
+                if (response.ok) {
+                    profs = await response.json();
+                } else {
+                    throw new Error('Falha ao obter profissionais.');
+                }
+            } catch (error) {
+                console.error(error);
+                profTableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--danger);">Erro na conexão. Carregando dados locais.</td></tr>`;
+                profs = JSON.parse(localStorage.getItem('personality_professionals')) || [];
+            }
+        } else {
+            profs = JSON.parse(localStorage.getItem('personality_professionals')) || [];
+        }
+
+        renderProfessionals(profs);
+    }
+
+    function renderProfessionals(profs) {
+        if (profCountSpan) profCountSpan.textContent = profs.length;
+        if (!profTableBody) return;
+        profTableBody.innerHTML = '';
+
+        if (profs.length === 0) {
+            profTableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px 0;">Nenhum profissional da saúde cadastrado ainda.</td></tr>`;
+            return;
+        }
+
+        profs.forEach(prof => {
+            const dateStr = prof.created_at || prof.timestamp;
+            let formattedDate = 'Data indisponível';
+            if (dateStr) {
+                try {
+                    formattedDate = new Date(dateStr).toLocaleString('pt-BR');
+                } catch(e) {}
+            }
+
+            const rawPhone = (prof.whatsapp || '').replace(/\D/g, '');
+            const waLink = rawPhone ? `<a href="https://wa.me/55${rawPhone}" target="_blank" class="wa-link">💬 ${escapeHtml(prof.whatsapp)}</a>` : 'Não informado';
+            
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${escapeHtml(prof.nome)}</strong></td>
+                <td>${escapeHtml(prof.cpf_cnpj)}</td>
+                <td>${escapeHtml(prof.email)}</td>
+                <td>${waLink}</td>
+                <td>${escapeHtml(prof.telefone || 'Não informado')}</td>
+                <td><span class="store-badge" style="margin-top:0; background: rgba(212, 175, 55, 0.12); color: var(--gold-light);">${escapeHtml(prof.clinica)}</span></td>
+                <td>${prof.newsletter ? 'Sim ✅' : 'Não ❌'}</td>
+                <td>${escapeHtml(formattedDate)}</td>
+            `;
+            profTableBody.appendChild(tr);
+        });
+    }
+
+    if (btnClearProfs) {
+        btnClearProfs.addEventListener('click', async () => {
+            const url = localStorage.getItem('personality_sb_url');
+            const key = localStorage.getItem('personality_sb_key');
+            const table = localStorage.getItem('personality_sb_profs_table') || 'profissionais_personality';
+
+            if (url && key) {
+                if (confirm('ATENÇÃO: Deseja apagar permanentemente todos os cadastros de profissionais salvos no banco de dados Supabase? Esta ação não pode ser desfeita!')) {
+                    try {
+                        const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                        const endpoint = `${cleanUrl}/rest/v1/${table}?id=not.is.null`;
+
+                        const response = await fetch(endpoint, {
+                            method: 'DELETE',
+                            headers: {
+                                'apikey': key,
+                                'Authorization': `Bearer ${key}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (!response.ok) {
+                            const errText = await response.text();
+                            throw new Error(errText || 'Falha ao deletar profissionais do Supabase.');
+                        }
+
+                        localStorage.removeItem('personality_professionals');
+                        alert('Todos os cadastros do banco Supabase e dados locais foram apagados com sucesso!');
+                        loadProfessionals();
+                    } catch (error) {
+                        console.error(error);
+                        alert(`Erro ao apagar profissionais: ${error.message}`);
+                    }
+                }
+            } else {
+                if (confirm('Deseja limpar os dados de profissionais salvos localmente?')) {
+                    localStorage.removeItem('personality_professionals');
+                    alert('Cadastros locais apagados com sucesso!');
+                    loadProfessionals();
+                }
+            }
+        });
+    }
+
+    if (btnExportProfs) {
+        btnExportProfs.addEventListener('click', async () => {
+            const url = localStorage.getItem('personality_sb_url');
+            const key = localStorage.getItem('personality_sb_key');
+            const table = localStorage.getItem('personality_sb_profs_table') || 'profissionais_personality';
+            
+            let profs = [];
+
+            if (url && key) {
+                try {
+                    const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                    const endpoint = `${cleanUrl}/rest/v1/${table}?select=*&order=created_at.desc`;
+                    const response = await fetch(endpoint, {
+                        method: 'GET',
+                        headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                    });
+                    if (response.ok) {
+                        profs = await response.json();
+                    }
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+            
+            if (profs.length === 0) {
+                profs = JSON.parse(localStorage.getItem('personality_professionals')) || [];
+            }
+
+            if (profs.length === 0) {
+                alert('Não há dados de profissionais cadastrados para exportar.');
+                return;
+            }
+
+            let csvContent = "\uFEFF"; 
+            csvContent += "Nome;CPF_CNPJ;Email;Whatsapp;Telefone;Clinica_Trabalho;Newsletter;Data_Cadastro\n";
+            
+            profs.forEach(prof => {
+                const dateStr = prof.created_at || prof.timestamp || '';
+                const line = [
+                    `"${prof.nome.replace(/"/g, '""')}"`,
+                    `"${prof.cpf_cnpj}"`,
+                    `"${prof.email.replace(/"/g, '""')}"`,
+                    `"${prof.whatsapp}"`,
+                    `"${prof.telefone || ''}"`,
+                    `"${prof.clinica.replace(/"/g, '""')}"`,
+                    `"${prof.newsletter ? 'Sim' : 'Não'}"`,
+                    `"${dateStr}"`
+                ].join(';');
+                csvContent += line + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const downloadUrl = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", downloadUrl);
+            link.setAttribute("download", `profissionais_personality_cadastro_${new Date().toISOString().slice(0,10)}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    }
 
     // -------------------------------------------------------------
     // 6. Gerenciamento de Equipe Técnica (Suporte & Garantia)

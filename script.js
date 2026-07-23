@@ -1542,6 +1542,218 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
         drawGoldenWaves();
     }
 
+    // -------------------------------------------------------------
+    // Cadastro de Profissionais da Saúde (CRM/CRO/etc)
+    // -------------------------------------------------------------
+    const professionalForm = document.getElementById('professionalForm');
+    const profSuccessAlert = document.getElementById('profSuccessAlert');
+    const btnResetProfForm = document.getElementById('btnResetProfForm');
+    const profNameInput = document.getElementById('profName');
+    const profCpfCnpjInput = document.getElementById('profCpfCnpj');
+    const profEmailInput = document.getElementById('profEmail');
+    const profWhatsappInput = document.getElementById('profWhatsapp');
+    const profPhoneInput = document.getElementById('profPhone');
+    const profClinicInput = document.getElementById('profClinic');
+    const profSameAsWhatsapp = document.getElementById('profSameAsWhatsapp');
+    const profNewsletter = document.getElementById('profNewsletter');
+    const btnSubmitProf = document.getElementById('btnSubmitProf');
+    const profSpinner = document.getElementById('profSpinner');
+
+    // Máscara para Telefones/WhatsApp: (99) 99999-9999 ou (99) 9999-9999
+    const applyPhoneMask = (inputEl) => {
+        if (!inputEl) return;
+        inputEl.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.substring(0, 11);
+            
+            if (value.length > 10) {
+                // Celular com 9 dígitos: (99) 99999-9999
+                e.target.value = `(${value.substring(0,2)}) ${value.substring(2,7)}-${value.substring(7,11)}`;
+            } else if (value.length > 6) {
+                // Fixo ou celular em digitação: (99) 9999-9999
+                e.target.value = `(${value.substring(0,2)}) ${value.substring(2,6)}-${value.substring(6,10)}`;
+            } else if (value.length > 2) {
+                e.target.value = `(${value.substring(0,2)}) ${value.substring(2)}`;
+            } else if (value.length > 0) {
+                e.target.value = `(${value}`;
+            }
+            
+            // Sincroniza se o checkbox estiver ativo
+            if (inputEl === profWhatsappInput && profSameAsWhatsapp && profSameAsWhatsapp.checked) {
+                profPhoneInput.value = e.target.value;
+            }
+        });
+    };
+
+    applyPhoneMask(profWhatsappInput);
+    applyPhoneMask(profPhoneInput);
+
+    // Sincronização do checkbox "Mesmo do WhatsApp"
+    if (profSameAsWhatsapp) {
+        profSameAsWhatsapp.addEventListener('change', () => {
+            if (profSameAsWhatsapp.checked) {
+                profPhoneInput.value = profWhatsappInput.value;
+                profPhoneInput.readOnly = true;
+                profPhoneInput.classList.add('disabled-input');
+            } else {
+                profPhoneInput.readOnly = false;
+                profPhoneInput.classList.remove('disabled-input');
+            }
+        });
+    }
+
+    if (professionalForm) {
+        professionalForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const nameVal = profNameInput.value.trim();
+            const docVal = profCpfCnpjInput.value.trim();
+            const emailVal = profEmailInput.value.trim();
+            const whatsappVal = profWhatsappInput.value.trim();
+            const phoneVal = profPhoneInput.value.trim();
+            const clinicVal = profClinicInput.value.trim();
+            const newsletterChecked = profNewsletter ? profNewsletter.checked : false;
+
+            const rawWhatsapp = whatsappVal.replace(/\D/g, '');
+            const rawPhone = phoneVal.replace(/\D/g, '');
+            const rawDoc = docVal.replace(/\D/g, '');
+
+            let isValid = true;
+
+            // Valida Nome
+            if (nameVal.length < 3) {
+                showError(profNameInput, document.getElementById('profNameError'), true);
+                isValid = false;
+            } else {
+                showError(profNameInput, document.getElementById('profNameError'), false);
+            }
+
+            // Valida CPF / CNPJ (mínimo 11 caracteres numéricos)
+            if (rawDoc.length < 11 || rawDoc.length > 14) {
+                showError(profCpfCnpjInput, document.getElementById('profCpfCnpjError'), true);
+                isValid = false;
+            } else {
+                showError(profCpfCnpjInput, document.getElementById('profCpfCnpjError'), false);
+            }
+
+            // Valida Email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(emailVal)) {
+                showError(profEmailInput, document.getElementById('profEmailError'), true);
+                isValid = false;
+            } else {
+                showError(profEmailInput, document.getElementById('profEmailError'), false);
+            }
+
+            // Valida WhatsApp
+            if (rawWhatsapp.length < 10 || rawWhatsapp.length > 11) {
+                showError(profWhatsappInput, document.getElementById('profWhatsappError'), true);
+                isValid = false;
+            } else {
+                showError(profWhatsappInput, document.getElementById('profWhatsappError'), false);
+            }
+
+            // Valida Clínica
+            if (clinicVal.length < 2) {
+                showError(profClinicInput, document.getElementById('profClinicError'), true);
+                isValid = false;
+            } else {
+                showError(profClinicInput, document.getElementById('profClinicError'), false);
+            }
+
+            if (!isValid) return;
+
+            btnSubmitProf.disabled = true;
+            if (profSpinner) profSpinner.style.display = 'inline-block';
+            btnSubmitProf.querySelector('.btn-text').textContent = 'Processando Cadastro...';
+
+            const profData = {
+                nome: nameVal,
+                cpf_cnpj: docVal,
+                email: emailVal,
+                whatsapp: whatsappVal,
+                telefone: phoneVal,
+                clinica: clinicVal,
+                newsletter: newsletterChecked,
+                timestamp: new Date().toISOString()
+            };
+
+            const url = getSupabaseUrl();
+            const key = getSupabaseKey();
+
+            if (url && key) {
+                try {
+                    const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                    const endpoint = `${cleanUrl}/rest/v1/profissionais_personality`;
+
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': key,
+                            'Authorization': `Bearer ${key}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify({
+                            nome: profData.nome,
+                            cpf_cnpj: profData.cpf_cnpj,
+                            email: profData.email,
+                            whatsapp: profData.whatsapp,
+                            telefone: profData.telefone,
+                            clinica: profData.clinica,
+                            newsletter: profData.newsletter
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        throw new Error(errText || 'Falha ao registrar no Supabase.');
+                    }
+                } catch (error) {
+                    console.error('Erro ao enviar profissionais para Supabase:', error);
+                    saveProfToLocalStorageFallback(profData);
+                } finally {
+                    finishFormSubmit();
+                }
+            } else {
+                // Fallback local simulado se não houver Supabase configurado
+                setTimeout(() => {
+                    saveProfToLocalStorageFallback(profData);
+                    finishFormSubmit();
+                }, 1000);
+            }
+        });
+    }
+
+    const saveProfToLocalStorageFallback = (data) => {
+        const stored = JSON.parse(localStorage.getItem('personality_professionals')) || [];
+        stored.push(data);
+        localStorage.setItem('personality_professionals', JSON.stringify(stored));
+    };
+
+    const finishFormSubmit = () => {
+        if (professionalForm) professionalForm.style.display = 'none';
+        if (profSuccessAlert) profSuccessAlert.style.display = 'block';
+        
+        btnSubmitProf.disabled = false;
+        if (profSpinner) profSpinner.style.display = 'none';
+        btnSubmitProf.querySelector('.btn-text').textContent = 'Cadastrar no Credenciamento';
+    };
+
+    if (btnResetProfForm) {
+        btnResetProfForm.addEventListener('click', () => {
+            if (professionalForm) {
+                professionalForm.reset();
+                professionalForm.style.display = 'block';
+                if (profPhoneInput) {
+                    profPhoneInput.readOnly = false;
+                    profPhoneInput.classList.remove('disabled-input');
+                }
+            }
+            if (profSuccessAlert) profSuccessAlert.style.display = 'none';
+        });
+    }
+
     // Inicia verificação do Portal do Parceiro
     checkPartnerSession();
 });
