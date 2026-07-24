@@ -1910,6 +1910,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (el && el.tagName === 'SELECT') el.addEventListener('change', () => renderPremiosManager());
     });
 
+    // Listeners do Dashboard (v3.60)
+    const btnApplyDashFilter = document.getElementById('btnApplyDashFilter');
+    const btnClearDashFilter = document.getElementById('btnClearDashFilter');
+    if (btnApplyDashFilter) {
+        btnApplyDashFilter.addEventListener('click', () => renderDashboardPremios());
+    }
+    if (btnClearDashFilter) {
+        btnClearDashFilter.addEventListener('click', () => {
+            const startInput = document.getElementById('dashDateStart');
+            const endInput = document.getElementById('dashDateEnd');
+            if (startInput) startInput.value = '';
+            if (endInput) endInput.value = '';
+            renderDashboardPremios();
+        });
+    }
+
     async function loadPremiosManager() {
         if (!adminPremiosTableBody) return;
 
@@ -1939,6 +1955,121 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         renderPremiosManager();
+        renderDashboardPremios();
+    }
+
+    function renderDashboardPremios() {
+        if (!allSubmittedSales) return;
+
+        const startInput = document.getElementById('dashDateStart');
+        const endInput = document.getElementById('dashDateEnd');
+        const startVal = startInput ? startInput.value : '';
+        const endVal = endInput ? endInput.value : '';
+
+        // Filtra vendas pela data (YYYY-MM-DD)
+        const filtered = allSubmittedSales.filter(sale => {
+            if (!sale.data_venda) return true;
+            const saleDate = sale.data_venda.substring(0, 10);
+            if (startVal && saleDate < startVal) return false;
+            if (endVal && saleDate > endVal) return false;
+            return true;
+        });
+
+        // 1. Métricas Rápidas
+        const totalSales = filtered.length;
+        let totalPoints = 0;
+        const storesSet = new Set();
+
+        filtered.forEach(sale => {
+            totalPoints += (Number(sale.pontos_lente) || 0) + (Number(sale.pontos_ar) || 0);
+            if (sale.loja) storesSet.add(sale.loja.trim());
+        });
+
+        const avgPoints = totalSales > 0 ? Math.round(totalPoints / totalSales) : 0;
+
+        const elTotalSales = document.getElementById('dashTotalSales');
+        const elTotalPoints = document.getElementById('dashTotalPoints');
+        const elAvgPoints = document.getElementById('dashAveragePoints');
+        const elActiveStores = document.getElementById('dashActiveStores');
+
+        if (elTotalSales) elTotalSales.textContent = totalSales;
+        if (elTotalPoints) elTotalPoints.textContent = `${totalPoints} Pts`;
+        if (elAvgPoints) elAvgPoints.textContent = avgPoints;
+        if (elActiveStores) elActiveStores.textContent = storesSet.size;
+
+        // 2. Agrupamentos para Rankings
+        const sellersMap = {};
+        const storesMap = {};
+        const lensesMap = {};
+        const arsMap = {};
+
+        filtered.forEach(sale => {
+            // Vendedores (por pontos)
+            const pts = (Number(sale.pontos_lente) || 0) + (Number(sale.pontos_ar) || 0);
+            const seller = sale.vendedor_nome || 'Desconhecido';
+            if (!sellersMap[seller]) sellersMap[seller] = 0;
+            sellersMap[seller] += pts;
+
+            // Lojas (por pontos)
+            const store = sale.loja || 'Sem Loja';
+            if (!storesMap[store]) storesMap[store] = 0;
+            storesMap[store] += pts;
+
+            // Lentes (por quantidade)
+            if (sale.lente_familia) {
+                const lens = sale.lente_familia;
+                if (!lensesMap[lens]) lensesMap[lens] = 0;
+                lensesMap[lens]++;
+            }
+
+            // Antirreflexos (por quantidade)
+            if (sale.ar_familia) {
+                const ar = sale.ar_familia;
+                if (!arsMap[ar]) arsMap[ar] = 0;
+                arsMap[ar]++;
+            }
+        });
+
+        // Converte em arrays e ordena
+        const sellersList = Object.keys(sellersMap).map(k => ({ name: k, val: sellersMap[k] })).sort((a,b) => b.val - a.val);
+        const storesList = Object.keys(storesMap).map(k => ({ name: k, val: storesMap[k] })).sort((a,b) => b.val - a.val);
+        const lensesList = Object.keys(lensesMap).map(k => ({ name: k, val: lensesMap[k] })).sort((a,b) => b.val - a.val);
+        const arsList = Object.keys(arsMap).map(k => ({ name: k, val: arsMap[k] })).sort((a,b) => b.val - a.val);
+
+        // Renderiza
+        renderRankingList('dashRankingSellers', sellersList, 'points');
+        renderRankingList('dashRankingStores', storesList, 'points');
+        renderRankingList('dashRankingLenses', lensesList, 'sales');
+        renderRankingList('dashRankingArs', arsList, 'sales');
+    }
+
+    function renderRankingList(containerId, list, type) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        if (list.length === 0) {
+            container.innerHTML = '<div style="padding: 15px 0; text-align: center; color: var(--text-muted); font-size: 11px;">Nenhum lançamento no período</div>';
+            return;
+        }
+
+        const maxVal = list[0].val;
+        container.innerHTML = '';
+
+        list.slice(0, 5).forEach((item, index) => {
+            const pct = maxVal > 0 ? (item.val / maxVal) * 100 : 0;
+            const textSuffix = type === 'points' ? 'Pts' : (item.val === 1 ? 'venda' : 'vendas');
+            const itemHtml = `
+                <div style="margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: #fff;">
+                        <span style="font-weight: 500;">#${index + 1} ${escapeHtml(item.name)}</span>
+                        <strong style="color: var(--gold-light);">${item.val} ${textSuffix}</strong>
+                    </div>
+                    <div style="width: 100%; height: 5px; background: rgba(255,255,255,0.03); border-radius: 3px; overflow: hidden;">
+                        <div style="width: ${pct}%; height: 100%; background: linear-gradient(90deg, #cfad52, #e5c060); border-radius: 3px;"></div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', itemHtml);
+        });
     }
 
     function renderPremiosManager() {

@@ -1111,6 +1111,82 @@ create policy "Permitir delete em os_autorizadas_personality" on os_autorizadas_
 
             <!-- Seção: Relatório Gerencial e Validação de O.S. (Prêmios) -->
             <div class="admin-section" id="sec-premios-relatorio">
+                
+                <!-- Painel de Performance e Dashboard (v3.60) -->
+                <div class="glass-card section-card" style="margin-bottom: 30px;" id="dashboardPremiosCard">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                        <div>
+                            <h2>📈 Dashboard de Performance & Rankings</h2>
+                            <p>Análise de vendas, ranking de balconistas, óticas parceiras e produtos mais vendidos no período.</p>
+                        </div>
+                        <!-- Filtros de data -->
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <label style="font-size: 10px; text-transform: uppercase; color: var(--text-muted);">Início</label>
+                                <input type="date" id="dashDateStart" style="padding: 6px 10px; background: #121216; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #fff; font-size: 11px;">
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <label style="font-size: 10px; text-transform: uppercase; color: var(--text-muted);">Fim</label>
+                                <input type="date" id="dashDateEnd" style="padding: 6px 10px; background: #121216; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #fff; font-size: 11px;">
+                            </div>
+                            <button class="btn btn-gold btn-xs" id="btnApplyDashFilter" style="padding: 8px 12px;">Filtrar</button>
+                            <button class="btn btn-outline-gold btn-xs" id="btnClearDashFilter" style="padding: 8px 12px;">Limpar</button>
+                        </div>
+                    </div>
+
+                    <!-- Métricas Rápidas do Dashboard -->
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin: 20px 0 25px 0;">
+                        <div class="glass-card" style="padding: 12px; background: rgba(255, 255, 255, 0.01); text-align: center;">
+                            <span style="font-size: 10px; text-transform: uppercase; color: var(--text-muted);">O.S. Resgatadas</span>
+                            <div style="font-size: 18px; font-weight: 800; color: #fff; margin-top: 4px;" id="dashTotalSales">0</div>
+                        </div>
+                        <div class="glass-card" style="padding: 12px; background: rgba(255, 255, 255, 0.01); text-align: center;">
+                            <span style="font-size: 10px; text-transform: uppercase; color: var(--text-muted);">Pontos Validados</span>
+                            <div style="font-size: 18px; font-weight: 800; color: var(--gold-light); margin-top: 4px;" id="dashTotalPoints">0 Pts</div>
+                        </div>
+                        <div class="glass-card" style="padding: 12px; background: rgba(255, 255, 255, 0.01); text-align: center;">
+                            <span style="font-size: 10px; text-transform: uppercase; color: var(--text-muted);">Média de Pontos/O.S.</span>
+                            <div style="font-size: 18px; font-weight: 800; color: #fff; margin-top: 4px;" id="dashAveragePoints">0</div>
+                        </div>
+                        <div class="glass-card" style="padding: 12px; background: rgba(255, 255, 255, 0.01); text-align: center;">
+                            <span style="font-size: 10px; text-transform: uppercase; color: var(--text-muted);">Óticas Ativas</span>
+                            <div style="font-size: 18px; font-weight: 800; color: #fff; margin-top: 4px;" id="dashActiveStores">0</div>
+                        </div>
+                    </div>
+
+                    <!-- Grades de Rankings (Lado a Lado) -->
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px;">
+                        <!-- Ranking Vendedores -->
+                        <div class="glass-card" style="padding: 15px; background: rgba(255, 255, 255, 0.01);">
+                            <h3 style="font-size: 11px; text-transform: uppercase; color: var(--gold-light); margin-bottom: 12px; font-weight: 700;">🏆 Ranking de Vendedores</h3>
+                            <div id="dashRankingSellers" style="font-size: 11px; color: var(--text-muted);">
+                                <!-- Preenchido dinamicamente -->
+                            </div>
+                        </div>
+                        <!-- Ranking Lojas -->
+                        <div class="glass-card" style="padding: 15px; background: rgba(255, 255, 255, 0.01);">
+                            <h3 style="font-size: 11px; text-transform: uppercase; color: var(--gold-light); margin-bottom: 12px; font-weight: 700;">🏪 Ranking de Lojas (Óticas)</h3>
+                            <div id="dashRankingStores" style="font-size: 11px; color: var(--text-muted);">
+                                <!-- Preenchido dinamicamente -->
+                            </div>
+                        </div>
+                        <!-- Top Lentes -->
+                        <div class="glass-card" style="padding: 15px; background: rgba(255, 255, 255, 0.01);">
+                            <h3 style="font-size: 11px; text-transform: uppercase; color: var(--gold-light); margin-bottom: 12px; font-weight: 700;">👓 Lentes Mais Vendidas</h3>
+                            <div id="dashRankingLenses" style="font-size: 11px; color: var(--text-muted);">
+                                <!-- Preenchido dinamicamente -->
+                            </div>
+                        </div>
+                        <!-- Top Antirreflexos -->
+                        <div class="glass-card" style="padding: 15px; background: rgba(255, 255, 255, 0.01);">
+                            <h3 style="font-size: 11px; text-transform: uppercase; color: var(--gold-light); margin-bottom: 12px; font-weight: 700;">✨ Tratamentos Antirreflexo</h3>
+                            <div id="dashRankingArs" style="font-size: 11px; color: var(--text-muted);">
+                                <!-- Preenchido dinamicamente -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="glass-card section-card" style="margin-bottom: 30px;">
                     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
                         <div>
