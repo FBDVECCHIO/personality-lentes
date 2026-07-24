@@ -515,8 +515,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function deleteStore(id) {
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
         const storesTable = localStorage.getItem('personality_sb_stores_table') || 'lojas_licenciadas';
 
         if (url && key) {
@@ -557,8 +557,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const endereco = storeAddressInput.value.trim();
         const telefone = storePhoneInput.value.trim();
 
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
         const storesTable = localStorage.getItem('personality_sb_stores_table') || 'lojas_licenciadas';
 
         if (editingStoreId) {
@@ -673,8 +673,8 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadAccessList() {
         accessTableBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Buscando acessos...</td></tr>`;
 
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
 
         let accesses = [];
 
@@ -762,8 +762,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function deleteAccess(id) {
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
 
         if (url && key) {
             try {
@@ -808,8 +808,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
 
         if (editingAccessId) {
             // Modo Edição (PATCH)
@@ -914,8 +914,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnClearLeads = document.getElementById('btnClearLeads');
 
     async function loadLeads() {
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
         const table = localStorage.getItem('personality_sb_table') || 'leads_personality';
 
         let leads = [];
@@ -996,8 +996,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Limpar leads locais e do Supabase
     btnClearLeads.addEventListener('click', async () => {
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
         const table = localStorage.getItem('personality_sb_table') || 'leads_personality';
 
         if (url && key) {
@@ -1040,8 +1040,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Exportar leads para CSV
     btnExportLeads.addEventListener('click', async () => {
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
         const table = localStorage.getItem('personality_sb_table') || 'leads_personality';
         
         let leads = [];
@@ -1125,8 +1125,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadProfessionals() {
         if (!profTableBody) return;
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
         
         const profsTable = localStorage.getItem('personality_sb_profs_table') || 'profissionais_personality';
         const vendTable = localStorage.getItem('personality_sb_vendedores_table') || 'vendedores_personality';
@@ -1302,8 +1302,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function approveSellerRecord(id) {
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
         const vendTable = localStorage.getItem('personality_sb_vendedores_table') || 'vendedores_personality';
 
         if (url && key) {
@@ -1346,8 +1346,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function deleteMemberRecord(id, tipo) {
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
 
         const activeTable = tipo === 'prof'
             ? (localStorage.getItem('personality_sb_profs_table') || 'profissionais_personality')
@@ -1393,8 +1393,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Limpar Banco de Membros
     if (btnClearProfs) {
         btnClearProfs.addEventListener('click', async () => {
-            const url = localStorage.getItem('personality_sb_url');
-            const key = localStorage.getItem('personality_sb_key');
+            const url = getSupabaseUrl();
+            const key = getSupabaseKey();
             
             const profsTable = localStorage.getItem('personality_sb_profs_table') || 'profissionais_personality';
             const vendTable = localStorage.getItem('personality_sb_vendedores_table') || 'vendedores_personality';
@@ -1510,11 +1510,13 @@ document.addEventListener('DOMContentLoaded', () => {
         { categoria: 'antirreflexo', nome: 'Sem Tratamento Especial', pontos: 0, valor: 0 }
     ];
 
+    let editingProductIndex = null;
+
     async function loadRewardsConfig() {
         if (!rewardsLentesConfigBody || !rewardsArConfigBody) return;
 
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
         const configTable = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
 
         if (url && key) {
@@ -1566,6 +1568,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     R$ <input type="number" step="0.01" class="config-value-input" data-index="${index}" value="${item.valor}" min="0" required style="width: 100px; padding: 6px 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color:#fff;">
                 </td>
                 <td>
+                    <button type="button" class="btn btn-xs btn-outline-gold btn-edit-reward-config" data-index="${index}" style="margin-right: 5px; padding: 4px 8px; font-size:11px; background:none; border-color: rgba(197, 168, 92, 0.4); color: var(--gold-light);">✏️ Editar</button>
                     <button type="button" class="btn btn-xs btn-outline-gold btn-delete-reward-config" data-name="${escapeHtml(item.nome)}" style="border-color: rgba(255,85,85,0.3); color:#fca5a5; padding: 4px 8px; font-size:11px; background:none;">🗑️ Deletar</button>
                 </td>
             `;
@@ -1584,13 +1587,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 deleteRewardConfigItem(name);
             });
         });
+
+        // Adiciona listeners para edição
+        const editConfigBtns = document.querySelectorAll('.btn-edit-reward-config');
+        editConfigBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = parseInt(btn.getAttribute('data-index'));
+                startEditingRewardConfig(idx);
+            });
+        });
+    }
+
+    function startEditingRewardConfig(index) {
+        editingProductIndex = index;
+        const item = adminPremiosConfig[index];
+        
+        document.getElementById('newProdCategory').value = item.categoria;
+        document.getElementById('newProdName').value = item.nome;
+        document.getElementById('newProdPoints').value = item.pontos;
+        document.getElementById('newProdValue').value = item.valor;
+
+        const formCard = document.getElementById('addRewardProductForm').closest('.section-card');
+        if (formCard) {
+            const h2 = formCard.querySelector('h2');
+            if (h2) h2.innerHTML = `✏️ Editar Família de Produto: <span class="gold-text">${escapeHtml(item.nome)}</span>`;
+        }
+        
+        const submitBtn = document.getElementById('addRewardProductForm').querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.innerHTML = 'Salvar Alterações 💾';
+            submitBtn.style.background = 'var(--gold-light)';
+            submitBtn.style.color = '#000';
+        }
+        
+        // Scroll para o formulário
+        document.getElementById('addRewardProductForm').scrollIntoView({ behavior: 'smooth' });
     }
 
     async function deleteRewardConfigItem(name) {
         if (!confirm(`Deseja realmente remover a família "${name}" da lista de prêmios?`)) return;
 
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
         const configTable = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
 
         if (url && key) {
@@ -1627,48 +1665,140 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!nameVal) return;
 
-            const duplicate = adminPremiosConfig.find(item => item.nome.toLowerCase() === nameVal.toLowerCase());
-            if (duplicate) {
-                alert('Já existe uma família cadastrada com este nome!');
-                return;
-            }
-
-            const newProduct = {
-                categoria: categoryVal,
-                nome: nameVal,
-                pontos: pointsVal,
-                valor: valueVal
-            };
-
-            const url = localStorage.getItem('personality_sb_url');
-            const key = localStorage.getItem('personality_sb_key');
+            const url = getSupabaseUrl();
+            const key = getSupabaseKey();
             const configTable = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
 
-            if (url && key) {
-                try {
-                    const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
-                    const res = await fetch(`${cleanUrl}/rest/v1/${configTable}`, {
-                        method: 'POST',
-                        headers: {
-                            'apikey': key,
-                            'Authorization': `Bearer ${key}`,
-                            'Content-Type': 'application/json',
-                            'Prefer': 'return=minimal'
-                        },
-                        body: JSON.stringify(newProduct)
-                    });
-                    if (!res.ok) {
-                        throw new Error('Erro ao salvar no Supabase.');
+            if (editingProductIndex !== null) {
+                // Modo Edição!
+                const originalItem = adminPremiosConfig[editingProductIndex];
+                
+                // Evita duplicação se o nome mudou e já existe outro com esse novo nome
+                if (originalItem.nome.toLowerCase() !== nameVal.toLowerCase()) {
+                    const duplicate = adminPremiosConfig.find((item, idx) => idx !== editingProductIndex && item.nome.toLowerCase() === nameVal.toLowerCase());
+                    if (duplicate) {
+                        alert('Já existe outra família cadastrada com este nome!');
+                        return;
                     }
-                } catch (err) {
-                    console.error(err);
                 }
+
+                const updatedProduct = {
+                    ...originalItem,
+                    categoria: categoryVal,
+                    nome: nameVal,
+                    pontos: pointsVal,
+                    valor: valueVal
+                };
+
+                if (url && key) {
+                    try {
+                        const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                        
+                        // Se o nome mudou, atualiza usando o id ou primeiro deleta e reinsere se não tiver id
+                        if (originalItem.id) {
+                            const res = await fetch(`${cleanUrl}/rest/v1/${configTable}?id=eq.${originalItem.id}`, {
+                                method: 'PATCH',
+                                headers: {
+                                    'apikey': key,
+                                    'Authorization': `Bearer ${key}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    categoria: categoryVal,
+                                    nome: nameVal,
+                                    pontos: pointsVal,
+                                    valor: valueVal
+                                })
+                            });
+                            if (!res.ok) throw new Error('Erro ao editar no Supabase.');
+                        } else {
+                            // Sem id: deleta pelo nome antigo e insere o novo
+                            await fetch(`${cleanUrl}/rest/v1/${configTable}?nome=eq.${encodeURIComponent(originalItem.nome)}`, {
+                                method: 'DELETE',
+                                headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                            });
+                            
+                            await fetch(`${cleanUrl}/rest/v1/${configTable}`, {
+                                method: 'POST',
+                                headers: {
+                                    'apikey': key,
+                                    'Authorization': `Bearer ${key}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    categoria: categoryVal,
+                                    nome: nameVal,
+                                    pontos: pointsVal,
+                                    valor: valueVal
+                                })
+                            });
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    }
+                }
+
+                adminPremiosConfig[editingProductIndex] = updatedProduct;
+                localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
+                
+                alert('Família de produto editada com sucesso!');
+                
+                // Reseta modo edição
+                editingProductIndex = null;
+                const formCard = addRewardProductForm.closest('.section-card');
+                if (formCard) {
+                    const h2 = formCard.querySelector('h2');
+                    if (h2) h2.innerHTML = '➕ Adicionar Nova Família de Produto para Prêmios';
+                }
+                const submitBtn = addRewardProductForm.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.innerHTML = 'Adicionar Família ➕';
+                    submitBtn.style.background = '';
+                    submitBtn.style.color = '';
+                }
+
+            } else {
+                // Modo Adição!
+                const duplicate = adminPremiosConfig.find(item => item.nome.toLowerCase() === nameVal.toLowerCase());
+                if (duplicate) {
+                    alert('Já existe uma família cadastrada com este nome!');
+                    return;
+                }
+
+                const newProduct = {
+                    categoria: categoryVal,
+                    nome: nameVal,
+                    pontos: pointsVal,
+                    valor: valueVal
+                };
+
+                if (url && key) {
+                    try {
+                        const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                        const res = await fetch(`${cleanUrl}/rest/v1/${configTable}`, {
+                            method: 'POST',
+                            headers: {
+                                'apikey': key,
+                                'Authorization': `Bearer ${key}`,
+                                'Content-Type': 'application/json',
+                                'Prefer': 'return=minimal'
+                            },
+                            body: JSON.stringify(newProduct)
+                        });
+                        if (!res.ok) {
+                            throw new Error('Erro ao salvar no Supabase.');
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    }
+                }
+
+                adminPremiosConfig.push(newProduct);
+                localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
+                
+                alert('Nova família de produto adicionada com sucesso!');
             }
 
-            adminPremiosConfig.push(newProduct);
-            localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
-            
-            alert('Nova família de produto adicionada com sucesso!');
             addRewardProductForm.reset();
             loadRewardsConfig();
         });
@@ -1692,8 +1822,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 adminPremiosConfig[idx].valor = Number(input.value);
             });
 
-            const url = localStorage.getItem('personality_sb_url');
-            const key = localStorage.getItem('personality_sb_key');
+            const url = getSupabaseUrl();
+            const key = getSupabaseKey();
             const configTable = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
 
             if (url && key) {
@@ -1777,8 +1907,8 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadPremiosManager() {
         if (!adminPremiosTableBody) return;
 
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
         const table = localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
 
         if (url && key) {
@@ -2039,8 +2169,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function updateSaleStatus(saleId, newStatus) {
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
         const table = localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
 
         if (url && key) {
@@ -2080,8 +2210,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function deleteSaleRecord(saleId) {
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
         const table = localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
 
         if (url && key) {
@@ -2112,8 +2242,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function payBulkSalesForSeller(vendedorId) {
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
         const table = localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
 
         if (url && key) {
@@ -2250,8 +2380,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function getTechsList() {
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
 
         if (url && key) {
             try {
@@ -2340,8 +2470,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function deleteTech(id) {
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
 
         if (url && key) {
             try {
@@ -2383,8 +2513,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const url = localStorage.getItem('personality_sb_url');
-            const key = localStorage.getItem('personality_sb_key');
+            const url = getSupabaseUrl();
+            const key = getSupabaseKey();
 
             if (editingTechId) {
                 if (url && key) {
@@ -2461,8 +2591,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const ticketsTableBody = document.getElementById('ticketsTableBody');
 
     async function getTicketsList() {
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
 
         if (url && key) {
             try {
@@ -2583,8 +2713,8 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     async function getMotivosList() {
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
 
         if (url && key) {
             try {
@@ -2676,8 +2806,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function editMotivo(oldReasonText, newReasonText) {
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
 
         if (url && key) {
             try {
@@ -2713,8 +2843,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function deleteMotivo(reasonText) {
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
 
         if (url && key) {
             try {
@@ -2745,8 +2875,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const url = localStorage.getItem('personality_sb_url');
-            const key = localStorage.getItem('personality_sb_key');
+            const url = getSupabaseUrl();
+            const key = getSupabaseKey();
 
             if (url && key) {
                 try {
@@ -2819,8 +2949,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!downloadMaterialsTableBody) return;
         downloadMaterialsTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">Buscando materiais...</td></tr>`;
 
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
 
         let downloads = [];
 
@@ -2936,8 +3066,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 descricao: downloadDescricao.value.trim()
             };
 
-            const url = localStorage.getItem('personality_sb_url');
-            const key = localStorage.getItem('personality_sb_key');
+            const url = getSupabaseUrl();
+            const key = getSupabaseKey();
 
             if (url && key) {
                 try {
@@ -2987,8 +3117,8 @@ document.addEventListener('DOMContentLoaded', () => {
     async function deleteAdminDownloadItem(id) {
         if (!confirm('Tem certeza que deseja excluir este material de download?')) return;
 
-        const url = localStorage.getItem('personality_sb_url');
-        const key = localStorage.getItem('personality_sb_key');
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
 
         if (url && key) {
             try {
