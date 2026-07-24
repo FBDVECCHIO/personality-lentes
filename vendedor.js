@@ -192,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentRewardsConfig.filter(c => c.categoria === 'lente').forEach(item => {
                 const opt = document.createElement('option');
                 opt.value = item.nome;
-                opt.textContent = `${item.nome} (${item.pontos} Pts / R$ ${Number(item.valor).toFixed(2)})`;
+                opt.textContent = `${item.nome} (${item.pontos} Pts)`;
                 saleLensFamily.appendChild(opt);
             });
         }
@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentRewardsConfig.filter(c => c.categoria === 'antirreflexo').forEach(item => {
                 const opt = document.createElement('option');
                 opt.value = item.nome;
-                opt.textContent = `${item.nome} (${item.pontos} Pts / R$ ${Number(item.valor).toFixed(2)})`;
+                opt.textContent = `${item.nome} (${item.pontos} Pts)`;
                 saleArFamily.appendChild(opt);
             });
         }
@@ -478,6 +478,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sessionStorage.setItem('active_vendedor_id', vendedor.id);
         sessionStorage.setItem('active_vendedor_nome', vendedor.nome);
         sessionStorage.setItem('active_vendedor_loja', vendedor.loja);
+        sessionStorage.setItem('active_vendedor_cpf', vendedor.cpf);
         
         checkVendedorSession();
     }
@@ -486,8 +487,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeId = sessionStorage.getItem('active_vendedor_id');
         const activeNome = sessionStorage.getItem('active_vendedor_nome');
         const activeLoja = sessionStorage.getItem('active_vendedor_loja');
+        const activeCpf = sessionStorage.getItem('active_vendedor_cpf');
 
-        if (activeId && activeNome && activeLoja) {
+        if (activeId && activeNome && activeLoja && activeCpf) {
             vendedorAuthContainer.style.display = 'none';
             vendedorDashboardPanel.style.display = 'block';
             approvalWarningBox.style.display = 'none';
@@ -496,6 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('vendedorSessionStore').textContent = activeLoja;
             
             loadVendedorExtrato(activeId);
+            loadAuthorizedOsList(activeCpf);
             startInactivityTimer();
         } else {
             vendedorDashboardPanel.style.display = 'none';
@@ -597,8 +600,92 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // -------------------------------------------------------------
-    // Lançamento de Vendas
+    // Lançamento de Vendas (Resgate de O.S. Liberada)
     // -------------------------------------------------------------
+    let activeAuthorizedOsList = [];
+
+    const saleOsSelect = document.getElementById('saleOs');
+    if (saleOsSelect) {
+        saleOsSelect.addEventListener('change', () => {
+            const selectedOsVal = saleOsSelect.value;
+            if (!selectedOsVal) {
+                document.getElementById('saleClientName').value = '';
+                document.getElementById('saleLensFamily').value = '';
+                document.getElementById('saleArFamily').value = '';
+                document.getElementById('saleDate').value = '';
+                return;
+            }
+            const osObj = activeAuthorizedOsList.find(o => o.os === selectedOsVal);
+            if (osObj) {
+                document.getElementById('saleClientName').value = osObj.cliente_nome;
+                
+                // Preenche e força exibição nos selects desabilitados
+                const lensSel = document.getElementById('saleLensFamily');
+                lensSel.innerHTML = `<option value="${escapeHtml(osObj.lente_familia)}">${escapeHtml(osObj.lente_familia)}</option>`;
+                lensSel.value = osObj.lente_familia;
+
+                const arSel = document.getElementById('saleArFamily');
+                arSel.innerHTML = `<option value="${escapeHtml(osObj.ar_familia)}">${escapeHtml(osObj.ar_familia)}</option>`;
+                arSel.value = osObj.ar_familia;
+
+                // Preenche Data (data de hoje)
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('saleDate').value = today;
+            }
+        });
+    }
+
+    async function loadAuthorizedOsList(cpf) {
+        const saleOs = document.getElementById('saleOs');
+        if (!saleOs) return;
+        
+        saleOs.innerHTML = '<option value="">Buscando O.S. liberadas...</option>';
+        
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
+        const osAuthTable = localStorage.getItem('personality_sb_os_autorizadas_table') || 'os_autorizadas_personality';
+        
+        let list = [];
+        
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const response = await fetch(`${cleanUrl}/rest/v1/${osAuthTable}?cpf_vendedor=eq.${encodeURIComponent(cpf)}&utilizada=eq.false&order=created_at.desc`, {
+                    method: 'GET',
+                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                });
+                if (response.ok) {
+                    list = await response.json();
+                }
+            } catch (error) {
+                console.error('Erro ao buscar OS autorizadas:', error);
+            }
+        }
+        
+        if (list.length === 0) {
+            const local = JSON.parse(localStorage.getItem('personality_local_os_autorizadas')) || [];
+            list = local.filter(item => item.cpf_vendedor === cpf && !item.utilizada);
+        }
+        
+        activeAuthorizedOsList = list;
+        
+        saleOs.innerHTML = '';
+        const btnSubmit = document.getElementById('btnSubmitSale');
+        if (list.length === 0) {
+            saleOs.innerHTML = '<option value="">Nenhuma O.S. liberada para seu CPF</option>';
+            if (btnSubmit) btnSubmit.disabled = true;
+        } else {
+            saleOs.innerHTML = '<option value="">Selecione a O.S. liberada...</option>';
+            list.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.os;
+                opt.textContent = `${item.os} - Cliente: ${item.cliente_nome}`;
+                saleOs.appendChild(opt);
+            });
+            if (btnSubmit) btnSubmit.disabled = false;
+        }
+    }
+
     const vendedorSubmitSaleForm = document.getElementById('vendedorSubmitSaleForm');
     if (vendedorSubmitSaleForm) {
         vendedorSubmitSaleForm.addEventListener('submit', async (e) => {
@@ -657,6 +744,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const activeId = sessionStorage.getItem('active_vendedor_id');
             const activeNome = sessionStorage.getItem('active_vendedor_nome');
             const activeLoja = sessionStorage.getItem('active_vendedor_loja');
+            const activeCpf = sessionStorage.getItem('active_vendedor_cpf');
 
             // Busca pontos e valores configurados
             const lensConf = currentRewardsConfig.find(c => c.categoria === 'lente' && c.nome === lensVal) || { pontos: 0, valor: 0 };
@@ -682,10 +770,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const url = getSupabaseUrl();
             const key = getSupabaseKey();
             const table = localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
+            const osAuthTable = localStorage.getItem('personality_sb_os_autorizadas_table') || 'os_autorizadas_personality';
 
             if (url && key) {
                 try {
                     const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                    
+                    // Envia lançamento da venda
                     const response = await fetch(`${cleanUrl}/rest/v1/${table}`, {
                         method: 'POST',
                         headers: {
@@ -701,9 +792,29 @@ document.addEventListener('DOMContentLoaded', () => {
                         throw new Error('Falha ao enviar venda ao Supabase.');
                     }
 
-                    alert('Venda lançada com sucesso! Aguarde a validação do laboratório.');
+                    // Marca a O.S. autorizada correspondente como utilizada
+                    await fetch(`${cleanUrl}/rest/v1/${osAuthTable}?os=eq.${encodeURIComponent(osVal)}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'apikey': key,
+                            'Authorization': `Bearer ${key}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ utilizada: true })
+                    });
+
+                    // Marca local também em caso de sincronização futura
+                    let localOs = JSON.parse(localStorage.getItem('personality_local_os_autorizadas')) || [];
+                    const osIdx = localOs.findIndex(item => item.os === osVal);
+                    if (osIdx !== -1) {
+                        localOs[osIdx].utilizada = true;
+                        localStorage.setItem('personality_local_os_autorizadas', JSON.stringify(localOs));
+                    }
+
+                    alert('Venda resgatada com sucesso! Pontos acumulados.');
                     vendedorSubmitSaleForm.reset();
                     loadVendedorExtrato(activeId);
+                    loadAuthorizedOsList(activeCpf);
 
                 } catch (error) {
                     console.error(error);
@@ -714,17 +825,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 } finally {
                     btn.disabled = false;
                     if (spinner) spinner.style.display = 'none';
-                    btn.querySelector('.btn-text').textContent = 'Enviar Lançamento de Venda';
+                    btn.querySelector('.btn-text').textContent = 'Resgatar O.S. e Acumular Pontos 🚀';
                 }
             } else {
                 setTimeout(() => {
                     saveSaleLocally(saleData);
-                    alert('Venda lançada com sucesso! Aguarde a validação do laboratório.');
+
+                    // Marca local como utilizada
+                    let localOs = JSON.parse(localStorage.getItem('personality_local_os_autorizadas')) || [];
+                    const osIdx = localOs.findIndex(item => item.os === osVal);
+                    if (osIdx !== -1) {
+                        localOs[osIdx].utilizada = true;
+                        localStorage.setItem('personality_local_os_autorizadas', JSON.stringify(localOs));
+                    }
+
+                    alert('Venda resgatada com sucesso! Pontos acumulados.');
                     vendedorSubmitSaleForm.reset();
                     loadVendedorExtrato(activeId);
+                    loadAuthorizedOsList(activeCpf);
                     btn.disabled = false;
                     if (spinner) spinner.style.display = 'none';
-                    btn.querySelector('.btn-text').textContent = 'Enviar Lançamento de Venda';
+                    btn.querySelector('.btn-text').textContent = 'Resgatar O.S. e Acumular Pontos 🚀';
                 }, 800);
             }
         });
@@ -752,7 +873,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let sales = [];
 
         if (url && key) {
-            extratoTableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Buscando extrato...</td></tr>`;
+            extratoTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Buscando extrato...</td></tr>`;
             try {
                 const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
                 const response = await fetch(`${cleanUrl}/rest/v1/${table}?vendedor_id=eq.${encodeURIComponent(vendedorId)}&order=created_at.desc`, {
@@ -786,7 +907,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let ptsPendente = 0, valPendente = 0;
 
         if (sales.length === 0) {
-            extratoTableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Nenhuma venda lançada neste portal ainda.</td></tr>`;
+            extratoTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Nenhuma venda lançada neste portal ainda.</td></tr>`;
         } else {
             sales.forEach(sale => {
                 const totPts = Number(sale.pontos_lente) + Number(sale.pontos_ar);
@@ -830,14 +951,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${escapeHtml(sale.lente_familia)}</td>
                     <td>${escapeHtml(sale.ar_familia)}</td>
                     <td>${totPts} Pts</td>
-                    <td><strong>R$ ${totVal.toFixed(2)}</strong></td>
                     <td>${statusBadge}</td>
                 `;
                 extratoTableBody.appendChild(tr);
             });
         }
 
-        // Atualiza cards de estatísticas
+        // Atualiza cards de estatísticas (valores ocultos, pontos visíveis)
         document.getElementById('vendedorStatReceber').textContent = `R$ ${valReceber.toFixed(2)}`;
         document.getElementById('vendedorStatReceberPontos').textContent = `${ptsReceber} Pontos Validados`;
         

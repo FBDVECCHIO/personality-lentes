@@ -66,6 +66,7 @@
                 <button class="side-btn" data-section="leads">📥 Leads Recebidos</button>
                 <button class="side-btn" data-section="profissionais">🩺 Profissionais & Vendedores</button>
                 <button class="side-btn" data-section="premios-config">💸 Configurar Prêmios</button>
+                <button class="side-btn" data-section="premios-autorizar">📥 Autorizar Vendas (O.S.)</button>
                 <button class="side-btn" data-section="premios-relatorio">📊 Relatório de Prêmios</button>
             </nav>
             <div class="sidebar-footer" style="display: flex; flex-direction: column; gap: 8px;">
@@ -132,6 +133,12 @@
                             <label for="sbPremiosConfigTable">Nome da Tabela de Configurações de Prêmios</label>
                             <input type="text" id="sbPremiosConfigTable" value="premios_config_personality" required>
                             <p class="input-hint">Tabela no banco de dados que irá receber as tabelas de prêmios por família: `categoria`, `nome`, `pontos`, `valor`.</p>
+                        </div>
+ 
+                        <div class="input-group">
+                            <label for="sbOsAutorizadasTable">Nome da Tabela de O.S. Autorizadas</label>
+                            <input type="text" id="sbOsAutorizadasTable" value="os_autorizadas_personality" required>
+                            <p class="input-hint">Tabela no banco de dados que irá receber as O.S. autorizadas pelo laboratório: `os`, `cpf_vendedor`, `loja`, `cliente_nome`, `lente_familia`, `ar_familia`, `utilizada`.</p>
                         </div>
 
                         <div class="input-group">
@@ -296,6 +303,19 @@ create table if not exists premios_lancados_personality (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- 11. Tabela de O.S. Autorizadas (Vendas Pré-lançadas pelo Laboratório)
+create table if not exists os_autorizadas_personality (
+  id uuid default gen_random_uuid() primary key,
+  os text not null unique,
+  cpf_vendedor text not null,
+  loja text not null,
+  cliente_nome text not null,
+  lente_familia text not null,
+  ar_familia text not null,
+  utilizada boolean default false,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
 -- Habilitar RLS (Row Level Security) e Criar Políticas de Acesso Nativas
 alter table leads_personality enable row level security;
 alter table lojas_licenciadas enable row level security;
@@ -307,6 +327,7 @@ alter table motivos_assistencia enable row level security;
 alter table vendedores_personality enable row level security;
 alter table premios_config_personality enable row level security;
 alter table premios_lancados_personality enable row level security;
+alter table os_autorizadas_personality enable row level security;
 
 -- Criar Políticas de Permissão Pública (Limpando antigas se existirem)
 drop policy if exists "Permitir select em leads_personality" on leads_personality;
@@ -398,6 +419,15 @@ create policy "Permitir select em premios_lancados_personality" on premios_lanca
 create policy "Permitir insert em premios_lancados_personality" on premios_lancados_personality for insert with check (true);
 create policy "Permitir update em premios_lancados_personality" on premios_lancados_personality for update using (true);
 create policy "Permitir delete em premios_lancados_personality" on premios_lancados_personality for delete using (true);
+
+drop policy if exists "Permitir select em os_autorizadas_personality" on os_autorizadas_personality;
+drop policy if exists "Permitir insert em os_autorizadas_personality" on os_autorizadas_personality;
+drop policy if exists "Permitir update em os_autorizadas_personality" on os_autorizadas_personality;
+drop policy if exists "Permitir delete em os_autorizadas_personality" on os_autorizadas_personality;
+create policy "Permitir select em os_autorizadas_personality" on os_autorizadas_personality for select using (true);
+create policy "Permitir insert em os_autorizadas_personality" on os_autorizadas_personality for insert with check (true);
+create policy "Permitir update em os_autorizadas_personality" on os_autorizadas_personality for update using (true);
+create policy "Permitir delete em os_autorizadas_personality" on os_autorizadas_personality for delete using (true);
 </code></pre>
                     </div>
                 </div>
@@ -1007,6 +1037,75 @@ create policy "Permitir delete em premios_lancados_personality" on premios_lanca
 
                         <button type="submit" class="btn btn-gold btn-sm" style="font-weight: 700; height: 38px; padding: 0 24px;">💾 Salvar Alterações de Valores</button>
                     </form>
+                </div>
+            </div>
+
+            <!-- Seção: Autorizar O.S. (Pré-lançamento para Vendedores) -->
+            <div class="admin-section" id="sec-premios-autorizar">
+                <div class="glass-card section-card" style="margin-bottom: 25px;">
+                    <div class="card-header">
+                        <h2>📥 Liberar Vendas / O.S. para Vendedores</h2>
+                        <p>Pré-lance os dados das O.S. válidas amarradas a um vendedor/CPF específico. O vendedor só poderá resgatar as O.S. cadastradas nesta área.</p>
+                    </div>
+                    <form id="authOsForm" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; align-items: end; margin-top: 15px;">
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label for="authOsNumber" style="font-size: 12px; margin-bottom: 6px;">Número da O.S. / Pedido</label>
+                            <input type="text" id="authOsNumber" placeholder="Ex: OS-98745" required style="width:100%; padding: 10px; background:rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff; font-family:inherit;">
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label for="authOsSellerCpf" style="font-size: 12px; margin-bottom: 6px;">Vendedor Proprietário (Selecione)</label>
+                            <select id="authOsSellerCpf" required style="width:100%; padding: 10px; background:#121216; border: 1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff; font-family:inherit;">
+                                <option value="">Selecione o vendedor...</option>
+                                <!-- Preenchido via JS com vendedores aprovados -->
+                            </select>
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label for="authOsClientName" style="font-size: 12px; margin-bottom: 6px;">Nome do Paciente / Cliente</label>
+                            <input type="text" id="authOsClientName" placeholder="Paciente da receita" required style="width:100%; padding: 10px; background:rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff; font-family:inherit;">
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label for="authOsLens" style="font-size: 12px; margin-bottom: 6px;">Família da Lente</label>
+                            <select id="authOsLens" required style="width:100%; padding: 10px; background:#121216; border: 1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff; font-family:inherit;">
+                                <option value="">Selecione a lente...</option>
+                                <!-- Preenchido via JS -->
+                            </select>
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label for="authOsAr" style="font-size: 12px; margin-bottom: 6px;">Tratamento Antirreflexo</label>
+                            <select id="authOsAr" required style="width:100%; padding: 10px; background:#121216; border: 1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff; font-family:inherit;">
+                                <option value="">Selecione o antirreflexo...</option>
+                                <!-- Preenchido via JS -->
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-gold btn-sm" style="font-weight: 700; height: 38px; padding: 0 20px;">Liberar O.S. 🚀</button>
+                    </form>
+                </div>
+
+                <div class="glass-card section-card">
+                    <div class="card-header">
+                        <h2>📋 Vendas e O.S. Liberadas pelo Laboratório</h2>
+                        <p>Veja a listagem de O.S. autorizadas no sistema para cada balconista/vendedor.</p>
+                    </div>
+                    <div class="table-container" style="margin-top: 20px;">
+                        <table class="leads-table">
+                            <thead>
+                                <tr>
+                                    <th>O.S. / Pedido</th>
+                                    <th>Vendedor</th>
+                                    <th>CPF</th>
+                                    <th>Loja</th>
+                                    <th>Cliente</th>
+                                    <th>Lente</th>
+                                    <th>Antirreflexo</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="authOsTableBody">
+                                <!-- Preenchido via JS -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 

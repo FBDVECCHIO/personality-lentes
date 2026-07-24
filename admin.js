@@ -101,6 +101,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadProfessionals();
             } else if (sectionId === 'premios-config') {
                 loadRewardsConfig();
+            } else if (sectionId === 'premios-autorizar') {
+                loadPremiosAutorizarSection();
             } else if (sectionId === 'premios-relatorio') {
                 loadPremiosManager();
             } else if (sectionId === 'lojas') {
@@ -131,6 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sbVendedoresTableInput = document.getElementById('sbVendedoresTable');
     const sbPremiosTableInput = document.getElementById('sbPremiosTable');
     const sbPremiosConfigTableInput = document.getElementById('sbPremiosConfigTable');
+    const sbOsAutorizadasTableInput = document.getElementById('sbOsAutorizadasTable');
     const makeWebhookUrlInput = document.getElementById('makeWebhookUrl');
     const connStatus = document.getElementById('sbConnectionStatus');
 
@@ -157,6 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sbVendedoresTableInput) sbVendedoresTableInput.value = localStorage.getItem('personality_sb_vendedores_table') || 'vendedores_personality';
     if (sbPremiosTableInput) sbPremiosTableInput.value = localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
     if (sbPremiosConfigTableInput) sbPremiosConfigTableInput.value = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
+    if (sbOsAutorizadasTableInput) sbOsAutorizadasTableInput.value = localStorage.getItem('personality_sb_os_autorizadas_table') || 'os_autorizadas_personality';
     if (makeWebhookUrlInput) makeWebhookUrlInput.value = localStorage.getItem('personality_make_webhook') || '';
 
     // Testa a conexão ao carregar a página se houver dados salvos
@@ -185,6 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const vendedoresTable = sbVendedoresTableInput.value.trim();
             const premiosTable = sbPremiosTableInput.value.trim();
             const configTable = sbPremiosConfigTableInput.value.trim();
+            const osAuthTable = sbOsAutorizadasTableInput ? sbOsAutorizadasTableInput.value.trim() : 'os_autorizadas_personality';
             const makeWebhook = makeWebhookUrlInput.value.trim();
 
             // Salva no localStorage
@@ -196,6 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('personality_sb_vendedores_table', vendedoresTable);
             localStorage.setItem('personality_sb_premios_table', premiosTable);
             localStorage.setItem('personality_sb_premios_config_table', configTable);
+            localStorage.setItem('personality_sb_os_autorizadas_table', osAuthTable);
             localStorage.setItem('personality_make_webhook', makeWebhook);
 
             alert('Configurações salvas com sucesso! Testando conexão...');
@@ -3138,5 +3144,303 @@ document.addEventListener('DOMContentLoaded', () => {
         localList = localList.filter(i => String(i.id) !== String(id));
         localStorage.setItem('personality_local_downloads', JSON.stringify(localList));
         loadAdminDownloadsManager();
+    }
+
+    // -------------------------------------------------------------
+    // 12. Pré-lançamento de O.S. Autorizadas (Laboratório)
+    // -------------------------------------------------------------
+    const authOsForm = document.getElementById('authOsForm');
+    const authOsNumber = document.getElementById('authOsNumber');
+    const authOsSellerCpf = document.getElementById('authOsSellerCpf');
+    const authOsClientName = document.getElementById('authOsClientName');
+    const authOsLens = document.getElementById('authOsLens');
+    const authOsAr = document.getElementById('authOsAr');
+    const authOsTableBody = document.getElementById('authOsTableBody');
+
+    async function loadPremiosAutorizarSection() {
+        if (!authOsTableBody) return;
+        authOsTableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted);">Buscando O.S. liberadas...</td></tr>`;
+
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
+        
+        const vendTable = localStorage.getItem('personality_sb_vendedores_table') || 'vendedores_personality';
+        const configTable = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
+        const osAuthTable = localStorage.getItem('personality_sb_os_autorizadas_table') || 'os_autorizadas_personality';
+
+        let approvedVendedores = [];
+        let rewardsConfig = [];
+        let authorizedList = [];
+
+        // 1. Carrega Vendedores Aprovados para o Select
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const res = await fetch(`${cleanUrl}/rest/v1/${vendTable}?select=*`, {
+                    method: 'GET',
+                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    approvedVendedores = data.filter(v => v.aprovado === true || v.aprovado === 'true');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+        if (approvedVendedores.length === 0) {
+            const local = JSON.parse(localStorage.getItem('personality_local_vendedores')) || [];
+            approvedVendedores = local.filter(v => v.aprovado === true || v.aprovado === 'true');
+        }
+
+        // Popula Select de Vendedores
+        if (authOsSellerCpf) {
+            authOsSellerCpf.innerHTML = '<option value="">Selecione o vendedor...</option>';
+            approvedVendedores.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v.cpf;
+                opt.textContent = `${v.nome} (CPF: ${v.cpf}) - ${v.loja}`;
+                authOsSellerCpf.appendChild(opt);
+            });
+        }
+
+        // 2. Carrega Famílias de Lentes e Antirreflexo para os Selects
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const res = await fetch(`${cleanUrl}/rest/v1/${configTable}?select=*`, {
+                    method: 'GET',
+                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                });
+                if (res.ok) {
+                    rewardsConfig = await res.json();
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+        if (rewardsConfig.length === 0) {
+            rewardsConfig = adminPremiosConfig;
+        }
+
+        if (authOsLens && authOsAr) {
+            authOsLens.innerHTML = '<option value="">Selecione a lente...</option>';
+            authOsAr.innerHTML = '<option value="">Selecione o antirreflexo...</option>';
+
+            rewardsConfig.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.nome;
+                opt.textContent = `${item.nome} (${item.pontos} Pts)`;
+                if (item.categoria === 'lente') {
+                    authOsLens.appendChild(opt);
+                } else {
+                    authOsAr.appendChild(opt);
+                }
+            });
+        }
+
+        // 3. Carrega O.S. Autorizadas cadastradas
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const res = await fetch(`${cleanUrl}/rest/v1/${osAuthTable}?select=*&order=created_at.desc`, {
+                    method: 'GET',
+                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                });
+                if (res.ok) {
+                    authorizedList = await res.json();
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+        if (authorizedList.length === 0) {
+            authorizedList = JSON.parse(localStorage.getItem('personality_local_os_autorizadas')) || [];
+        }
+
+        // Renderiza Tabela de O.S. Autorizadas
+        renderAuthOsTable(authorizedList, approvedVendedores);
+    }
+
+    function renderAuthOsTable(items, sellersList) {
+        if (!authOsTableBody) return;
+        authOsTableBody.innerHTML = '';
+
+        if (items.length === 0) {
+            authOsTableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted);">Nenhuma O.S. autorizada no momento.</td></tr>`;
+            return;
+        }
+
+        items.forEach(item => {
+            // Acha o nome do vendedor correspondente ao CPF
+            const vend = sellersList.find(v => v.cpf === item.cpf_vendedor) || { nome: 'Desconhecido', loja: item.loja || 'N/A' };
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${escapeHtml(item.os)}</strong></td>
+                <td>${escapeHtml(vend.nome)}</td>
+                <td>${escapeHtml(item.cpf_vendedor)}</td>
+                <td>${escapeHtml(item.loja || vend.loja)}</td>
+                <td>${escapeHtml(item.cliente_nome)}</td>
+                <td><span class="gold-text">${escapeHtml(item.lente_familia)}</span></td>
+                <td><span style="color: #93c5fd;">${escapeHtml(item.ar_familia)}</span></td>
+                <td>
+                    ${item.utilizada ? '<span class="badge badge-success" style="background:#10b981; color:#fff; padding: 2px 6px; border-radius: 4px; font-size:11px;">Resgatada ✅</span>' : '<span class="badge badge-warning" style="background:#f59e0b; color:#000; padding: 2px 6px; border-radius: 4px; font-size:11px;">Pendente ⏳</span>'}
+                </td>
+                <td>
+                    <button class="btn btn-xs btn-danger btn-delete-auth-os" data-os="${escapeHtml(item.os)}" style="padding: 4px 8px; font-size:11px; border-color: rgba(255,85,85,0.3); color:#fca5a5; background:none;">Cancel 🗑️</button>
+                </td>
+            `;
+
+            const btnDel = tr.querySelector('.btn-delete-auth-os');
+            if (btnDel) {
+                btnDel.addEventListener('click', () => {
+                    deleteAuthOs(item.os);
+                });
+            }
+
+            authOsTableBody.appendChild(tr);
+        });
+    }
+
+    async function deleteAuthOs(osNumber) {
+        if (!confirm(`Deseja realmente cancelar a liberação da O.S. "${osNumber}"?`)) return;
+
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
+        const osAuthTable = localStorage.getItem('personality_sb_os_autorizadas_table') || 'os_autorizadas_personality';
+
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                await fetch(`${cleanUrl}/rest/v1/${osAuthTable}?os=eq.${encodeURIComponent(osNumber)}`, {
+                    method: 'DELETE',
+                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        let local = JSON.parse(localStorage.getItem('personality_local_os_autorizadas')) || [];
+        local = local.filter(item => item.os !== osNumber);
+        localStorage.setItem('personality_local_os_autorizadas', JSON.stringify(local));
+
+        alert('Liberação cancelada!');
+        loadPremiosAutorizarSection();
+    }
+
+    // Submit do formulário de liberação de O.S.
+    if (authOsForm) {
+        authOsForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const osVal = authOsNumber.value.trim();
+            const cpfVal = authOsSellerCpf.value;
+            const clientVal = authOsClientName.value.trim();
+            const lensVal = authOsLens.value;
+            const arVal = authOsAr.value;
+
+            if (!osVal || !cpfVal || !clientVal || !lensVal || !arVal) {
+                alert('Preencha todos os campos!');
+                return;
+            }
+
+            // Busca a loja do vendedor correspondente ao CPF
+            let storeVal = 'Desconhecida';
+            const url = getSupabaseUrl();
+            const key = getSupabaseKey();
+            const vendTable = localStorage.getItem('personality_sb_vendedores_table') || 'vendedores_personality';
+            const osAuthTable = localStorage.getItem('personality_sb_os_autorizadas_table') || 'os_autorizadas_personality';
+
+            let approvedVendedores = [];
+            if (url && key) {
+                try {
+                    const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                    const res = await fetch(`${cleanUrl}/rest/v1/${vendTable}?cpf=eq.${encodeURIComponent(cpfVal)}`, {
+                        method: 'GET',
+                        headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                    });
+                    if (res.ok) {
+                        approvedVendedores = await res.json();
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+            if (approvedVendedores.length === 0) {
+                const local = JSON.parse(localStorage.getItem('personality_local_vendedores')) || [];
+                approvedVendedores = local.filter(v => v.cpf === cpfVal);
+            }
+            if (approvedVendedores.length > 0) {
+                storeVal = approvedVendedores[0].loja;
+            }
+
+            const newAuth = {
+                os: osVal,
+                cpf_vendedor: cpfVal,
+                loja: storeVal,
+                cliente_nome: clientVal,
+                lente_familia: lensVal,
+                ar_familia: arVal,
+                utilizada: false,
+                created_at: new Date().toISOString()
+            };
+
+            if (url && key) {
+                try {
+                    const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                    const checkRes = await fetch(`${cleanUrl}/rest/v1/${osAuthTable}?os=eq.${encodeURIComponent(osVal)}`, {
+                        method: 'GET',
+                        headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                    });
+                    if (checkRes.ok) {
+                        const existing = await checkRes.json();
+                        if (existing && existing.length > 0) {
+                            alert('Erro: Esta O.S. já foi liberada no sistema anteriormente!');
+                            return;
+                        }
+                    }
+
+                    const res = await fetch(`${cleanUrl}/rest/v1/${osAuthTable}`, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': key,
+                            'Authorization': `Bearer ${key}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify(newAuth)
+                    });
+                    if (!res.ok) {
+                        throw new Error('Falha ao registrar no Supabase.');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    saveAuthOsLocally(newAuth);
+                }
+            } else {
+                const local = JSON.parse(localStorage.getItem('personality_local_os_autorizadas')) || [];
+                if (local.find(item => item.os === osVal)) {
+                    alert('Erro: Esta O.S. já foi liberada no sistema anteriormente!');
+                    return;
+                }
+                saveAuthOsLocally(newAuth);
+            }
+
+            authOsForm.reset();
+            alert(`O.S. ${osVal} liberada com sucesso para o vendedor!`);
+            loadPremiosAutorizarSection();
+        });
+    }
+
+    function saveAuthOsLocally(data) {
+        const local = JSON.parse(localStorage.getItem('personality_local_os_autorizadas')) || [];
+        const localData = {
+            id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15),
+            ...data
+        };
+        local.push(localData);
+        localStorage.setItem('personality_local_os_autorizadas', JSON.stringify(local));
     }
 });
