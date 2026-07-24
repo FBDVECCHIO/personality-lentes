@@ -496,3 +496,69 @@
     margin-bottom: 24px;
     line-height: 1.5;
 }
+
+/* =============================================================
+   Ajustes Personalizados de Fontes (v3.60)
+   ============================================================= */
+
+/* 1. Tabelas de Extratos e Listagens */
+.leads-table {
+    font-size: 10px !important;
+}
+.leads-table th {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    padding: 12px !important;
+}
+.leads-table td {
+    font-size: 10px !important;
+    padding: 12px !important;
+}
+
+/* 2. Painel Master (Admin Geral) */
+.admin-sidebar, 
+.admin-content-area,
+.section-card p,
+.input-group label,
+.status-box {
+    font-size: 12px !important;
+}
+.card-header h2,
+.section-card h2 {
+    font-size: 14px !important;
+}
+.section-card h3,
+.sidebar-header h3 {
+    font-size: 12px !important;
+}
+.input-hint {
+    font-size: 10px !important;
+}
+
+/* 3. Controles (Formulários e Botões) */
+.input-group input,
+.input-group select,
+.input-group textarea,
+select,
+input,
+textarea {
+    font-size: 10px !important;
+}
+
+/* Botões de Ação das Tabelas */
+.btn-xs,
+.btn-edit-reward-config,
+.btn-delete-reward-config,
+.btn-delete-auth-os,
+.leads-table button {
+    font-size: 10px !important;
+}
+
+/* Botões de Ação Principais do Formulário */
+#authOsForm button[type="submit"],
+#addRewardProductForm button[type="submit"],
+.btn-gold,
+.btn-submit-main {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+}

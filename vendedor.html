@@ -60,7 +60,7 @@
             display: none;
         }
         
-        /* Estilos de Tabelas */
+        /* Estilos de Tabelas (v3.60) */
         .table-container {
             width: 100%;
             overflow-x: auto;
@@ -72,24 +72,45 @@
             width: 100%;
             border-collapse: collapse;
             text-align: left;
-            font-size: 13px;
+            font-size: 10px;
             white-space: nowrap;
         }
         .leads-table th {
             background: rgba(255, 255, 255, 0.02);
-            padding: 14px 16px;
+            padding: 12px;
             font-weight: 600;
             color: #fff;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 10px;
         }
         .leads-table td {
-            padding: 14px 16px;
+            padding: 12px;
             color: var(--text-muted);
             border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            font-size: 10px;
         }
         .leads-table tbody tr:hover td {
             background: rgba(255, 255, 255, 0.01);
             color: #fff;
+        }
+
+        /* Controles, Inputs e Formulários */
+        .input-group label {
+            font-size: 11px !important;
+        }
+        .input-group input,
+        .input-group select,
+        .input-group textarea,
+        select,
+        input,
+        textarea {
+            font-size: 10px !important;
+        }
+        #btnSubmitSale,
+        #btnVendedorLogin,
+        #btnVendedorRegister {
+            font-size: 12px !important;
+            font-weight: 700 !important;
         }
     </style>
 </head>
