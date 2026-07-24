@@ -12,13 +12,13 @@
 /* Layout de Duas Colunas do Dashboard com Prevenção de Transbordamento */
 .admin-container {
     display: grid;
-    grid-template-columns: 260px minmax(0, 1fr);
+    grid-template-columns: 200px minmax(0, 1fr);
     gap: 24px;
     align-items: flex-start;
     padding-top: 30px;
     padding-bottom: 80px;
     width: 100%;
-    max-width: 1300px;
+    max-width: 98%;
     box-sizing: border-box;
 }
 
@@ -501,18 +501,32 @@
    Ajustes Personalizados de Fontes (v3.60)
    ============================================================= */
 
-/* 1. Tabelas de Extratos e Listagens */
+/* 1. Tabelas de Extratos e Listagens com prevenção de rolagem horizontal */
 .leads-table {
     font-size: 10px !important;
+    white-space: normal !important;
 }
 .leads-table th {
     font-size: 10px !important;
     font-weight: 600 !important;
     padding: 12px !important;
+    white-space: normal !important;
+    word-break: break-word !important;
 }
 .leads-table td {
     font-size: 10px !important;
     padding: 12px !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+}
+
+/* Colunas curtas que não devem quebrar de linha */
+.leads-table th:nth-child(1), .leads-table td:nth-child(1),
+.leads-table th:nth-child(3), .leads-table td:nth-child(3),
+.leads-table th:nth-child(5), .leads-table td:nth-child(5),
+.leads-table th:nth-last-child(2), .leads-table td:nth-last-child(2),
+.leads-table th:last-child, .leads-table td:last-child {
+    white-space: nowrap !important;
 }
 
 /* 2. Painel Master (Admin Geral) */
@@ -532,6 +546,11 @@
     font-size: 12px !important;
 }
 .input-hint {
+    font-size: 10px !important;
+}
+
+/* Redução do Menu Principal Esquerdo para 10px */
+.side-btn {
     font-size: 10px !important;
 }
 

@@ -73,7 +73,7 @@
             border-collapse: collapse;
             text-align: left;
             font-size: 10px;
-            white-space: nowrap;
+            white-space: normal !important;
         }
         .leads-table th {
             background: rgba(255, 255, 255, 0.02);
@@ -82,16 +82,26 @@
             color: #fff;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             font-size: 10px;
+            white-space: normal !important;
+            word-break: break-word !important;
         }
         .leads-table td {
             padding: 12px;
             color: var(--text-muted);
             border-bottom: 1px solid rgba(255, 255, 255, 0.03);
             font-size: 10px;
+            white-space: normal !important;
+            word-break: break-word !important;
         }
         .leads-table tbody tr:hover td {
             background: rgba(255, 255, 255, 0.01);
             color: #fff;
+        }
+        /* Colunas curtas que não devem quebrar de linha */
+        .leads-table th:nth-child(1), .leads-table td:nth-child(1),
+        .leads-table th:nth-child(2), .leads-table td:nth-child(2),
+        .leads-table th:last-child, .leads-table td:last-child {
+            white-space: nowrap !important;
         }
 
         /* Controles, Inputs e Formulários */
