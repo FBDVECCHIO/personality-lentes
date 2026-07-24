@@ -933,6 +933,35 @@ create policy "Permitir delete em premios_lancados_personality" on premios_lanca
 
             <!-- Seção: Configuração de Valores de Prêmios -->
             <div class="admin-section" id="sec-premios-config">
+                <div class="glass-card section-card" style="margin-bottom: 25px;">
+                    <div class="card-header">
+                        <h2>➕ Adicionar Nova Família de Produto para Prêmios</h2>
+                        <p>Cadastre novas famílias de lentes ou tratamentos antirreflexo no sistema.</p>
+                    </div>
+                    <form id="addRewardProductForm" style="display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 15px; align-items: end; margin-top: 15px;">
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label for="newProdCategory" style="font-size: 12px; margin-bottom: 6px;">Categoria</label>
+                            <select id="newProdCategory" required style="width:100%; padding: 10px; background:#121216; border: 1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff; font-family:inherit;">
+                                <option value="lente">Lente 🕶️</option>
+                                <option value="antirreflexo">Antirreflexo ✨</option>
+                            </select>
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label for="newProdName" style="font-size: 12px; margin-bottom: 6px;">Nome do Produto</label>
+                            <input type="text" id="newProdName" placeholder="Ex: Lente 1.67 Premium" required style="width:100%; padding: 10px; background:rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff; font-family:inherit;">
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label for="newProdPoints" style="font-size: 12px; margin-bottom: 6px;">Pontos por Par</label>
+                            <input type="number" id="newProdPoints" placeholder="Ex: 40" required min="0" style="width:100%; padding: 10px; background:rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff; font-family:inherit;">
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label for="newProdValue" style="font-size: 12px; margin-bottom: 6px;">Prêmio por Par (R$)</label>
+                            <input type="number" step="0.01" id="newProdValue" placeholder="Ex: 40.00" required min="0" style="width:100%; padding: 10px; background:rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff; font-family:inherit;">
+                        </div>
+                        <button type="submit" class="btn btn-gold btn-sm" style="font-weight: 700; height: 38px; padding: 0 20px;">Adicionar Família ➕</button>
+                    </form>
+                </div>
+
                 <div class="glass-card section-card">
                     <div class="card-header">
                         <h2>💸 Configuração de <span class="gold-text">Prêmios de Lentes e Tratamentos</span></h2>
@@ -949,6 +978,7 @@ create policy "Permitir delete em premios_lancados_personality" on premios_lanca
                                         <th>Família de Lente</th>
                                         <th>Pontos por Par</th>
                                         <th>Prêmio por Par (R$)</th>
+                                        <th>Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody id="rewardsLentesConfigBody">
@@ -966,6 +996,7 @@ create policy "Permitir delete em premios_lancados_personality" on premios_lanca
                                         <th>Tratamento Antirreflexo</th>
                                         <th>Pontos por Par</th>
                                         <th>Prêmio por Par (R$)</th>
+                                        <th>Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody id="rewardsArConfigBody">
@@ -974,7 +1005,7 @@ create policy "Permitir delete em premios_lancados_personality" on premios_lanca
                             </table>
                         </div>
 
-                        <button type="submit" class="btn btn-gold btn-sm" style="font-weight: 700; height: 38px; padding: 0 24px;">💾 Salvar Valores de Prêmios</button>
+                        <button type="submit" class="btn btn-gold btn-sm" style="font-weight: 700; height: 38px; padding: 0 24px;">💾 Salvar Alterações de Valores</button>
                     </form>
                 </div>
             </div>
@@ -1074,6 +1105,31 @@ create policy "Permitir delete em premios_lancados_personality" on premios_lanca
                                 </tr>
                             </thead>
                             <tbody id="adminConsolidadoTableBody">
+                                <!-- Preenchido via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Painel de Payouts Consolidados Já Pagos -->
+                <div class="glass-card section-card" style="margin-top: 30px;">
+                    <div class="card-header">
+                        <h2>💳 Histórico de Pagamentos Realizados <span class="gold-text">(Consolidado por Vendedor)</span></h2>
+                        <p>Resumo de prêmios que já foram pagos e conciliados por vendedor.</p>
+                    </div>
+                    <div class="table-container" style="margin-top: 20px;">
+                        <table class="leads-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome do Vendedor</th>
+                                    <th>CPF</th>
+                                    <th>Ótica de Trabalho</th>
+                                    <th>WhatsApp</th>
+                                    <th>Total Pago (Conciliado)</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminConsolidadoPagosTableBody">
                                 <!-- Preenchido via JS -->
                             </tbody>
                         </table>

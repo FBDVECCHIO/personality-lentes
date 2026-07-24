@@ -1146,6 +1146,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 if (response.ok) {
                     profs = await response.json();
+                } else {
+                    throw new Error('Falha ao obter profissionais.');
                 }
             } catch (error) {
                 console.error(error);
@@ -1165,6 +1167,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 if (response.ok) {
                     vends = await response.json();
+                } else {
+                    throw new Error('Falha ao obter vendedores.');
                 }
             } catch (error) {
                 console.error(error);
@@ -1186,6 +1190,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 whatsapp: p.whatsapp,
                 loja_clinica: p.clinica,
                 info: p.newsletter ? 'Newsletter: Sim ✅' : 'Newsletter: Não ❌',
+                aprovado: true,
                 created_at: p.created_at || p.timestamp
             });
         });
@@ -1199,6 +1204,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 whatsapp: v.whatsapp,
                 loja_clinica: v.loja,
                 info: `Usuário: <code>${v.usuario}</code>`,
+                aprovado: v.aprovado === true || v.aprovado === "true",
                 created_at: v.created_at || v.timestamp
             });
         });
@@ -1242,6 +1248,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? `<span class="store-badge" style="margin-top:0; background: rgba(197, 168, 92, 0.1); color: var(--gold-light); border: 1px solid rgba(197, 168, 92, 0.3); font-weight:700;">🩺 Profissional</span>`
                 : `<span class="store-badge" style="margin-top:0; background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); font-weight:700;">🏆 Vendedor</span>`;
 
+            let approvalBtn = '';
+            let statusPill = m.info;
+
+            if (m.tipo === 'vend') {
+                if (m.aprovado) {
+                    statusPill = `<span style="color:#10b981; font-weight:700; display:block; margin-bottom: 4px;">Aprovado ✅</span><small style="color:var(--text-muted);">${m.info}</small>`;
+                } else {
+                    statusPill = `<span style="color:#f59e0b; font-weight:700; display:block; margin-bottom: 4px;">Pendente ⏳</span><small style="color:var(--text-muted);">${m.info}</small>`;
+                    approvalBtn = `<button class="btn btn-sm btn-success btn-approve-seller" data-id="${m.id}" style="margin-right: 5px; padding: 4px 8px; font-size:11px; font-weight:700; background:#10b981; border-color:#10b981; color:#000;">Aprovar ✅</button>`;
+                }
+            }
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${badgeTipo}</td>
@@ -1250,9 +1268,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${escapeHtml(m.email)}</td>
                 <td>${waLink}</td>
                 <td>${escapeHtml(m.loja_clinica)}</td>
-                <td>${m.info}</td>
+                <td>${statusPill}</td>
                 <td>${escapeHtml(formattedDate)}</td>
                 <td>
+                    ${approvalBtn}
                     <button class="btn btn-sm btn-outline-gold btn-delete-member" data-id="${m.id}" data-type="${m.tipo}" style="border-color: rgba(255, 85, 85, 0.3); color: #fca5a5; padding: 4px 8px; font-size:11px;">🗑️ Apagar</button>
                 </td>
             `;
@@ -1270,6 +1289,60 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
+
+        // Adiciona listeners para aprovação de vendedor
+        profTableBody.querySelectorAll('.btn-approve-seller').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.getAttribute('data-id');
+                if (confirm('Deseja realmente aprovar este vendedor?')) {
+                    await approveSellerRecord(id);
+                }
+            });
+        });
+    }
+
+    async function approveSellerRecord(id) {
+        const url = localStorage.getItem('personality_sb_url');
+        const key = localStorage.getItem('personality_sb_key');
+        const vendTable = localStorage.getItem('personality_sb_vendedores_table') || 'vendedores_personality';
+
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const response = await fetch(`${cleanUrl}/rest/v1/${vendTable}?id=eq.${id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': key,
+                        'Authorization': `Bearer ${key}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ aprovado: true })
+                });
+                if (!response.ok) {
+                    const txt = await response.text();
+                    throw new Error(txt);
+                }
+                alert('Vendedor aprovado com sucesso!');
+            } catch (err) {
+                console.error(err);
+                approveSellerLocally(id);
+                alert('Vendedor aprovado localmente.');
+            }
+        } else {
+            approveSellerLocally(id);
+            alert('Vendedor aprovado localmente.');
+        }
+
+        loadProfessionals();
+    }
+
+    function approveSellerLocally(id) {
+        const local = JSON.parse(localStorage.getItem('personality_local_vendedores')) || [];
+        const found = local.find(v => v.id === id);
+        if (found) {
+            found.aprovado = true;
+            localStorage.setItem('personality_local_vendedores', JSON.stringify(local));
+        }
     }
 
     async function deleteMemberRecord(id, tipo) {
@@ -1456,9 +1529,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (data && data.length > 0) {
                         adminPremiosConfig = data;
                     }
+                } else {
+                    throw new Error('Erro ao buscar do Supabase');
                 }
             } catch (error) {
                 console.error('Erro ao carregar configuracoes de premios:', error);
+                const localConfig = localStorage.getItem('personality_premios_config');
+                if (localConfig) {
+                    adminPremiosConfig = JSON.parse(localConfig);
+                }
             }
         } else {
             const localConfig = localStorage.getItem('personality_premios_config');
@@ -1481,10 +1560,13 @@ document.addEventListener('DOMContentLoaded', () => {
             tr.innerHTML = `
                 <td><strong>${escapeHtml(item.nome)}</strong></td>
                 <td>
-                    <input type="number" class="config-points-input" data-index="${index}" value="${item.pontos}" min="0" required style="width: 100px; padding: 6px 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color:#fff;"> Pts
+                    <input type="number" class="config-points-input" data-index="${index}" value="${item.pontos}" min="0" required style="width: 80px; padding: 6px 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color:#fff;"> Pts
                 </td>
                 <td>
-                    R$ <input type="number" step="0.01" class="config-value-input" data-index="${index}" value="${item.valor}" min="0" required style="width: 120px; padding: 6px 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color:#fff;">
+                    R$ <input type="number" step="0.01" class="config-value-input" data-index="${index}" value="${item.valor}" min="0" required style="width: 100px; padding: 6px 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color:#fff;">
+                </td>
+                <td>
+                    <button type="button" class="btn btn-xs btn-outline-gold btn-delete-reward-config" data-name="${escapeHtml(item.nome)}" style="border-color: rgba(255,85,85,0.3); color:#fca5a5; padding: 4px 8px; font-size:11px; background:none;">🗑️ Deletar</button>
                 </td>
             `;
             if (item.categoria === 'lente') {
@@ -1492,6 +1574,103 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 rewardsArConfigBody.appendChild(tr);
             }
+        });
+
+        // Adiciona listeners para deleção
+        const deleteConfigBtns = document.querySelectorAll('.btn-delete-reward-config');
+        deleteConfigBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const name = btn.getAttribute('data-name');
+                deleteRewardConfigItem(name);
+            });
+        });
+    }
+
+    async function deleteRewardConfigItem(name) {
+        if (!confirm(`Deseja realmente remover a família "${name}" da lista de prêmios?`)) return;
+
+        const url = localStorage.getItem('personality_sb_url');
+        const key = localStorage.getItem('personality_sb_key');
+        const configTable = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
+
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const res = await fetch(`${cleanUrl}/rest/v1/${configTable}?nome=eq.${encodeURIComponent(name)}`, {
+                    method: 'DELETE',
+                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                });
+                if (!res.ok) {
+                    throw new Error('Falha ao excluir no Supabase.');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+        
+        adminPremiosConfig = adminPremiosConfig.filter(item => item.nome !== name);
+        localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
+        alert('Família removida com sucesso!');
+        loadRewardsConfig();
+    }
+
+    // Listener para o formulário de adicionar novo produto de prêmio
+    const addRewardProductForm = document.getElementById('addRewardProductForm');
+    if (addRewardProductForm) {
+        addRewardProductForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const categoryVal = document.getElementById('newProdCategory').value;
+            const nameVal = document.getElementById('newProdName').value.trim();
+            const pointsVal = Number(document.getElementById('newProdPoints').value);
+            const valueVal = Number(document.getElementById('newProdValue').value);
+
+            if (!nameVal) return;
+
+            const duplicate = adminPremiosConfig.find(item => item.nome.toLowerCase() === nameVal.toLowerCase());
+            if (duplicate) {
+                alert('Já existe uma família cadastrada com este nome!');
+                return;
+            }
+
+            const newProduct = {
+                categoria: categoryVal,
+                nome: nameVal,
+                pontos: pointsVal,
+                valor: valueVal
+            };
+
+            const url = localStorage.getItem('personality_sb_url');
+            const key = localStorage.getItem('personality_sb_key');
+            const configTable = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
+
+            if (url && key) {
+                try {
+                    const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                    const res = await fetch(`${cleanUrl}/rest/v1/${configTable}`, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': key,
+                            'Authorization': `Bearer ${key}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify(newProduct)
+                    });
+                    if (!res.ok) {
+                        throw new Error('Erro ao salvar no Supabase.');
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+
+            adminPremiosConfig.push(newProduct);
+            localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
+            
+            alert('Nova família de produto adicionada com sucesso!');
+            addRewardProductForm.reset();
+            loadRewardsConfig();
         });
     }
 
@@ -1731,9 +1910,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Agrupa todas as O.S. com status 'Pago' (Já Pago)
+        const pagosPorVendedor = {};
+        
+        allSubmittedSales.forEach(sale => {
+            if (sale.status === 'Pago') {
+                const vId = sale.vendedor_id;
+                if (!pagosPorVendedor[vId]) {
+                    pagosPorVendedor[vId] = {
+                        vendedor_nome: sale.vendedor_nome,
+                        loja: sale.loja,
+                        total_pago: 0,
+                        vendedor_id: vId
+                    };
+                }
+                pagosPorVendedor[vId].total_pago += (Number(sale.valor_lente) + Number(sale.valor_ar));
+            }
+        });
+
         // Para pegar o WhatsApp e o CPF do vendedor, vamos mapear com a lista de vendedores locais/remotos
         const sellersList = loadedMembersList.filter(m => m.tipo === 'vend');
         const consolidadoRows = Object.values(validadosPorVendedor);
+        const consolidadoPagosRows = Object.values(pagosPorVendedor);
 
         if (consolidadoRows.length === 0) {
             adminConsolidadoTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Nenhum vendedor possui saldo pendente de pagamento no momento.</td></tr>`;
@@ -1757,6 +1955,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 adminConsolidadoTableBody.appendChild(tr);
             });
+        }
+
+        const adminConsolidadoPagosTableBody = document.getElementById('adminConsolidadoPagosTableBody');
+        if (adminConsolidadoPagosTableBody) {
+            adminConsolidadoPagosTableBody.innerHTML = '';
+            if (consolidadoPagosRows.length === 0) {
+                adminConsolidadoPagosTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Nenhum pagamento realizado ainda.</td></tr>`;
+            } else {
+                consolidadoPagosRows.forEach(row => {
+                    const sellerInfo = sellersList.find(s => s.id === row.vendedor_id) || {};
+                    
+                    const rawPhone = (sellerInfo.whatsapp || '').replace(/\D/g, '');
+                    const waLink = rawPhone ? `<a href="https://wa.me/55${rawPhone}" target="_blank" class="wa-link">💬 ${escapeHtml(sellerInfo.whatsapp)}</a>` : 'Não informado';
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${escapeHtml(row.vendedor_nome)}</strong></td>
+                        <td><code>${escapeHtml(sellerInfo.cpf_cnpj || 'n/d')}</code></td>
+                        <td>${escapeHtml(row.loja)}</td>
+                        <td>${waLink}</td>
+                        <td><strong style="color: #60a5fa; font-size:16px;">R$ ${row.total_pago.toFixed(2)}</strong></td>
+                        <td><span class="status-vendedor-pago">Pago e Conciliado ✅</span></td>
+                    `;
+                    adminConsolidadoPagosTableBody.appendChild(tr);
+                });
+            }
         }
 
         // Configura os Listeners dos botões de ação do relatório
