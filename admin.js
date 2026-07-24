@@ -99,6 +99,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadLeads();
             } else if (sectionId === 'profissionais') {
                 loadProfessionals();
+            } else if (sectionId === 'premios-config') {
+                loadRewardsConfig();
+            } else if (sectionId === 'premios-relatorio') {
+                loadPremiosManager();
             } else if (sectionId === 'lojas') {
                 loadStores();
             } else if (sectionId === 'acessos') {
@@ -124,6 +128,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const sbTableInput = document.getElementById('sbTable');
     const sbStoresTableInput = document.getElementById('sbStoresTable');
     const sbProfsTableInput = document.getElementById('sbProfsTable');
+    const sbVendedoresTableInput = document.getElementById('sbVendedoresTable');
+    const sbPremiosTableInput = document.getElementById('sbPremiosTable');
+    const sbPremiosConfigTableInput = document.getElementById('sbPremiosConfigTable');
     const makeWebhookUrlInput = document.getElementById('makeWebhookUrl');
     const connStatus = document.getElementById('sbConnectionStatus');
 
@@ -147,6 +154,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sbTableInput) sbTableInput.value = localStorage.getItem('personality_sb_table') || 'leads_personality';
     if (sbStoresTableInput) sbStoresTableInput.value = localStorage.getItem('personality_sb_stores_table') || 'lojas_licenciadas';
     if (sbProfsTableInput) sbProfsTableInput.value = localStorage.getItem('personality_sb_profs_table') || 'profissionais_personality';
+    if (sbVendedoresTableInput) sbVendedoresTableInput.value = localStorage.getItem('personality_sb_vendedores_table') || 'vendedores_personality';
+    if (sbPremiosTableInput) sbPremiosTableInput.value = localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
+    if (sbPremiosConfigTableInput) sbPremiosConfigTableInput.value = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
     if (makeWebhookUrlInput) makeWebhookUrlInput.value = localStorage.getItem('personality_make_webhook') || '';
 
     // Testa a conexão ao carregar a página se houver dados salvos
@@ -156,7 +166,10 @@ document.addEventListener('DOMContentLoaded', () => {
             sbKeyInput.value, 
             sbTableInput ? sbTableInput.value : 'leads_personality', 
             sbStoresTableInput ? sbStoresTableInput.value : 'lojas_licenciadas',
-            sbProfsTableInput ? sbProfsTableInput.value : 'profissionais_personality'
+            sbProfsTableInput ? sbProfsTableInput.value : 'profissionais_personality',
+            sbVendedoresTableInput ? sbVendedoresTableInput.value : 'vendedores_personality',
+            sbPremiosTableInput ? sbPremiosTableInput.value : 'premios_lancados_personality',
+            sbPremiosConfigTableInput ? sbPremiosConfigTableInput.value : 'premios_config_personality'
         );
     }
 
@@ -169,6 +182,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const table = sbTableInput.value.trim();
             const storesTable = sbStoresTableInput.value.trim();
             const profsTable = sbProfsTableInput.value.trim();
+            const vendedoresTable = sbVendedoresTableInput.value.trim();
+            const premiosTable = sbPremiosTableInput.value.trim();
+            const configTable = sbPremiosConfigTableInput.value.trim();
             const makeWebhook = makeWebhookUrlInput.value.trim();
 
             // Salva no localStorage
@@ -177,10 +193,13 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('personality_sb_table', table);
             localStorage.setItem('personality_sb_stores_table', storesTable);
             localStorage.setItem('personality_sb_profs_table', profsTable);
+            localStorage.setItem('personality_sb_vendedores_table', vendedoresTable);
+            localStorage.setItem('personality_sb_premios_table', premiosTable);
+            localStorage.setItem('personality_sb_premios_config_table', configTable);
             localStorage.setItem('personality_make_webhook', makeWebhook);
 
             alert('Configurações salvas com sucesso! Testando conexão...');
-            testConnection(url, key, table, storesTable, profsTable);
+            testConnection(url, key, table, storesTable, profsTable, vendedoresTable, premiosTable, configTable);
         });
     }
 
@@ -260,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    async function testConnection(url, key, table, storesTable, profsTable) {
+    async function testConnection(url, key, table, storesTable, profsTable, vendedoresTable, premiosTable, configTable) {
         connStatus.className = 'status-box loading';
         connStatus.querySelector('.status-text').textContent = 'Testando conexão com o banco Supabase...';
 
@@ -272,6 +291,15 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const activeProfsTable = profsTable || localStorage.getItem('personality_sb_profs_table') || 'profissionais_personality';
             const endpointProfs = `${cleanUrl}/rest/v1/${activeProfsTable}?select=*&limit=1`;
+
+            const activeVendedoresTable = vendedoresTable || localStorage.getItem('personality_sb_vendedores_table') || 'vendedores_personality';
+            const endpointVend = `${cleanUrl}/rest/v1/${activeVendedoresTable}?select=*&limit=1`;
+
+            const activePremiosTable = premiosTable || localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
+            const endpointPrem = `${cleanUrl}/rest/v1/${activePremiosTable}?select=*&limit=1`;
+
+            const activeConfigTable = configTable || localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
+            const endpointConf = `${cleanUrl}/rest/v1/${activeConfigTable}?select=*&limit=1`;
 
             // Testa tabela de Leads
             const resLeads = await fetch(endpointLeads, {
@@ -302,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!resAccess.ok) {
-                console.warn("Tabela de Acessos não encontrada ou inválida. Crie a tabela 'acessos_lojas' no Supabase.");
+                console.warn("Tabela de Acessos não encontrada ou inválida.");
             }
 
             // Testa tabela de Profissionais
@@ -315,8 +343,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.warn(`Tabela de Profissionais (${activeProfsTable}) não encontrada ou inválida.`);
             }
 
+            // Testa tabela de Vendedores
+            const resVend = await fetch(endpointVend, {
+                method: 'GET',
+                headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+            });
+
+            if (!resVend.ok) {
+                console.warn(`Tabela de Vendedores (${activeVendedoresTable}) não encontrada ou inválida.`);
+            }
+
+            // Testa tabela de Prêmios Lançados
+            const resPrem = await fetch(endpointPrem, {
+                method: 'GET',
+                headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+            });
+
+            if (!resPrem.ok) {
+                console.warn(`Tabela de Prêmios Lançados (${activePremiosTable}) não encontrada ou inválida.`);
+            }
+
+            // Testa tabela de Configuração de Prêmios
+            const resConf = await fetch(endpointConf, {
+                method: 'GET',
+                headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+            });
+
+            if (!resConf.ok) {
+                console.warn(`Tabela de Configuração de Prêmios (${activeConfigTable}) não encontrada ou inválida.`);
+            }
+
             connStatus.className = 'status-box connected';
-            connStatus.querySelector('.status-text').textContent = 'Conectado ao Supabase (Leads, Lojas, Acessos e Profissionais configurados)! ✅';
+            connStatus.querySelector('.status-text').textContent = 'Conectado ao Supabase (Tabelas de Leads, Lojas, Profissionais, Vendedores e Prêmios configurados)! ✅';
         } catch (error) {
             console.error('Erro de conexão:', error);
             connStatus.className = 'status-box error';
@@ -1044,61 +1102,132 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // -------------------------------------------------------------
-    // Carregamento e Visualização de Profissionais da Saúde Cadastrados
+    // Carregamento e Visualização de Profissionais & Vendedores (Unificado)
     // -------------------------------------------------------------
     const profTableBody = document.getElementById('profTableBody');
     const profCountSpan = document.getElementById('profCount');
     const btnExportProfs = document.getElementById('btnExportProfs');
     const btnClearProfs = document.getElementById('btnClearProfs');
+    const filterTabs = document.querySelectorAll('.filter-tab');
+    
+    let currentFilterType = 'all'; // 'all', 'prof', 'vend'
+    let loadedMembersList = [];
+
+    // Switcher de Abas de Filtros de Tipos
+    filterTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            filterTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentFilterType = tab.getAttribute('data-type');
+            renderUnifiedMembers();
+        });
+    });
 
     async function loadProfessionals() {
         if (!profTableBody) return;
         const url = localStorage.getItem('personality_sb_url');
         const key = localStorage.getItem('personality_sb_key');
-        const table = localStorage.getItem('personality_sb_profs_table') || 'profissionais_personality';
+        
+        const profsTable = localStorage.getItem('personality_sb_profs_table') || 'profissionais_personality';
+        const vendTable = localStorage.getItem('personality_sb_vendedores_table') || 'vendedores_personality';
 
         let profs = [];
+        let vends = [];
 
+        profTableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted);">Buscando cadastros no banco de dados...</td></tr>`;
+
+        // 1. Carrega Profissionais
         if (url && key) {
-            profTableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Buscando cadastros no Supabase...</td></tr>`;
             try {
                 const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
-                const endpoint = `${cleanUrl}/rest/v1/${table}?select=*&order=created_at.desc`;
-
-                const response = await fetch(endpoint, {
+                const response = await fetch(`${cleanUrl}/rest/v1/${profsTable}?select=*&order=created_at.desc`, {
                     method: 'GET',
                     headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
                 });
-
                 if (response.ok) {
                     profs = await response.json();
-                } else {
-                    throw new Error('Falha ao obter profissionais.');
                 }
             } catch (error) {
                 console.error(error);
-                profTableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--danger);">Erro na conexão. Carregando dados locais.</td></tr>`;
                 profs = JSON.parse(localStorage.getItem('personality_professionals')) || [];
             }
         } else {
             profs = JSON.parse(localStorage.getItem('personality_professionals')) || [];
         }
 
-        renderProfessionals(profs);
+        // 2. Carrega Vendedores
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const response = await fetch(`${cleanUrl}/rest/v1/${vendTable}?select=*&order=created_at.desc`, {
+                    method: 'GET',
+                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                });
+                if (response.ok) {
+                    vends = await response.json();
+                }
+            } catch (error) {
+                console.error(error);
+                vends = JSON.parse(localStorage.getItem('personality_local_vendedores')) || [];
+            }
+        } else {
+            vends = JSON.parse(localStorage.getItem('personality_local_vendedores')) || [];
+        }
+
+        // Combina com normalização
+        loadedMembersList = [];
+        profs.forEach(p => {
+            loadedMembersList.push({
+                id: p.id,
+                tipo: 'prof',
+                nome: p.nome,
+                cpf_cnpj: p.cpf_cnpj || p.cpf,
+                email: p.email,
+                whatsapp: p.whatsapp,
+                loja_clinica: p.clinica,
+                info: p.newsletter ? 'Newsletter: Sim ✅' : 'Newsletter: Não ❌',
+                created_at: p.created_at || p.timestamp
+            });
+        });
+        vends.forEach(v => {
+            loadedMembersList.push({
+                id: v.id,
+                tipo: 'vend',
+                nome: v.nome,
+                cpf_cnpj: v.cpf,
+                email: v.email,
+                whatsapp: v.whatsapp,
+                loja_clinica: v.loja,
+                info: `Usuário: <code>${v.usuario}</code>`,
+                created_at: v.created_at || v.timestamp
+            });
+        });
+
+        // Ordena por data descendente
+        loadedMembersList.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        renderUnifiedMembers();
     }
 
-    function renderProfessionals(profs) {
-        if (profCountSpan) profCountSpan.textContent = profs.length;
+    function renderUnifiedMembers() {
         if (!profTableBody) return;
         profTableBody.innerHTML = '';
 
-        if (profs.length === 0) {
-            profTableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px 0;">Nenhum profissional da saúde cadastrado ainda.</td></tr>`;
+        // Filtra pelo tipo ativo
+        const filtered = loadedMembersList.filter(m => {
+            if (currentFilterType === 'all') return true;
+            return m.tipo === currentFilterType;
+        });
+
+        if (profCountSpan) profCountSpan.textContent = filtered.length;
+
+        if (filtered.length === 0) {
+            profTableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 30px 0;">Nenhum cadastro encontrado para este filtro.</td></tr>`;
             return;
         }
 
-        profs.forEach(prof => {
-            const dateStr = prof.created_at || prof.timestamp;
+        filtered.forEach(m => {
+            const dateStr = m.created_at;
             let formattedDate = 'Data indisponível';
             if (dateStr) {
                 try {
@@ -1106,115 +1235,176 @@ document.addEventListener('DOMContentLoaded', () => {
                 } catch(e) {}
             }
 
-            const rawPhone = (prof.whatsapp || '').replace(/\D/g, '');
-            const waLink = rawPhone ? `<a href="https://wa.me/55${rawPhone}" target="_blank" class="wa-link">💬 ${escapeHtml(prof.whatsapp)}</a>` : 'Não informado';
+            const rawPhone = (m.whatsapp || '').replace(/\D/g, '');
+            const waLink = rawPhone ? `<a href="https://wa.me/55${rawPhone}" target="_blank" class="wa-link">💬 ${escapeHtml(m.whatsapp)}</a>` : 'Não informado';
             
+            const badgeTipo = m.tipo === 'prof' 
+                ? `<span class="store-badge" style="margin-top:0; background: rgba(197, 168, 92, 0.1); color: var(--gold-light); border: 1px solid rgba(197, 168, 92, 0.3); font-weight:700;">🩺 Profissional</span>`
+                : `<span class="store-badge" style="margin-top:0; background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); font-weight:700;">🏆 Vendedor</span>`;
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td><strong>${escapeHtml(prof.nome)}</strong></td>
-                <td>${escapeHtml(prof.cpf_cnpj)}</td>
-                <td>${escapeHtml(prof.email)}</td>
+                <td>${badgeTipo}</td>
+                <td><strong>${escapeHtml(m.nome)}</strong></td>
+                <td><code>${escapeHtml(m.cpf_cnpj)}</code></td>
+                <td>${escapeHtml(m.email)}</td>
                 <td>${waLink}</td>
-                <td>${escapeHtml(prof.telefone || 'Não informado')}</td>
-                <td><span class="store-badge" style="margin-top:0; background: rgba(212, 175, 55, 0.12); color: var(--gold-light);">${escapeHtml(prof.clinica)}</span></td>
-                <td>${prof.newsletter ? 'Sim ✅' : 'Não ❌'}</td>
+                <td>${escapeHtml(m.loja_clinica)}</td>
+                <td>${m.info}</td>
                 <td>${escapeHtml(formattedDate)}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-gold btn-delete-member" data-id="${m.id}" data-type="${m.tipo}" style="border-color: rgba(255, 85, 85, 0.3); color: #fca5a5; padding: 4px 8px; font-size:11px;">🗑️ Apagar</button>
+                </td>
             `;
             profTableBody.appendChild(tr);
         });
+
+        // Adiciona listeners para exclusão individual
+        profTableBody.querySelectorAll('.btn-delete-member').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.getAttribute('data-id');
+                const tipo = btn.getAttribute('data-type');
+                
+                if (confirm(`Deseja realmente excluir este cadastro? Esta ação é irreversível!`)) {
+                    await deleteMemberRecord(id, tipo);
+                }
+            });
+        });
     }
 
+    async function deleteMemberRecord(id, tipo) {
+        const url = localStorage.getItem('personality_sb_url');
+        const key = localStorage.getItem('personality_sb_key');
+
+        const activeTable = tipo === 'prof'
+            ? (localStorage.getItem('personality_sb_profs_table') || 'profissionais_personality')
+            : (localStorage.getItem('personality_sb_vendedores_table') || 'vendedores_personality');
+
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const response = await fetch(`${cleanUrl}/rest/v1/${activeTable}?id=eq.${id}`, {
+                    method: 'DELETE',
+                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                });
+                if (!response.ok) {
+                    const txt = await response.text();
+                    throw new Error(txt || 'Erro ao deletar.');
+                }
+                alert('Cadastro apagado com sucesso!');
+            } catch (err) {
+                console.error(err);
+                deleteMemberLocally(id, tipo);
+                alert('Cadastro excluído localmente.');
+            }
+        } else {
+            deleteMemberLocally(id, tipo);
+            alert('Cadastro local excluído com sucesso.');
+        }
+
+        loadProfessionals();
+    }
+
+    function deleteMemberLocally(id, tipo) {
+        if (tipo === 'prof') {
+            const local = JSON.parse(localStorage.getItem('personality_professionals')) || [];
+            const filtered = local.filter(p => p.id !== id);
+            localStorage.setItem('personality_professionals', JSON.stringify(filtered));
+        } else {
+            const local = JSON.parse(localStorage.getItem('personality_local_vendedores')) || [];
+            const filtered = local.filter(v => v.id !== id);
+            localStorage.setItem('personality_local_vendedores', JSON.stringify(filtered));
+        }
+    }
+
+    // Limpar Banco de Membros
     if (btnClearProfs) {
         btnClearProfs.addEventListener('click', async () => {
             const url = localStorage.getItem('personality_sb_url');
             const key = localStorage.getItem('personality_sb_key');
-            const table = localStorage.getItem('personality_sb_profs_table') || 'profissionais_personality';
-
-            if (url && key) {
-                if (confirm('ATENÇÃO: Deseja apagar permanentemente todos os cadastros de profissionais salvos no banco de dados Supabase? Esta ação não pode ser desfeita!')) {
-                    try {
-                        const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
-                        const endpoint = `${cleanUrl}/rest/v1/${table}?id=not.is.null`;
-
-                        const response = await fetch(endpoint, {
-                            method: 'DELETE',
-                            headers: {
-                                'apikey': key,
-                                'Authorization': `Bearer ${key}`,
-                                'Content-Type': 'application/json'
-                            }
-                        });
-
-                        if (!response.ok) {
-                            const errText = await response.text();
-                            throw new Error(errText || 'Falha ao deletar profissionais do Supabase.');
-                        }
-
-                        localStorage.removeItem('personality_professionals');
-                        alert('Todos os cadastros do banco Supabase e dados locais foram apagados com sucesso!');
-                        loadProfessionals();
-                    } catch (error) {
-                        console.error(error);
-                        alert(`Erro ao apagar profissionais: ${error.message}`);
-                    }
-                }
-            } else {
-                if (confirm('Deseja limpar os dados de profissionais salvos localmente?')) {
-                    localStorage.removeItem('personality_professionals');
-                    alert('Cadastros locais apagados com sucesso!');
-                    loadProfessionals();
-                }
-            }
-        });
-    }
-
-    if (btnExportProfs) {
-        btnExportProfs.addEventListener('click', async () => {
-            const url = localStorage.getItem('personality_sb_url');
-            const key = localStorage.getItem('personality_sb_key');
-            const table = localStorage.getItem('personality_sb_profs_table') || 'profissionais_personality';
             
-            let profs = [];
+            const profsTable = localStorage.getItem('personality_sb_profs_table') || 'profissionais_personality';
+            const vendTable = localStorage.getItem('personality_sb_vendedores_table') || 'vendedores_personality';
+
+            const confirmAction = confirm('ATENÇÃO: Deseja apagar permanentemente TODOS os cadastros (Profissionais E Vendedores) do banco de dados? Esta ação é irreversível!');
+            if (!confirmAction) return;
+
+            const typedPass = prompt('Por favor, digite a senha master para confirmar a limpeza geral do banco de cadastros:');
+            const masterPass = localStorage.getItem('personality_master_password') || 'admin123';
+            if (typedPass !== masterPass) {
+                alert('Senha incorreta! Operação cancelada.');
+                return;
+            }
 
             if (url && key) {
                 try {
                     const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
-                    const endpoint = `${cleanUrl}/rest/v1/${table}?select=*&order=created_at.desc`;
-                    const response = await fetch(endpoint, {
-                        method: 'GET',
+                    
+                    // Limpa profissionais
+                    await fetch(`${cleanUrl}/rest/v1/${profsTable}?id=not.is.null`, {
+                        method: 'DELETE',
                         headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
                     });
-                    if (response.ok) {
-                        profs = await response.json();
-                    }
-                } catch (error) {
-                    console.error(error);
+                    
+                    // Limpa vendedores
+                    await fetch(`${cleanUrl}/rest/v1/${vendTable}?id=not.is.null`, {
+                        method: 'DELETE',
+                        headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                    });
+
+                    localStorage.removeItem('personality_professionals');
+                    localStorage.removeItem('personality_local_vendedores');
+                    
+                    alert('Banco de dados limpo com sucesso!');
+                } catch(e) {
+                    console.error(e);
+                    alert('Houve um problema durante a limpeza remota. Limpando dados locais.');
                 }
-            }
-            
-            if (profs.length === 0) {
-                profs = JSON.parse(localStorage.getItem('personality_professionals')) || [];
+            } else {
+                localStorage.removeItem('personality_professionals');
+                localStorage.removeItem('personality_local_vendedores');
+                alert('Membros locais apagados com sucesso!');
             }
 
-            if (profs.length === 0) {
-                alert('Não há dados de profissionais cadastrados para exportar.');
+            loadProfessionals();
+        });
+    }
+
+    // Exportar Planilha de Membros
+    if (btnExportProfs) {
+        btnExportProfs.addEventListener('click', () => {
+            const filtered = loadedMembersList.filter(m => {
+                if (currentFilterType === 'all') return true;
+                return m.tipo === currentFilterType;
+            });
+
+            if (filtered.length === 0) {
+                alert('Não há dados cadastrados neste filtro para exportar.');
                 return;
             }
 
             let csvContent = "\uFEFF"; 
-            csvContent += "Nome;CPF_CNPJ;Email;Whatsapp;Telefone;Clinica_Trabalho;Newsletter;Data_Cadastro\n";
+            csvContent += "Tipo;Nome;CPF_CNPJ;Email;Whatsapp;Loja_Clinica;Info_Adicional;Data_Cadastro\n";
             
-            profs.forEach(prof => {
-                const dateStr = prof.created_at || prof.timestamp || '';
+            filtered.forEach(m => {
+                const dateStr = m.created_at;
+                let formattedDate = '';
+                if (dateStr) {
+                    try {
+                        formattedDate = new Date(dateStr).toLocaleString('pt-BR');
+                    } catch(e) {}
+                }
+                const infoText = m.info.replace(/<[^>]*>/g, ''); // Remove tags html do info
+
                 const line = [
-                    `"${prof.nome.replace(/"/g, '""')}"`,
-                    `"${prof.cpf_cnpj}"`,
-                    `"${prof.email.replace(/"/g, '""')}"`,
-                    `"${prof.whatsapp}"`,
-                    `"${prof.telefone || ''}"`,
-                    `"${prof.clinica.replace(/"/g, '""')}"`,
-                    `"${prof.newsletter ? 'Sim' : 'Não'}"`,
-                    `"${dateStr}"`
+                    `"${m.tipo === 'prof' ? 'Profissional' : 'Vendedor'}"`,
+                    `"${m.nome.replace(/"/g, '""')}"`,
+                    `"${m.cpf_cnpj}"`,
+                    `"${m.email.replace(/"/g, '""')}"`,
+                    `"${m.whatsapp}"`,
+                    `"${m.loja_clinica.replace(/"/g, '""')}"`,
+                    `"${infoText.replace(/"/g, '""')}"`,
+                    `"${formattedDate}"`
                 ].join(';');
                 csvContent += line + "\n";
             });
@@ -1223,7 +1413,567 @@ document.addEventListener('DOMContentLoaded', () => {
             const downloadUrl = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.setAttribute("href", downloadUrl);
-            link.setAttribute("download", `profissionais_personality_cadastro_${new Date().toISOString().slice(0,10)}.csv`);
+            link.setAttribute("download", `personality_credenciados_${currentFilterType}_${new Date().toISOString().slice(0,10)}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    }
+
+    // -------------------------------------------------------------
+    // 5.1 Configuração de Valores de Prêmios
+    // -------------------------------------------------------------
+    const rewardsConfigForm = document.getElementById('rewardsConfigForm');
+    const rewardsLentesConfigBody = document.getElementById('rewardsLentesConfigBody');
+    const rewardsArConfigBody = document.getElementById('rewardsArConfigBody');
+
+    let adminPremiosConfig = [
+        { categoria: 'lente', nome: 'Linha IA (Exclusivos)', pontos: 50, valor: 50 },
+        { categoria: 'lente', nome: 'Linha Tradicional', pontos: 20, valor: 20 },
+        { categoria: 'lente', nome: '1.61 Gold', pontos: 30, valor: 30 },
+        { categoria: 'antirreflexo', nome: 'Anti-Reflexo Premium (Classic)', pontos: 10, valor: 10 },
+        { categoria: 'antirreflexo', nome: 'Filtro Azul (Blue Control)', pontos: 15, valor: 15 },
+        { categoria: 'antirreflexo', nome: 'Sem Tratamento Especial', pontos: 0, valor: 0 }
+    ];
+
+    async function loadRewardsConfig() {
+        if (!rewardsLentesConfigBody || !rewardsArConfigBody) return;
+
+        const url = localStorage.getItem('personality_sb_url');
+        const key = localStorage.getItem('personality_sb_key');
+        const configTable = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
+
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const response = await fetch(`${cleanUrl}/rest/v1/${configTable}?select=*`, {
+                    method: 'GET',
+                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.length > 0) {
+                        adminPremiosConfig = data;
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao carregar configuracoes de premios:', error);
+            }
+        } else {
+            const localConfig = localStorage.getItem('personality_premios_config');
+            if (localConfig) {
+                adminPremiosConfig = JSON.parse(localConfig);
+            }
+        }
+
+        renderRewardsConfig();
+    }
+
+    function renderRewardsConfig() {
+        if (!rewardsLentesConfigBody || !rewardsArConfigBody) return;
+
+        rewardsLentesConfigBody.innerHTML = '';
+        rewardsArConfigBody.innerHTML = '';
+
+        adminPremiosConfig.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${escapeHtml(item.nome)}</strong></td>
+                <td>
+                    <input type="number" class="config-points-input" data-index="${index}" value="${item.pontos}" min="0" required style="width: 100px; padding: 6px 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color:#fff;"> Pts
+                </td>
+                <td>
+                    R$ <input type="number" step="0.01" class="config-value-input" data-index="${index}" value="${item.valor}" min="0" required style="width: 120px; padding: 6px 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color:#fff;">
+                </td>
+            `;
+            if (item.categoria === 'lente') {
+                rewardsLentesConfigBody.appendChild(tr);
+            } else {
+                rewardsArConfigBody.appendChild(tr);
+            }
+        });
+    }
+
+    if (rewardsConfigForm) {
+        rewardsConfigForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Atualiza o array local
+            const pointsInputs = rewardsConfigForm.querySelectorAll('.config-points-input');
+            const valueInputs = rewardsConfigForm.querySelectorAll('.config-value-input');
+
+            pointsInputs.forEach(input => {
+                const idx = parseInt(input.getAttribute('data-index'));
+                adminPremiosConfig[idx].pontos = Number(input.value);
+            });
+
+            valueInputs.forEach(input => {
+                const idx = parseInt(input.getAttribute('data-index'));
+                adminPremiosConfig[idx].valor = Number(input.value);
+            });
+
+            const url = localStorage.getItem('personality_sb_url');
+            const key = localStorage.getItem('personality_sb_key');
+            const configTable = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
+
+            if (url && key) {
+                try {
+                    const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                    
+                    // Executa o upsert/insert para cada linha
+                    for (const item of adminPremiosConfig) {
+                        const bodyData = {
+                            categoria: item.categoria,
+                            nome: item.nome,
+                            pontos: item.pontos,
+                            valor: item.valor
+                        };
+                        
+                        // Primeiro tenta dar select pelo nome para ver se atualiza ou insere
+                        const checkRes = await fetch(`${cleanUrl}/rest/v1/${configTable}?nome=eq.${encodeURIComponent(item.nome)}`, {
+                            method: 'GET',
+                            headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                        });
+                        
+                        let method = 'POST';
+                        let endpoint = `${cleanUrl}/rest/v1/${configTable}`;
+                        
+                        if (checkRes.ok) {
+                            const exist = await checkRes.json();
+                            if (exist && exist.length > 0) {
+                                method = 'PATCH';
+                                endpoint = `${cleanUrl}/rest/v1/${configTable}?nome=eq.${encodeURIComponent(item.nome)}`;
+                            }
+                        }
+                        
+                        await fetch(endpoint, {
+                            method: method,
+                            headers: {
+                                'apikey': key,
+                                'Authorization': `Bearer ${key}`,
+                                'Content-Type': 'application/json',
+                                'Prefer': 'return=minimal'
+                            },
+                            body: JSON.stringify(bodyData)
+                        });
+                    }
+
+                    localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
+                    alert('Valores de prêmios salvos com sucesso no Supabase!');
+                } catch (err) {
+                    console.error(err);
+                    localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
+                    alert('Houve erro no Supabase. Configuração salva localmente.');
+                }
+            } else {
+                localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
+                alert('Valores de prêmios locais salvos com sucesso!');
+            }
+
+            loadRewardsConfig();
+        });
+    }
+
+    // -------------------------------------------------------------
+    // 5.2 Relatório Gerencial e Conciliação de Prêmios (O.S.)
+    // -------------------------------------------------------------
+    const adminPremiosTableBody = document.getElementById('adminPremiosTableBody');
+    const adminConsolidadoTableBody = document.getElementById('adminConsolidadoTableBody');
+    const btnExportPremios = document.getElementById('btnExportPremios');
+    
+    // Filtros
+    const filterPremVendedor = document.getElementById('filterPremVendedor');
+    const filterPremLoja = document.getElementById('filterPremLoja');
+    const filterPremStatus = document.getElementById('filterPremStatus');
+
+    let allSubmittedSales = [];
+
+    // Listeners de Filtros
+    [filterPremVendedor, filterPremLoja, filterPremStatus].forEach(el => {
+        if (el) el.addEventListener('input', () => renderPremiosManager());
+        if (el && el.tagName === 'SELECT') el.addEventListener('change', () => renderPremiosManager());
+    });
+
+    async function loadPremiosManager() {
+        if (!adminPremiosTableBody) return;
+
+        const url = localStorage.getItem('personality_sb_url');
+        const key = localStorage.getItem('personality_sb_key');
+        const table = localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
+
+        if (url && key) {
+            adminPremiosTableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted);">Buscando lançamentos...</td></tr>`;
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const response = await fetch(`${cleanUrl}/rest/v1/${table}?select=*&order=created_at.desc`, {
+                    method: 'GET',
+                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                });
+                if (response.ok) {
+                    allSubmittedSales = await response.json();
+                } else {
+                    throw new Error('Falha ao buscar.');
+                }
+            } catch (error) {
+                console.error(error);
+                allSubmittedSales = JSON.parse(localStorage.getItem('personality_local_premios')) || [];
+            }
+        } else {
+            allSubmittedSales = JSON.parse(localStorage.getItem('personality_local_premios')) || [];
+        }
+
+        renderPremiosManager();
+    }
+
+    function renderPremiosManager() {
+        if (!adminPremiosTableBody || !adminConsolidadoTableBody) return;
+
+        adminPremiosTableBody.innerHTML = '';
+        adminConsolidadoTableBody.innerHTML = '';
+
+        // Filtra dados com base nos inputs
+        const vendedorVal = filterPremVendedor ? filterPremVendedor.value.trim().toLowerCase() : '';
+        const lojaVal = filterPremLoja ? filterPremLoja.value.trim().toLowerCase() : '';
+        const statusVal = filterPremStatus ? filterPremStatus.value : '';
+
+        const filteredSales = allSubmittedSales.filter(sale => {
+            const vendMatch = !vendedorVal || (sale.vendedor_nome || '').toLowerCase().includes(vendedorVal);
+            const lojaMatch = !lojaVal || (sale.loja || '').toLowerCase().includes(lojaVal);
+            const statusMatch = !statusVal || sale.status === statusVal;
+            return vendMatch && lojaMatch && statusMatch;
+        });
+
+        // 1. Calcula Resumos Gerais baseando-se em TODOS os lançamentos (não filtrados)
+        let valPendente = 0, countPendente = 0;
+        let valSaldoAPagar = 0, countSaldoAPagar = 0;
+        let valTotalPago = 0, countTotalPago = 0;
+
+        allSubmittedSales.forEach(sale => {
+            const totalVal = Number(sale.valor_lente) + Number(sale.valor_ar);
+            if (sale.status === 'Pendente') {
+                valPendente += totalVal;
+                countPendente++;
+            } else if (sale.status === 'Validado') {
+                valSaldoAPagar += totalVal;
+                countSaldoAPagar++;
+            } else if (sale.status === 'Pago') {
+                valTotalPago += totalVal;
+                countTotalPago++;
+            }
+        });
+
+        document.getElementById('adminPendenteVal').textContent = `R$ ${valPendente.toFixed(2)}`;
+        document.getElementById('adminPendenteValOS').textContent = `${countPendente} O.S. Pendentes`;
+
+        document.getElementById('adminSaldoPagar').textContent = `R$ ${valSaldoAPagar.toFixed(2)}`;
+        document.getElementById('adminSaldoPagarOS').textContent = `${countSaldoAPagar} O.S. Validadas`;
+
+        document.getElementById('adminTotalPago').textContent = `R$ ${valTotalPago.toFixed(2)}`;
+        document.getElementById('adminTotalPagoOS').textContent = `${countTotalPago} O.S. Pagas`;
+
+        // 2. Renderiza Tabela Detalhada
+        if (filteredSales.length === 0) {
+            adminPremiosTableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Nenhum lançamento corresponde aos filtros ativos.</td></tr>`;
+        } else {
+            filteredSales.forEach(sale => {
+                const totalVal = Number(sale.valor_lente) + Number(sale.valor_ar);
+                const totalPts = Number(sale.pontos_lente) + Number(sale.pontos_ar);
+
+                let statusText = '';
+                let actionBtn = '';
+
+                if (sale.status === 'Pendente') {
+                    statusText = `<span class="status-vendedor-pendente">Pendente</span>`;
+                    actionBtn = `<button class="btn btn-success btn-xs btn-os-validate" data-id="${sale.id}" style="padding: 4px 8px; font-size:11px; margin-right: 5px;">Validar O.S. ✅</button>`;
+                } else if (sale.status === 'Validado') {
+                    statusText = `<span class="status-vendedor-validado">A Pagar</span>`;
+                    actionBtn = `<button class="btn btn-primary btn-xs btn-os-pay" data-id="${sale.id}" style="padding: 4px 8px; font-size:11px; margin-right: 5px; background: var(--gold-light); color:#000;">Marcar Pago 💵</button>`;
+                } else {
+                    statusText = `<span class="status-vendedor-pago">Pago</span>`;
+                }
+
+                // Botão de deletar lançamento
+                actionBtn += `<button class="btn btn-outline-gold btn-xs btn-os-delete" data-id="${sale.id}" style="border-color: rgba(255, 85, 85, 0.3); color: #fca5a5; padding: 4px 8px; font-size:11px;">🗑️ Excluir</button>`;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${escapeHtml(sale.vendedor_nome)}</strong></td>
+                    <td>${escapeHtml(sale.loja)}</td>
+                    <td><code>${escapeHtml(sale.os)}</code></td>
+                    <td>${escapeHtml(sale.cliente_nome)}</td>
+                    <td>${escapeHtml(sale.lente_familia)}</td>
+                    <td>${escapeHtml(sale.ar_familia)}</td>
+                    <td><strong>R$ ${totalVal.toFixed(2)}</strong> <br><small style="color:var(--text-muted);">${totalPts} Pts</small></td>
+                    <td>${statusText}</td>
+                    <td>${actionBtn}</td>
+                `;
+                adminPremiosTableBody.appendChild(tr);
+            });
+        }
+
+        // 3. Renderiza Tabela de Payout Consolidados por Vendedor
+        // Agrupa todas as O.S. com status 'Validado' (A pagar)
+        const validadosPorVendedor = {};
+        
+        allSubmittedSales.forEach(sale => {
+            if (sale.status === 'Validado') {
+                const vId = sale.vendedor_id;
+                if (!validadosPorVendedor[vId]) {
+                    validadosPorVendedor[vId] = {
+                        vendedor_nome: sale.vendedor_nome,
+                        loja: sale.loja,
+                        total_apagar: 0,
+                        vendedor_id: vId
+                    };
+                }
+                validadosPorVendedor[vId].total_apagar += (Number(sale.valor_lente) + Number(sale.valor_ar));
+            }
+        });
+
+        // Para pegar o WhatsApp e o CPF do vendedor, vamos mapear com a lista de vendedores locais/remotos
+        const sellersList = loadedMembersList.filter(m => m.tipo === 'vend');
+        const consolidadoRows = Object.values(validadosPorVendedor);
+
+        if (consolidadoRows.length === 0) {
+            adminConsolidadoTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Nenhum vendedor possui saldo pendente de pagamento no momento.</td></tr>`;
+        } else {
+            consolidadoRows.forEach(row => {
+                const sellerInfo = sellersList.find(s => s.id === row.vendedor_id) || {};
+                
+                const rawPhone = (sellerInfo.whatsapp || '').replace(/\D/g, '');
+                const waLink = rawPhone ? `<a href="https://wa.me/55${rawPhone}" target="_blank" class="wa-link">💬 ${escapeHtml(sellerInfo.whatsapp)}</a>` : 'Não informado';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${escapeHtml(row.vendedor_nome)}</strong></td>
+                    <td><code>${escapeHtml(sellerInfo.cpf_cnpj || 'n/d')}</code></td>
+                    <td>${escapeHtml(row.loja)}</td>
+                    <td>${waLink}</td>
+                    <td><strong style="color: #10b981; font-size:16px;">R$ ${row.total_apagar.toFixed(2)}</strong></td>
+                    <td>
+                        <button class="btn btn-success btn-sm btn-bulk-payout" data-vendedor-id="${row.vendedor_id}" data-name="${escapeHtml(row.vendedor_nome)}" style="font-weight:700;">Pagar Todos desse Vendedor 💰</button>
+                    </td>
+                `;
+                adminConsolidadoTableBody.appendChild(tr);
+            });
+        }
+
+        // Configura os Listeners dos botões de ação do relatório
+        configureRelatorioActions();
+    }
+
+    function configureRelatorioActions() {
+        // Validar O.S.
+        const osValidateBtns = adminPremiosTableBody.querySelectorAll('.btn-os-validate');
+        if (osValidateBtns) {
+            osValidateBtns.forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const id = btn.getAttribute('data-id');
+                    await updateSaleStatus(id, 'Validado');
+                });
+            });
+        }
+
+        // Pagar O.S. Individual
+        const osPayBtns = adminPremiosTableBody.querySelectorAll('.btn-os-pay');
+        if (osPayBtns) {
+            osPayBtns.forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const id = btn.getAttribute('data-id');
+                    await updateSaleStatus(id, 'Pago');
+                });
+            });
+        }
+
+        // Excluir O.S.
+        const osDeleteBtns = adminPremiosTableBody.querySelectorAll('.btn-os-delete');
+        if (osDeleteBtns) {
+            osDeleteBtns.forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const id = btn.getAttribute('data-id');
+                    if (confirm('Deseja realmente deletar este lançamento de venda do sistema?')) {
+                        await deleteSaleRecord(id);
+                    }
+                });
+            });
+        }
+
+        // Pagar em Lote por Vendedor
+        const bulkPayoutBtns = adminConsolidadoTableBody.querySelectorAll('.btn-bulk-payout');
+        if (bulkPayoutBtns) {
+            bulkPayoutBtns.forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const vendedorId = btn.getAttribute('data-vendedor-id');
+                    const vendedorName = btn.getAttribute('data-name');
+                    if (confirm(`Confirmar o pagamento geral de prêmios em lote para o vendedor "${vendedorName}"? Todas as O.S. validadas dele serão marcadas como Pagas.`)) {
+                        await payBulkSalesForSeller(vendedorId);
+                    }
+                });
+            });
+        }
+    }
+
+    async function updateSaleStatus(saleId, newStatus) {
+        const url = localStorage.getItem('personality_sb_url');
+        const key = localStorage.getItem('personality_sb_key');
+        const table = localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
+
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const response = await fetch(`${cleanUrl}/rest/v1/${table}?id=eq.${saleId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': key,
+                        'Authorization': `Bearer ${key}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                if (!response.ok) {
+                    const txt = await response.text();
+                    throw new Error(txt);
+                }
+            } catch (err) {
+                console.error(err);
+                updateLocalSaleStatus(saleId, newStatus);
+            }
+        } else {
+            updateLocalSaleStatus(saleId, newStatus);
+        }
+
+        loadPremiosManager();
+    }
+
+    function updateLocalSaleStatus(saleId, newStatus) {
+        const local = JSON.parse(localStorage.getItem('personality_local_premios')) || [];
+        const found = local.find(s => s.id === saleId);
+        if (found) {
+            found.status = newStatus;
+            localStorage.setItem('personality_local_premios', JSON.stringify(local));
+        }
+    }
+
+    async function deleteSaleRecord(saleId) {
+        const url = localStorage.getItem('personality_sb_url');
+        const key = localStorage.getItem('personality_sb_key');
+        const table = localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
+
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const response = await fetch(`${cleanUrl}/rest/v1/${table}?id=eq.${saleId}`, {
+                    method: 'DELETE',
+                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                });
+                if (!response.ok) {
+                    throw new Error('Erro ao deletar.');
+                }
+            } catch (err) {
+                console.error(err);
+                deleteLocalSale(saleId);
+            }
+        } else {
+            deleteLocalSale(saleId);
+        }
+
+        loadPremiosManager();
+    }
+
+    function deleteLocalSale(saleId) {
+        const local = JSON.parse(localStorage.getItem('personality_local_premios')) || [];
+        const filtered = local.filter(s => s.id !== saleId);
+        localStorage.setItem('personality_local_premios', JSON.stringify(filtered));
+    }
+
+    async function payBulkSalesForSeller(vendedorId) {
+        const url = localStorage.getItem('personality_sb_url');
+        const key = localStorage.getItem('personality_sb_key');
+        const table = localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
+
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                // Filtra as validadas desse vendedor
+                const response = await fetch(`${cleanUrl}/rest/v1/${table}?vendedor_id=eq.${vendedorId}&status=eq.Validado`, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': key,
+                        'Authorization': `Bearer ${key}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: 'Pago' })
+                });
+                if (!response.ok) {
+                    throw new Error('Falha no update em lote.');
+                }
+                alert('Pagamento geral em lote concluído com sucesso!');
+            } catch (err) {
+                console.error(err);
+                payLocalBulkSales(vendedorId);
+                alert('Pagamento geral concluído localmente.');
+            }
+        } else {
+            payLocalBulkSales(vendedorId);
+            alert('Pagamento geral concluído localmente.');
+        }
+
+        loadPremiosManager();
+    }
+
+    function payLocalBulkSales(vendedorId) {
+        const local = JSON.parse(localStorage.getItem('personality_local_premios')) || [];
+        local.forEach(s => {
+            if (s.vendedor_id === vendedorId && s.status === 'Validado') {
+                s.status = 'Pago';
+            }
+        });
+        localStorage.setItem('personality_local_premios', JSON.stringify(local));
+    }
+
+    // Exportar CSV de Lançamentos de Prêmios
+    if (btnExportPremios) {
+        btnExportPremios.addEventListener('click', () => {
+            if (allSubmittedSales.length === 0) {
+                alert('Não há dados de lançamentos para exportar.');
+                return;
+            }
+
+            let csvContent = "\uFEFF"; 
+            csvContent += "Vendedor;Loja;OS;Cliente;Lente;Antirreflexo;Pontos_Total;Premio_Total_R$;Status;Data_Cadastro\n";
+            
+            allSubmittedSales.forEach(s => {
+                const totPts = Number(s.pontos_lente) + Number(s.pontos_ar);
+                const totVal = Number(s.valor_lente) + Number(s.valor_ar);
+                
+                let formattedDate = '';
+                if (s.created_at) {
+                    try {
+                        formattedDate = new Date(s.created_at).toLocaleString('pt-BR');
+                    } catch(e) {}
+                }
+
+                const line = [
+                    `"${s.vendedor_nome.replace(/"/g, '""')}"`,
+                    `"${s.loja.replace(/"/g, '""')}"`,
+                    `"${s.os}"`,
+                    `"${s.cliente_nome.replace(/"/g, '""')}"`,
+                    `"${s.lente_familia}"`,
+                    `"${s.ar_familia}"`,
+                    `"${totPts}"`,
+                    `"${totVal.toFixed(2)}"`,
+                    `"${s.status}"`,
+                    `"${formattedDate}"`
+                ].join(';');
+                csvContent += line + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const downloadUrl = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", downloadUrl);
+            link.setAttribute("download", `personality_relatorio_premios_${new Date().toISOString().slice(0,10)}.csv`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
