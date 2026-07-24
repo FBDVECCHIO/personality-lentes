@@ -12,7 +12,7 @@
 /* Layout de Duas Colunas do Dashboard com Prevenção de Transbordamento */
 .admin-container {
     display: grid;
-    grid-template-columns: 200px minmax(0, 1fr);
+    grid-template-columns: 235px minmax(0, 1fr);
     gap: 24px;
     align-items: flex-start;
     padding-top: 30px;
