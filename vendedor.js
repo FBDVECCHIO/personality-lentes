@@ -283,7 +283,6 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.querySelector('.btn-text').textContent = 'Cadastrando...';
 
             const vendedorData = {
-                id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15),
                 nome: nameVal,
                 cpf: cpfVal,
                 loja: storeVal,
@@ -377,7 +376,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function saveVendedorLocally(data) {
         const local = JSON.parse(localStorage.getItem('personality_local_vendedores')) || [];
-        local.push(data);
+        const localData = {
+            id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15),
+            ...data
+        };
+        local.push(localData);
         localStorage.setItem('personality_local_vendedores', JSON.stringify(local));
     }
 
@@ -660,7 +663,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const arConf = currentRewardsConfig.find(c => c.categoria === 'antirreflexo' && c.nome === arVal) || { pontos: 0, valor: 0 };
 
             const saleData = {
-                id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15),
                 vendedor_id: activeId,
                 vendedor_nome: activeNome,
                 loja: activeLoja,
@@ -730,7 +732,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function saveSaleLocally(data) {
         const local = JSON.parse(localStorage.getItem('personality_local_premios')) || [];
-        local.push(data);
+        const localData = {
+            id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15),
+            ...data
+        };
+        local.push(localData);
         localStorage.setItem('personality_local_premios', JSON.stringify(local));
     }
 
