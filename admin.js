@@ -1658,6 +1658,100 @@ document.addEventListener('DOMContentLoaded', () => {
         loadRewardsConfig();
     }
 
+    // Carga em Massa de Catálogo Completo Personality (v3.60)
+    const btnBulkImportCatalog = document.getElementById('btnBulkImportCatalog');
+    if (btnBulkImportCatalog) {
+        btnBulkImportCatalog.addEventListener('click', async () => {
+            const confirmMsg = "Tem certeza que deseja importar em massa o catálogo completo de lentes e tratamentos da Personality?\n\nOs produtos serão cadastrados com 0 pontos e 0 prêmio em R$, e você poderá configurar o que pagará por produto clicando no botão Editar (✏️) na listagem abaixo.";
+            if (!confirm(confirmMsg)) return;
+
+            const catalog = [
+                // Linha IA (Lentes de Inteligência Artificial)
+                { categoria: 'lente', nome: 'Gold Design IA', pontos: 0, valor: 0 },
+                { categoria: 'lente', nome: 'Premium HD IA', pontos: 0, valor: 0 },
+                { categoria: 'lente', nome: 'Tecno Line IA', pontos: 0, valor: 0 },
+                { categoria: 'lente', nome: 'Gold Design Office IA', pontos: 0, valor: 0 },
+                { categoria: 'lente', nome: 'Gold Comfort IA', pontos: 0, valor: 0 },
+                { categoria: 'lente', nome: 'Gold Premium IA', pontos: 0, valor: 0 },
+
+                // Linha Tradicional (Lentes Digitais/Tradicionais)
+                { categoria: 'lente', nome: 'Gold Design Digital', pontos: 0, valor: 0 },
+                { categoria: 'lente', nome: 'Premium HD Digital', pontos: 0, valor: 0 },
+                { categoria: 'lente', nome: 'Tecno Line Digital', pontos: 0, valor: 0 },
+                { categoria: 'lente', nome: 'Maxvision Digital', pontos: 0, valor: 0 },
+                { categoria: 'lente', nome: 'Multi Premium', pontos: 0, valor: 0 },
+                { categoria: 'lente', nome: 'Gold Line', pontos: 0, valor: 0 },
+                { categoria: 'lente', nome: 'Gold Design Office', pontos: 0, valor: 0 },
+                { categoria: 'lente', nome: 'Gold Comfort', pontos: 0, valor: 0 },
+                { categoria: 'lente', nome: 'Gold Premium', pontos: 0, valor: 0 },
+
+                // Tratamentos (Antirreflexos)
+                { categoria: 'antirreflexo', nome: 'Antirreflexo Classic', pontos: 0, valor: 0 },
+                { categoria: 'antirreflexo', nome: 'Antirreflexo Premium (Super Clean)', pontos: 0, valor: 0 },
+                { categoria: 'antirreflexo', nome: 'Filtro Azul (Blue Control)', pontos: 0, valor: 0 },
+                { categoria: 'antirreflexo', nome: 'Fotossensível (Active Transitions)', pontos: 0, valor: 0 },
+                { categoria: 'antirreflexo', nome: 'Sem Antirreflexo (Básico)', pontos: 0, valor: 0 }
+            ];
+
+            // Filtra os itens que já existem
+            const newItems = [];
+            catalog.forEach(item => {
+                const exists = adminPremiosConfig.some(existing => existing.nome.toLowerCase() === item.nome.toLowerCase());
+                if (!exists) {
+                    newItems.push(item);
+                }
+            });
+
+            if (newItems.length === 0) {
+                alert("Todos os produtos do catálogo já estão cadastrados na lista!");
+                return;
+            }
+
+            const url = getSupabaseUrl();
+            const key = getSupabaseKey();
+            const configTable = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
+
+            btnBulkImportCatalog.disabled = true;
+            btnBulkImportCatalog.textContent = 'Importando... ⏳';
+
+            if (url && key) {
+                try {
+                    const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                    const response = await fetch(`${cleanUrl}/rest/v1/${configTable}`, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': key,
+                            'Authorization': `Bearer ${key}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify(newItems)
+                    });
+
+                    if (response.ok) {
+                        alert(`${newItems.length} novos itens do catálogo importados com sucesso!`);
+                    } else {
+                        throw new Error('Falha no upload para a base online.');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    alert("Aviso: Conexão online indisponível. Salvando importação localmente.");
+                }
+            } else {
+                alert(`${newItems.length} novos itens do catálogo importados localmente!`);
+            }
+
+            // Atualiza memória local e renderiza
+            adminPremiosConfig.push(...newItems);
+            localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
+            
+            btnBulkImportCatalog.disabled = false;
+            btnBulkImportCatalog.textContent = '📦 Importar Catálogo Completo Personality';
+
+            loadRewardsConfig();
+        });
+    }
+
     // Listener para o formulário de adicionar novo produto de prêmio
     const addRewardProductForm = document.getElementById('addRewardProductForm');
     if (addRewardProductForm) {
