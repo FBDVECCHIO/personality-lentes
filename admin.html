@@ -23,7 +23,10 @@
             <form id="masterAuthForm">
                 <div class="input-group">
                     <label for="masterPasswordInput">Senha de Acesso Master</label>
-                    <input type="password" id="masterPasswordInput" placeholder="Digite a senha master..." required autofocus autocomplete="current-password">
+                    <div class="password-wrapper">
+                        <input type="password" id="masterPasswordInput" placeholder="Digite a senha master..." required autofocus autocomplete="current-password" style="padding-right: 40px !important;">
+                        <button type="button" class="password-toggle-btn" tabindex="-1">👁️</button>
+                    </div>
                     <span class="error-message" id="masterAuthError" style="display: none; color: #ff5555; margin-top: 6px;">Senha incorreta! Tente novamente.</span>
                 </div>
                 <button type="submit" class="btn btn-gold btn-full">Entrar no Painel Master 🔑</button>
@@ -95,7 +98,10 @@
 
                         <div class="input-group">
                             <label for="sbKey">Anon Key (Public API Key)</label>
-                            <input type="password" id="sbKey" placeholder="Ex: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." required>
+                            <div class="password-wrapper">
+                                <input type="password" id="sbKey" placeholder="Ex: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." required style="padding-right: 40px !important;">
+                                <button type="button" class="password-toggle-btn" tabindex="-1">👁️</button>
+                            </div>
                             <p class="input-hint">Encontrado em: *Project Settings > API > Project API keys (anon public)*.</p>
                         </div>
 
@@ -441,7 +447,10 @@ create policy "Permitir delete em os_autorizadas_personality" on os_autorizadas_
                     <form id="changeMasterPasswordForm">
                         <div class="input-group">
                             <label for="newMasterPassword">Nova Senha Master</label>
-                            <input type="password" id="newMasterPassword" placeholder="Digite a nova senha..." required minlength="4">
+                            <div class="password-wrapper">
+                                <input type="password" id="newMasterPassword" placeholder="Digite a nova senha..." required minlength="4" style="padding-right: 40px !important;">
+                                <button type="button" class="password-toggle-btn" tabindex="-1">👁️</button>
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-gold">Atualizar Senha Master 💾</button>
                     </form>

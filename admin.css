@@ -581,3 +581,30 @@ textarea {
     font-size: 12px !important;
     font-weight: 700 !important;
 }
+
+/* Password Toggle CSS (v3.60) */
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+.password-toggle-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent !important;
+    border: none !important;
+    color: rgba(255, 255, 255, 0.45) !important;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 6px;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    z-index: 10;
+}
+.password-toggle-btn:hover {
+    color: var(--gold-light) !important;
+}

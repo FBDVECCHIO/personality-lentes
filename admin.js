@@ -12,6 +12,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const changeMasterPasswordForm = document.getElementById('changeMasterPasswordForm');
     const newMasterPassword = document.getElementById('newMasterPassword');
 
+    // Password Visibility Toggle (Olho) (v3.60)
+    document.querySelectorAll('.password-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const wrapper = btn.closest('.password-wrapper');
+            if (!wrapper) return;
+            const input = wrapper.querySelector('input');
+            if (!input) return;
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = '🔒';
+            } else {
+                input.type = 'password';
+                btn.textContent = '👁️';
+            }
+        });
+    });
+
     const getMasterPassword = () => {
         return localStorage.getItem('personality_master_password') || 'admin123';
     };

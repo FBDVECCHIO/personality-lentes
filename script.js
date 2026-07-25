@@ -619,6 +619,25 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
         });
     });
 
+    // Password Visibility Toggle (Olho) (v3.60)
+    document.querySelectorAll('.password-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const wrapper = btn.closest('.password-wrapper');
+            if (!wrapper) return;
+            const input = wrapper.querySelector('input');
+            if (!input) return;
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = '🔒'; // Tranca para ocultar
+            } else {
+                input.type = 'password';
+                btn.textContent = '👁️'; // Olho para revelar
+            }
+        });
+    });
+
     // -------------------------------------------------------------
     // 6. Portal do Parceiro Licenciado (Login & Leads Filtrados)
     // -------------------------------------------------------------

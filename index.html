@@ -1990,7 +1990,10 @@
                     </div>
                     <div class="input-group" style="margin-bottom: 24px;">
                         <label for="partnerPassword">Senha</label>
-                        <input type="password" id="partnerPassword" placeholder="Senha" required>
+                        <div class="password-wrapper">
+                            <input type="password" id="partnerPassword" placeholder="Senha" required style="padding-right: 40px !important;">
+                            <button type="button" class="password-toggle-btn" tabindex="-1">👁️</button>
+                        </div>
                         <span class="error-message" id="partnerLoginError" style="margin-top: 10px;">Usuário ou senha incorretos.</span>
                     </div>
                     <button type="submit" class="btn btn-gold btn-full" id="btnPartnerLogin">
