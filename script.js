@@ -1484,18 +1484,34 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
     loadDownloadsList();
 
     // -------------------------------------------------------------
-    // Golden Wave 60FPS Video Canvas Engine para a Home
+    // Engine de Animação de Fundo Multi-Estado 60FPS (v3.62)
     // -------------------------------------------------------------
     const heroCanvas = document.getElementById('heroGoldenWaveCanvas');
     if (heroCanvas) {
         const ctx = heroCanvas.getContext('2d');
-        let width = heroCanvas.width = heroCanvas.offsetWidth || window.innerWidth;
-        let height = heroCanvas.height = heroCanvas.offsetHeight || window.innerHeight;
+        let width = heroCanvas.width = window.innerWidth;
+        let height = heroCanvas.height = window.innerHeight;
 
         window.addEventListener('resize', () => {
             if (!heroCanvas) return;
-            width = heroCanvas.width = heroCanvas.offsetWidth || window.innerWidth;
-            height = heroCanvas.height = heroCanvas.offsetHeight || window.innerHeight;
+            width = heroCanvas.width = window.innerWidth;
+            height = heroCanvas.height = window.innerHeight;
+        });
+
+        // Mouse tracking com inércia física
+        let mouseX = width / 2;
+        let mouseY = height / 2;
+        let targetMouseX = width / 2;
+        let targetMouseY = height / 2;
+        let isMoving = false;
+        let moveTimer;
+
+        window.addEventListener('mousemove', (e) => {
+            targetMouseX = e.clientX;
+            targetMouseY = e.clientY;
+            isMoving = true;
+            clearTimeout(moveTimer);
+            moveTimer = setTimeout(() => { isMoving = false; }, 3000);
         });
 
         let step = 0;
@@ -1516,19 +1532,73 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
             opacity: Math.random() * 0.5 + 0.25
         }));
 
-        function drawGoldenWaves() {
-            ctx.clearRect(0, 0, width, height);
+        // Seções para cálculo de scroll
+        const secHome = document.getElementById('home');
+        const secMarca = document.getElementById('marca');
+        const secLenteGold = document.getElementById('lente-161-gold');
+        const secProdutos = document.getElementById('produtos');
+        let scrollProgress = 0;
 
-            ctx.fillStyle = '#08080a';
-            ctx.fillRect(0, 0, width, height);
+        function updateScrollProgress() {
+            if (!secHome || !secMarca || !secLenteGold || !secProdutos) return;
+            const y = window.scrollY;
+            
+            const startMarca = secMarca.offsetTop;
+            const startLenteGold = secLenteGold.offsetTop;
+            const startProdutos = secProdutos.offsetTop;
 
-            step += 0.7;
+            if (y < startMarca) {
+                scrollProgress = y / startMarca;
+            } else if (y < startLenteGold) {
+                scrollProgress = 1 + (y - startMarca) / (startLenteGold - startMarca);
+            } else if (y < startProdutos) {
+                scrollProgress = 2 + (y - startLenteGold) / (startProdutos - startLenteGold);
+            } else {
+                const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+                const remaining = maxScroll - startProdutos;
+                if (remaining > 0) {
+                    scrollProgress = 3 + Math.min(1, (y - startProdutos) / remaining);
+                } else {
+                    scrollProgress = 3;
+                }
+            }
+        }
 
+        function getBgColor(progress) {
+            const c0 = [8, 8, 10]; // #08080a
+            const c1 = [9, 9, 12]; // #09090c
+            const c2 = [20, 18, 14]; // #14120e
+            const c3 = [8, 8, 11]; // #08080b
+            
+            let r, g, b;
+            if (progress < 1) {
+                const f = progress;
+                r = c0[0] + (c1[0] - c0[0]) * f;
+                g = c0[1] + (c1[1] - c0[1]) * f;
+                b = c0[2] + (c1[2] - c0[2]) * f;
+            } else if (progress < 2) {
+                const f = progress - 1;
+                r = c1[0] + (c2[0] - c1[0]) * f;
+                g = c1[1] + (c2[1] - c1[1]) * f;
+                b = c1[2] + (c2[2] - c1[2]) * f;
+            } else {
+                const f = Math.min(1, progress - 2);
+                r = c2[0] + (c3[0] - c2[0]) * f;
+                g = c2[1] + (c3[1] - c2[1]) * f;
+                b = c2[2] + (c3[2] - c2[2]) * f;
+            }
+            return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+        }
+
+        function drawWaves(alpha) {
+            if (alpha <= 0.001) return;
+            ctx.save();
+            ctx.globalAlpha = alpha;
             lines.forEach((line) => {
                 ctx.beginPath();
                 const centerY = height * line.yOffset;
 
-                for (let x = 0; x <= width; x += 5) {
+                for (let x = 0; x <= width; x += 10) {
                     const y = centerY + Math.sin(x * line.wavelength + step * line.speed) * line.amplitude + Math.cos(x * 0.0008 + step * 0.004) * 18;
                     if (x === 0) {
                         ctx.moveTo(x, y);
@@ -1546,14 +1616,220 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
 
                 ctx.strokeStyle = grad;
                 ctx.lineWidth = line.width;
-                ctx.shadowBlur = 18;
-                ctx.shadowColor = 'rgba(212, 175, 55, 0.45)';
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = 'rgba(212, 175, 55, 0.3)';
                 ctx.stroke();
             });
+            ctx.restore();
+        }
 
+        function drawRefractionRays(alpha) {
+            if (alpha <= 0.001) return;
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            
+            const lensX = width * 0.5;
+            
+            // Desenha a linha divisória da lente
+            ctx.strokeStyle = 'rgba(255, 215, 0, 0.08)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(lensX, 0);
+            ctx.lineTo(lensX, height);
+            ctx.stroke();
+            
+            // Desenha a borda curva da lente
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(255, 215, 0, 0.18)';
+            ctx.lineWidth = 1.5;
+            ctx.arc(lensX - 250, height/2, 400, -Math.PI/6, Math.PI/6);
+            ctx.stroke();
+            
+            const rayYPositions = [height * 0.35, height * 0.5, height * 0.65];
+            const colors = [
+                'rgba(255, 100, 100, 0.35)', // Vermelho
+                'rgba(255, 215, 0, 0.5)',    // Dourado
+                'rgba(100, 200, 255, 0.35)'  // Azul
+            ];
+            
+            rayYPositions.forEach((yPos, index) => {
+                ctx.beginPath();
+                ctx.strokeStyle = colors[index];
+                ctx.lineWidth = 2.5;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = colors[index];
+                ctx.moveTo(0, yPos);
+                ctx.lineTo(lensX, yPos);
+                ctx.stroke();
+                
+                // Refração (espectro)
+                const spectrumCount = 5;
+                for (let i = 0; i < spectrumCount; i++) {
+                    const angleFactor = (i - (spectrumCount - 1) / 2) * 0.06;
+                    const endY = yPos + (width - lensX) * angleFactor;
+                    
+                    ctx.beginPath();
+                    const opacity = 0.45 - Math.abs(angleFactor) * 0.7;
+                    ctx.strokeStyle = `rgba(212, 175, 55, ${opacity})`;
+                    ctx.lineWidth = 1.2;
+                    ctx.shadowBlur = 4;
+                    ctx.moveTo(lensX, yPos);
+                    ctx.lineTo(width, endY);
+                    ctx.stroke();
+                }
+            });
+            ctx.restore();
+        }
+
+        function drawGoldGlow(alpha) {
+            if (alpha <= 0.001) return;
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            
+            const pulse = 0.5 + Math.sin(step * 0.02) * 0.15;
+            const grad = ctx.createRadialGradient(width/2, height/2, 50, width/2, height/2, Math.max(width, height) * 0.65);
+            grad.addColorStop(0, `rgba(197, 168, 92, ${0.1 * pulse})`);
+            grad.addColorStop(0.5, `rgba(197, 168, 92, ${0.03 * pulse})`);
+            grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, width, height);
+            
+            ctx.strokeStyle = 'rgba(212, 175, 55, 0.03)';
+            ctx.lineWidth = 1.2;
+            for (let r = 100; r < 400; r += 80) {
+                ctx.beginPath();
+                ctx.arc(width/2, height/2, r + Math.sin(step * 0.01 + r) * 8, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        function drawLensGrid(alpha) {
+            if (alpha <= 0.001) return;
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            
+            ctx.strokeStyle = 'rgba(197, 168, 92, 0.07)';
+            ctx.lineWidth = 0.8;
+            
+            const gridSpacing = 60;
+            const lensRadius = 160;
+            const lensStrength = 0.45;
+            
+            // Grade vertical
+            for (let x = 0; x < width + gridSpacing; x += gridSpacing) {
+                ctx.beginPath();
+                for (let y = 0; y < height + 10; y += 10) {
+                    const distorted = distortPoint(x, y, mouseX, mouseY, lensRadius, lensStrength);
+                    if (y === 0) {
+                        ctx.moveTo(distorted.x, distorted.y);
+                    } else {
+                        ctx.lineTo(distorted.x, distorted.y);
+                    }
+                }
+                ctx.stroke();
+            }
+            
+            // Grade horizontal
+            for (let y = 0; y < height + gridSpacing; y += gridSpacing) {
+                ctx.beginPath();
+                for (let x = 0; x < width + 10; x += 10) {
+                    const distorted = distortPoint(x, y, mouseX, mouseY, lensRadius, lensStrength);
+                    if (x === 0) {
+                        ctx.moveTo(distorted.x, distorted.y);
+                    } else {
+                        ctx.lineTo(distorted.x, distorted.y);
+                    }
+                }
+                ctx.stroke();
+            }
+            
+            // Borda da lente
+            ctx.beginPath();
+            ctx.arc(mouseX, mouseY, lensRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(212, 175, 55, 0.28)';
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 12;
+            ctx.shadowColor = 'rgba(212, 175, 55, 0.35)';
+            ctx.stroke();
+            
+            // Reflexo
+            ctx.beginPath();
+            ctx.arc(mouseX, mouseY, lensRadius - 5, -Math.PI / 3, -Math.PI / 8);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+
+        function distortPoint(x, y, cx, cy, r, strength) {
+            const dx = x - cx;
+            const dy = y - cy;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < r) {
+                const factor = Math.sin((dist / r) * (Math.PI / 2));
+                const newDist = dist * (1 - strength * (1 - factor));
+                const angle = Math.atan2(dy, dx);
+                return {
+                    x: cx + Math.cos(angle) * newDist,
+                    y: cy + Math.sin(angle) * newDist
+                };
+            }
+            return { x, y };
+        }
+
+        function drawGoldenWaves() {
+            ctx.clearRect(0, 0, width, height);
+
+            updateScrollProgress();
+
+            // Cor de fundo interpolada
+            ctx.fillStyle = getBgColor(scrollProgress);
+            ctx.fillRect(0, 0, width, height);
+
+            step += 0.7;
+
+            // Orbita do cursor automática caso inativo
+            if (!isMoving) {
+                const time = step * 0.015;
+                targetMouseX = width / 2 + Math.cos(time) * (width * 0.25);
+                targetMouseY = height / 2 + Math.sin(time * 0.8) * (height * 0.2);
+            }
+            mouseX += (targetMouseX - mouseX) * 0.08;
+            mouseY += (targetMouseY - mouseY) * 0.08;
+
+            // Determina opacidades por estado com base no scrollProgress
+            let alphaWaves = 0;
+            let alphaRefract = 0;
+            let alphaGoldGlow = 0;
+            let alphaLensGrid = 0;
+
+            if (scrollProgress < 1) {
+                alphaWaves = 1 - scrollProgress;
+                alphaRefract = scrollProgress;
+            } else if (scrollProgress < 2) {
+                alphaRefract = 2 - scrollProgress;
+                alphaGoldGlow = scrollProgress - 1;
+            } else if (scrollProgress < 3) {
+                alphaGoldGlow = 3 - scrollProgress;
+                alphaLensGrid = scrollProgress - 2;
+            } else {
+                alphaLensGrid = 1;
+            }
+
+            // Renderiza os estados ativos
+            drawWaves(alphaWaves);
+            drawRefractionRays(alphaRefract);
+            drawGoldGlow(alphaGoldGlow);
+            drawLensGrid(alphaLensGrid);
+
+            // Renderiza partículas flutuantes universais (mudam de comportamento no Estado 3)
             particles.forEach((p) => {
-                p.y -= p.speedY;
-                p.x += Math.sin(step * 0.02) * p.speedX;
+                const multSpeed = (scrollProgress >= 3) ? 0.3 : 1.0;
+                p.y -= p.speedY * multSpeed;
+                p.x += Math.sin(step * 0.02) * p.speedX * multSpeed;
 
                 if (p.y < -10) {
                     p.y = height + 10;
@@ -1563,8 +1839,8 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
                 ctx.fillStyle = `rgba(255, 215, 0, ${p.opacity})`;
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = 'rgba(255, 215, 0, 0.65)';
+                ctx.shadowBlur = 6;
+                ctx.shadowColor = 'rgba(255, 215, 0, 0.45)';
                 ctx.fill();
             });
 

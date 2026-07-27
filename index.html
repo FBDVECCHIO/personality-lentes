@@ -8,9 +8,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=3.61">
+    <link rel="stylesheet" href="style.css?v=3.62">
 </head>
 <body>
+    <!-- Canvas de Fundo Global Unificado (Engine de Animação 60FPS) -->
+    <canvas id="heroGoldenWaveCanvas" class="hero-bg-canvas"></canvas>
+
     <!-- Efeitos de Fundo Luminosos (Gold Glows) -->
     <div class="bg-glow bg-glow-1"></div>
     <div class="bg-glow bg-glow-2"></div>
@@ -81,16 +84,8 @@
 
     <!-- Seção HOME (Hero) -->
     <section id="home" class="hero-section">
-        <!-- Fundo de Vídeo em Looping com Efeito Golden Wave Sutil -->
-        <div class="hero-video-container">
-            <!-- Engine de Animação de Vídeo 60FPS Golden Wave Fluid -->
-            <canvas id="heroGoldenWaveCanvas" class="hero-bg-canvas"></canvas>
-            <video autoplay loop muted playsinline class="hero-bg-video" id="heroVideoElem">
-                <source src="videos/golden-wave.mp4" type="video/mp4">
-            </video>
-            <!-- Máscara de fundo predominantemente preto -->
-            <div class="hero-video-overlay"></div>
-        </div>
+        <!-- Máscara de fundo da Home -->
+        <div class="hero-video-overlay"></div>
 
         <div class="container hero-container" style="position: relative; z-index: 5;">
             <div class="hero-content">
@@ -246,6 +241,34 @@
                 <h2 class="section-title">Nosso <span class="gold-text">Portfólio de Lentes</span></h2>
                 <div class="gold-divider"></div>
                 <p class="section-subtitle">Navegue pelas linhas oficiais de lentes de precisão e tratamentos antirreflexo da Personality.</p>
+            </div>
+            <!-- Bento Grid Showcase (Destaques do Portfólio) (v3.62) -->
+            <div class="bento-grid" style="margin-bottom: 50px;">
+                <!-- Card 1: Linha IA -->
+                <div class="bento-card bento-card-large" onclick="const tab = document.querySelector('.tab-btn[data-tab=\'linha-ia\']'); if(tab) tab.click(); document.getElementById('produtos').scrollIntoView({behavior: 'smooth'});">
+                    <span class="bento-badge">🧬 Inteligência Artificial</span>
+                    <h3>Neural Freeform IA</h3>
+                    <p>Lentes calculadas digitalmente por inteligência artificial para esforço de fusão neural zero e adaptação imediata em qualquer armação.</p>
+                    <div class="bento-card-action">Explorar Modelos IA →</div>
+                </div>
+
+                <!-- Card 2: 1.61 Gold -->
+                <div class="bento-card bento-card-medium" onclick="document.getElementById('lente-161-gold').scrollIntoView({behavior: 'smooth'});">
+                    <span class="bento-badge" style="border-color: var(--gold-primary); color: var(--gold-light);">⚡ Lançamento Exclusivo</span>
+                    <h3>Lente 1.61 Gold</h3>
+                    <p>"A beleza que se revela na meia-luz." Antirreflexo residual dourado premium e espessura até 20% menor.</p>
+                    <div class="bento-card-action">Ver Detalhes Gold →</div>
+                </div>
+
+                <!-- Card 3: Antirreflexos -->
+                <div class="bento-card bento-card-small" onclick="const tab = document.querySelector('.tab-btn[data-tab=\'antirreflexos\']'); if(tab) tab.click(); document.getElementById('produtos').scrollIntoView({behavior: 'smooth'});">
+                    <div class="bento-card-content">
+                        <span class="bento-badge">🛡️ Proteção Ativa</span>
+                        <h3>Antirreflexos Premium</h3>
+                        <p>Tratamentos hidrofóbicos e lipofóbicos de altíssima resistência com filtro azul para telas digitais.</p>
+                    </div>
+                    <div class="bento-card-action">Ver Tratamentos →</div>
+                </div>
             </div>
 
             <!-- Seletores de Abas Principais (Tabs) -->
@@ -2060,6 +2083,6 @@
     <!-- Botão Voltar ao Topo -->
     <button id="backToTop" class="back-to-top" aria-label="Voltar ao topo">▲</button>
 
-    <script src="script.js?v=3.61"></script>
+    <script src="script.js?v=3.62"></script>
 </body>
 </html>
