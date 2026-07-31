@@ -370,7 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let i = 0; i < 4; i++) {
             code += chars[Math.floor(Math.random() * chars.length)];
         }
-        return `PERS-15-${code}`;
+        return `PERS-10-${code}`;
     }
 
     contactForm.addEventListener('submit', async (e) => {
@@ -514,7 +514,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('successStoreAddress').textContent = storeAddress || 'Endereço não cadastrado';
         document.getElementById('successStorePhone').textContent = storePhone ? `Telefone: ${storePhone}` : 'Telefone não cadastrado';
 
-        const messageText = `Olá! Acabei de gerar meu voucher de *15% de desconto* nas lentes *PERSONALITY*! 🎉
+        const messageText = `Olá! Acabei de gerar meu voucher de *10% de desconto* nas lentes *PERSONALITY*! 🎉
 
 🎟️ *Código do Voucher:* ${voucher}
 
@@ -601,7 +601,7 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
     const resetSubmitButton = () => {
         btnSubmit.disabled = false;
         btnSpinner.style.display = 'none';
-        btnSubmit.querySelector('.btn-text').textContent = 'Garantir Meu Voucher (15% OFF)';
+        btnSubmit.querySelector('.btn-text').textContent = 'Garantir Meu Voucher (10% OFF)';
     };
 
     btnCopyVoucher.addEventListener('click', () => {
