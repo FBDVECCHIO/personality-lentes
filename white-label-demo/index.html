@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>White Label Engine | Lens Brand Builder</title>
+    
+    <!-- Google Fonts carregados dinamicamente para os temas -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Montserrat:wght@400;600;700;800&family=Outfit:wght@400;600;700;800&family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Variáveis Padrão (Tema Inicial: Personality Lenses) */
+        :root {
+            --color-primary: #c5a85c;
+            --color-secondary: #dfc380;
+            --bg-dark: #08080a;
+            --bg-card: rgba(25, 25, 32, 0.65);
+            --font-heading: 'Montserrat', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --border-radius: 16px;
+            --glass-blur: 20px;
+            --shadow-glow: rgba(212, 175, 55, 0.3);
+            --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Estilos Globais Básicos */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-body);
+            transition: background-color 0.5s ease, border-radius 0.5s ease, font-family 0.5s ease;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #fff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.5px;
+        }
+
+        p {
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        a {
+            color: var(--color-primary);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Canvas de Fundo Fixo */
+        #bgCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        /* -------------------------------------------------------------
+           🛠️ BARRA DE CONTROLE WHITE LABEL (DASHBOARD FLUTUANTE)
+        ------------------------------------------------------------- */
+        .wl-control-panel {
+            position: fixed;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            width: 90%;
+            max-width: 950px;
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .wl-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .wl-badge-active {
+            background: #00f0ff;
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 800;
+            font-size: 10px;
+        }
+
+        .wl-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .wl-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 8px 14px;
+            border-radius: 6px;
+            color: #ccc;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition);
+        }
+
+        .wl-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border-color: rgba(255,255,255,0.3);
+        }
+
+        .wl-btn.active {
+            background: var(--color-primary);
+            border-color: transparent;
+            color: #000;
+            box-shadow: 0 0 15px var(--shadow-glow);
+        }
+
+        .wl-btn-code {
+            border-color: #ff007f;
+            color: #ff007f;
+        }
+
+        .wl-btn-code:hover {
+            background: rgba(255, 0, 127, 0.1);
+            color: #ff007f;
+        }
+
+        /* -------------------------------------------------------------
+           📋 VISUALIZADOR DE CÓDIGO JSON CONFIG
+        ------------------------------------------------------------- */
+        .json-viewer {
+            display: none;
+            position: fixed;
+            top: 90px;
+            right: 5%;
+            width: 380px;
+            max-height: 80vh;
+            background: #0a0a0f;
+            border: 1px solid #ff007f;
+            border-radius: 8px;
+            padding: 16px;
+            z-index: 999;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+        }
+
+        .json-viewer h4 {
+            font-family: 'Space Grotesk', sans-serif;
+            color: #ff007f;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(255, 0, 127, 0.2);
+            padding-bottom: 6px;
+        }
+
+        .json-viewer pre {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: #a5f3fc;
+            white-space: pre-wrap;
+            line-height: 1.4;
+        }
+
+        /* -------------------------------------------------------------
+           💎 DESIGN SYSTEM: GLASS CARD & BOTÕES
+        ------------------------------------------------------------- */
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--border-radius);
+            padding: 32px;
+            transition: var(--transition);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 16px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 28px;
+            border-radius: var(--border-radius);
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-gold {
+            background: var(--color-primary);
+            color: #000;
+            box-shadow: 0 6px 20px var(--shadow-glow);
+        }
+
+        .btn-gold:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px var(--shadow-glow);
+            filter: brightness(1.1);
+        }
+
+        .btn-outline-gold {
+            background: transparent;
+            border: 1.5px solid var(--color-primary);
+            color: #fff;
+        }
+
+        .btn-outline-gold:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: #fff;
+            transform: translateY(-2px);
+        }
+
+        /* -------------------------------------------------------------
+           🏠 SEÇÃO HERO (LAYOUT DINÂMICO)
+        ------------------------------------------------------------- */
+        .main-header {
+            padding: 100px 0 20px 0;
+        }
+
+        .header-logo {
+            font-family: var(--font-heading);
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        .header-logo span {
+            color: var(--color-primary);
+        }
+
+        .hero-section {
+            padding: 80px 0 120px 0;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 48px;
+            align-items: center;
+        }
+
+        .gold-badge {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 30px;
+            border: 1px solid var(--color-primary);
+            color: var(--color-secondary);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .hero-title {
+            font-size: 48px;
+            line-height: 1.15;
+            margin-bottom: 24px;
+        }
+
+        .color-text-gradient {
+            background: linear-gradient(135deg, #fff 30%, var(--color-primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 16px;
+            margin-bottom: 36px;
+            max-width: 580px;
+        }
+
+        .hero-cta-group {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .hero-lens-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero-lens-image {
+            width: 100%;
+            max-width: 380px;
+            height: auto;
+            border-radius: var(--border-radius);
+            object-fit: cover;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: var(--transition);
+        }
+
+        .hero-lens-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120%;
+            height: 120%;
+            background: radial-gradient(circle, var(--shadow-glow) 0%, rgba(0,0,0,0) 70%);
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        /* -------------------------------------------------------------
+           🍱 BENTO GRID DESTAQUES (LAYOUT DOURADO/NEON/ECO)
+        ------------------------------------------------------------- */
+        .bento-section {
+            padding: 80px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 40px;
+        }
+
+        .bento-card {
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            cursor: pointer;
+        }
+
+        .bento-card-large {
+            grid-column: span 2;
+        }
+
+        .bento-badge {
+            align-self: flex-start;
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 16px;
+        }
+
+        .bento-card h3 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .bento-card p {
+            font-size: 13px;
+        }
+
+        /* -------------------------------------------------------------
+           🎟️ SEÇÃO CUPOM DE DESCONTO (VOUCHER)
+        ------------------------------------------------------------- */
+        .coupon-section {
+            padding: 80px 0 120px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .coupon-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 48px;
+            align-items: flex-start;
+        }
+
+        .coupon-card {
+            border: 1px solid var(--color-primary);
+        }
+
+        .coupon-details {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 24px;
+        }
+
+        .coupon-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .coupon-step-icon {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--color-primary);
+        }
+
+        .coupon-step-text h5 {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .coupon-step-text p {
+            font-size: 12.5px;
+        }
+
+        /* Formulário de Resgate */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            color: rgba(255,255,255,0.6);
+            font-weight: 600;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius);
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--color-primary);
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 0 10px var(--shadow-glow);
+        }
+
+        .form-group select option {
+            background: #0a0a0f;
+            color: #fff;
+        }
+
+        /* -------------------------------------------------------------
+           📱 RESPONSIVIDADE
+        ------------------------------------------------------------- */
+        @media (max-width: 968px) {
+            .wl-control-panel {
+                top: 8px;
+                padding: 8px 16px;
+                justify-content: center;
+            }
+            .json-viewer {
+                width: 90%;
+                right: 5%;
+                left: 5%;
+                top: 130px;
+            }
+            .hero-grid, .coupon-grid {
+                grid-template-columns: 1fr;
+                gap: 36px;
+            }
+            .hero-lens-wrapper {
+                order: -1;
+            }
+            .bento-grid {
+                grid-template-columns: 1fr;
+            }
+            .bento-card-large {
+                grid-column: span 1;
+            }
+            .hero-title {
+                font-size: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- CONTROL PANEL DE SIMULAÇÃO DE MARCAS -->
+    <div class="wl-control-panel">
+        <div class="wl-title">
+            ⚙️ White Label Engine <span class="wl-badge-active">Multi-Tenant</span>
+        </div>
+        <div class="wl-buttons">
+            <button class="wl-btn active" id="btn-brand-personality" onclick="switchBrand('personality')">
+                🏆 Personality Lenses
+            </button>
+            <button class="wl-btn" id="btn-brand-aero" onclick="switchBrand('aero')">
+                🎮 Aero Vision (Cyber)
+            </button>
+            <button class="wl-btn" id="btn-brand-bionature" onclick="switchBrand('bionature')">
+                🌱 BioNature Optics (Eco)
+            </button>
+            <button class="wl-btn wl-btn-code" onclick="toggleJsonViewer()">
+                💻 JSON Config
+            </button>
+        </div>
+    </div>
+
+    <!-- CODE VIEW PANELS -->
+    <div class="json-viewer" id="jsonViewer">
+        <h4>Active Brand Metadata Schema</h4>
+        <pre id="jsonPre"></pre>
+    </div>
+
+    <!-- CANVAS DE FUNDO GLOBAL INTERATIVO -->
+    <canvas id="bgCanvas"></canvas>
+
+    <!-- HEADER -->
+    <header class="main-header">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="header-logo" id="logoText">PERSONALITY<span>.</span></div>
+            <a href="#contato" class="btn btn-outline-gold" style="padding: 8px 16px; font-size: 11px;" id="headerCta">Cupom 10% OFF</a>
+        </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="hero-section">
+        <div class="container hero-grid">
+            <div class="hero-content">
+                <div class="gold-badge" id="heroBadge">Promoção de Lançamento Exclusiva ⚡</div>
+                <h1 class="hero-title" id="heroTitle">Garanta suas lentes <span class="color-text-gradient">PERSONALITY com 10% OFF</span></h1>
+                <p class="hero-subtitle" id="heroSubtitle">Mapeadas por inteligência artificial e lapidadas em alta precisão. Cadastre-se agora, selecione a ótica licenciada de sua preferência e gere seu voucher de desconto imediatamente.</p>
+                <div class="hero-cta-group">
+                    <a href="#contato" class="btn btn-gold" id="heroCtaPrimary">Quero Meu Voucher de 10%</a>
+                    <a href="#produtos" class="btn btn-outline-gold">Conhecer Linha Completa</a>
+                </div>
+            </div>
+            <div class="hero-lens-wrapper">
+                <img src="images/personality_lens.png" alt="Lente Mockup" class="hero-lens-image" id="heroLensImage">
+                <div class="hero-lens-glow"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BENTO GRID SHOWCASE -->
+    <section id="produtos" class="bento-section">
+        <div class="container">
+            <h2 style="font-size: 32px; text-align: center;">Destaques de <span class="gold-text" id="bentoBrandName">Portfólio</span></h2>
+            <p style="text-align: center; margin-top: 8px; font-size: 14px;">Tecnologia óptica e tratamentos calculados ponto a ponto.</p>
+            
+            <div class="bento-grid">
+                <!-- Card 1 (Large) -->
+                <div class="bento-card glass-card bento-card-large" id="bentoCard1">
+                    <span class="bento-badge" id="bentoBadge1">🧬 Inteligência Artificial</span>
+                    <h3 id="bentoTitle1">Neural Freeform IA</h3>
+                    <p id="bentoDesc1">Lentes calculadas digitalmente por inteligência artificial para esforço de fusão neural zero e adaptação imediata em qualquer armação.</p>
+                </div>
+                <!-- Card 2 (Medium) -->
+                <div class="bento-card glass-card" id="bentoCard2">
+                    <span class="bento-badge" id="bentoBadge2">⚡ Lançamento Exclusivo</span>
+                    <h3 id="bentoTitle2">Lente 1.61 Gold</h3>
+                    <p id="bentoDesc2">"A beleza que se revela na meia-luz." Antirreflexo residual dourado premium e espessura até 20% menor.</p>
+                </div>
+                <!-- Card 3 (Small - Full Width below) -->
+                <div class="bento-card glass-card" style="grid-column: span 3; min-height: 180px;" id="bentoCard3">
+                    <span class="bento-badge" id="bentoBadge3">🛡️ Proteção Ativa</span>
+                    <h3 id="bentoTitle3">Antirreflexos Premium</h3>
+                    <p id="bentoDesc3">Tratamentos hidrofóbicos e lipofóbicos de altíssima resistência com filtro azul para telas digitais.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SEÇÃO CUPOM -->
+    <section id="contato" class="coupon-section">
+        <div class="container coupon-grid">
+            <div class="glass-card coupon-card">
+                <h3 id="couponPromoTitle">Voucher de Desconto</h3>
+                <p style="font-size: 13.5px; margin-top: 8px;" id="couponPromoDesc">Gere seu código exclusivo de desconto em 3 passos rápidos:</p>
+                
+                <div class="coupon-details">
+                    <div class="coupon-step">
+                        <div class="coupon-step-icon">1</div>
+                        <div class="coupon-step-text">
+                            <h5>Preencha Seus Dados</h5>
+                            <p>Informe seu nome completo, e-mail e contato.</p>
+                        </div>
+                    </div>
+                    <div class="coupon-step">
+                        <div class="coupon-step-icon">2</div>
+                        <div class="coupon-step-text">
+                            <h5>Escolha uma Ótica</h5>
+                            <p>Selecione a loja parceira credenciada mais conveniente.</p>
+                        </div>
+                    </div>
+                    <div class="coupon-step">
+                        <div class="coupon-step-icon">3</div>
+                        <div class="coupon-step-text">
+                            <h5>Retire na Loja</h5>
+                            <p id="couponStep3Desc">Apresente o código na loja para garantir seu desconto nas lentes.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <form id="leadForm" onsubmit="generateVoucher(event)">
+                    <div class="form-group">
+                        <label for="leadName">Nome Completo</label>
+                        <input type="text" id="leadName" placeholder="Digite seu nome..." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="leadEmail">E-mail</label>
+                        <input type="email" id="leadEmail" placeholder="seuemail@exemplo.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="leadStore">Selecione a Loja</label>
+                        <select id="leadStore" required>
+                            <option value="Loja Matriz">Óptica Central Centro</option>
+                            <option value="Filial Shopping">Óptica Central Shopping</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-gold btn-full" style="width: 100%; margin-top: 10px;" id="btnSubmit">
+                        Gerar Meu Cupom de Desconto
+                    </button>
+                </form>
+
+                <div id="voucherResult" style="display: none; flex-direction: column; align-items: center; margin-top: 24px; border-top: 1px dashed rgba(255,255,255,0.15); padding-top: 20px;">
+                    <h4 style="font-size: 16px; color: var(--color-primary);">Voucher Gerado!</h4>
+                    <div style="border: 2px dashed var(--color-primary); background: rgba(255,255,255,0.02); padding: 16px; border-radius: 8px; margin-top: 12px; font-size: 24px; font-weight: 800; text-align: center; width: 100%; font-family: var(--font-heading);" id="voucherCode">
+                        PERS-10-XXXX
+                    </div>
+                    <p style="font-size: 12px; text-align: center; margin-top: 8px;">Apresente este código no balcão de resgate da ótica selecionada.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MOTOR DE CANVAS MULTI-ESTADO INTERATIVO -->
+    <script>
+        // CONFIGURAÇÕES DAS TRÊS MARCAS (WHitelabel metadata)
+        const brandsData = {
+            "personality": {
+                "name": "Personality Lenses",
+                "logo": "PERSONALITY<span>.</span>",
+                "title": "Garanta suas lentes <span class='color-text-gradient'>PERSONALITY com 10% OFF</span>",
+                "subtitle": "Mapeadas por inteligência artificial e lapidadas em alta precisão. Cadastre-se agora, selecione a ótica licenciada de sua preferência e gere seu voucher de desconto imediatamente.",
+                "badge": "PROMOÇÃO DE LANÇAMENTO EXCLUSIVA ⚡",
+                "lens_image": "images/personality_lens.png",
+                "cta_primary": "Quero Meu Voucher de 10%",
+                "header_cta": "Cupom 10% OFF",
+                "theme": {
+                    "primary": "#c5a85c",
+                    "secondary": "#dfc380",
+                    "bg_dark": "#08080a",
+                    "bg_card": "rgba(25, 25, 32, 0.65)",
+                    "font_heading": "'Montserrat', sans-serif",
+                    "font_body": "'Inter', sans-serif",
+                    "border_radius": "16px",
+                    "glass_blur": "20px",
+                    "shadow_glow": "rgba(212, 175, 55, 0.3)"
+                },
+                "bento": [
+                    { "badge": "🧬 Inteligência Artificial", "title": "Neural Freeform IA", "desc": "Lentes calculadas digitalmente por inteligência artificial para esforço de fusão neural zero e adaptação imediata em qualquer armação." },
+                    { "badge": "⚡ Lançamento Exclusivo", "title": "Lente 1.61 Gold", "desc": "'A beleza que se revela na meia-luz.' Antirreflexo residual dourado premium e espessura até 20% menor." },
+                    { "badge": "🛡️ Proteção Ativa", "title": "Antirreflexos Premium", "desc": "Tratamentos hidrofóbicos e lipofóbicos de altíssima resistência com filtro azul para telas digitais." }
+                ],
+                "prefix": "PERS-10-"
+            },
+            "aero": {
+                "name": "Aero Vision",
+                "logo": "AERO // VISION",
+                "title": "Upgrade your vision with <span class='color-text-gradient'>AERO CYBER LENSES - 20% OFF</span>",
+                "subtitle": "High-performance lenses calculated for gamers, programmers and pilots. Real-time visual clarity with absolute zero blue-light fatigue and premium anti-glare nano-coating.",
+                "badge": "NEON LIGHT SPEED EDITION ⚡",
+                "lens_image": "images/aero_vision_lens.jpg",
+                "cta_primary": "Generate Cyber Voucher",
+                "header_cta": "Cupom 20% OFF",
+                "theme": {
+                    "primary": "#00f0ff",
+                    "secondary": "#ff007f",
+                    "bg_dark": "#030712",
+                    "bg_card": "rgba(17, 24, 39, 0.7)",
+                    "font_heading": "'Space Grotesk', sans-serif",
+                    "font_body": "'JetBrains Mono', monospace",
+                    "border_radius": "4px",
+                    "glass_blur": "10px",
+                    "shadow_glow": "rgba(0, 240, 255, 0.4)"
+                },
+                "bento": [
+                    { "badge": "🎮 Zero Blue Light", "title": "CyberScreen Shield", "desc": "Lenses engineered specifically to block high-energy blue light spectrums from LED and OLED displays." },
+                    { "badge": "🏎️ Race Reflex", "title": "Aero-Glide 1.67", "desc": "Super refractive index for ultra-slim profile and rapid focal point transitions during high-speed activity." },
+                    { "badge": "⚡ Nano Guard", "title": "Laser-Clean Anti-Glare", "desc": "Advanced physical coating that deflects 99.8% of halo reflections and headlight glares at night." }
+                ],
+                "prefix": "AERO-20-"
+            },
+            "bionature": {
+                "name": "BioNature Lenses",
+                "logo": "BioNature<span>🌱</span>",
+                "title": "Conecte-se ao mundo com <span class='color-text-gradient'>BIONATURE LENSES (15% OFF)</span>",
+                "subtitle": "Lentes ecológicas fabricadas com polímeros à base de óleos vegetais renováveis e processos carbono neutro. Visão nítida em harmonia com o meio ambiente e proteção UV absoluta.",
+                "badge": "PROTETOR DO FUTURO ECOLÓGICO 🌱",
+                "lens_image": "images/bionature_lens.jpg",
+                "cta_primary": "Obter Voucher Eco-Amigável",
+                "header_cta": "Cupom 15% OFF",
+                "theme": {
+                    "primary": "#2e7d32",
+                    "secondary": "#a1887f",
+                    "bg_dark": "#0a0f0d",
+                    "bg_card": "rgba(20, 28, 24, 0.7)",
+                    "font_heading": "'Outfit', sans-serif",
+                    "font_body": "'Plus Jakarta Sans', sans-serif",
+                    "border_radius": "32px",
+                    "glass_blur": "25px",
+                    "shadow_glow": "rgba(46, 125, 50, 0.25)"
+                },
+                "bento": [
+                    { "badge": "🌱 Resina Orgânica", "title": "EcoSphere Carbon", "desc": "Lentes fabricadas utilizando 45% de recursos naturais renováveis com pegada de carbono totalmente compensada." },
+                    { "badge": "💦 Hidro-Repelente", "title": "Rain-Drop Protect", "desc": "Revestimento inspirado no efeito folha de lótus, que repele poeira e gotas de água instantaneamente." },
+                    { "badge": "☀️ Filtro Solar Natural", "title": "BioShield UV-Filter", "desc": "Absorve 100% da radiação ultravioleta prejudicial sem distorcer o equilíbrio de cores naturais." }
+                ],
+                "prefix": "BIO-15-"
+            }
+        };
+
+        let activeBrand = 'personality';
+
+        // ALTERA O TEMA EM TEMPO REAL INJETANDO CSS CUSTOM PROPERTIES E CONTEÚDO
+        function switchBrand(brandKey) {
+            activeBrand = brandKey;
+            const data = brandsData[brandKey];
+            
+            // Atualiza botões do painel
+            document.querySelectorAll('.wl-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById(`btn-brand-${brandKey}`);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            // Injeta as propriedades customizadas do CSS no :root
+            const root = document.documentElement;
+            root.style.setProperty('--color-primary', data.theme.primary);
+            root.style.setProperty('--color-secondary', data.theme.secondary);
+            root.style.setProperty('--bg-dark', data.theme.bg_dark);
+            root.style.setProperty('--bg-card', data.theme.bg_card);
+            root.style.setProperty('--font-heading', data.theme.font_heading);
+            root.style.setProperty('--font-body', data.theme.font_body);
+            root.style.setProperty('--border-radius', data.theme.border_radius);
+            root.style.setProperty('--glass-blur', data.theme.glass_blur);
+            root.style.setProperty('--shadow-glow', data.theme.shadow_glow);
+
+            // Atualiza textos do layout
+            document.getElementById('logoText').innerHTML = data.logo;
+            document.getElementById('headerCta').textContent = data.header_cta;
+            document.getElementById('heroBadge').textContent = data.badge;
+            document.getElementById('heroTitle').innerHTML = data.title;
+            document.getElementById('heroSubtitle').textContent = data.subtitle;
+            document.getElementById('heroCtaPrimary').textContent = data.cta_primary;
+            document.getElementById('heroLensImage').src = data.lens_image;
+            document.getElementById('bentoBrandName').textContent = data.name;
+
+            // Atualiza Bento Grid
+            for (let i = 1; i <= 3; i++) {
+                const b = data.bento[i - 1];
+                document.getElementById(`bentoBadge${i}`).textContent = b.badge;
+                document.getElementById(`bentoTitle${i}`).textContent = b.title;
+                document.getElementById(`bentoDesc${i}`).textContent = b.desc;
+            }
+
+            // Atualiza o descritivo de cupom
+            document.getElementById('couponStep3Desc').textContent = `Apresente o código na loja para garantir seu desconto de ${data.header_cta.replace('Cupom ', '')} nas lentes.`;
+            document.getElementById('voucherResult').style.display = 'none';
+
+            // Atualiza o JSON Viewer
+            document.getElementById('jsonPre').textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Toggle do visualizador de JSON
+        function toggleJsonViewer() {
+            const viewer = document.getElementById('jsonViewer');
+            viewer.style.display = viewer.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Geração do Cupom de Desconto
+        function generateVoucher(e) {
+            e.preventDefault();
+            const data = brandsData[activeBrand];
+            const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            let code = '';
+            for (let i = 0; i < 4; i++) {
+                code += chars[Math.floor(Math.random() * chars.length)];
+            }
+            document.getElementById('voucherCode').textContent = `${data.prefix}${code}`;
+            document.getElementById('voucherResult').style.display = 'flex';
+        }
+
+        // -------------------------------------------------------------
+        // MOTOR GRÁFICO DO CANVAS (SE ADAPTA AO TEMA SELECIONADO)
+        // -------------------------------------------------------------
+        const canvas = document.getElementById('bgCanvas');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        // Mouse tracking
+        let mouseX = width / 2;
+        let mouseY = height / 2;
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        let step = 0;
+
+        // Partículas
+        const particles = Array.from({ length: 30 }, () => ({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            radius: Math.random() * 2 + 1,
+            speedY: Math.random() * 0.3 + 0.1,
+            speedX: (Math.random() - 0.5) * 0.2,
+            opacity: Math.random() * 0.5 + 0.2
+        }));
+
+        function drawLoop() {
+            ctx.clearRect(0, 0, width, height);
+            
+            // Desenha a cor de fundo do tema ativo
+            ctx.fillStyle = brandsData[activeBrand].theme.bg_dark;
+            ctx.fillRect(0, 0, width, height);
+
+            step += 0.8;
+
+            // Renderiza animações específicas por tema
+            if (activeBrand === 'personality') {
+                // TEMA 1: Ondas Douradas da Personality
+                ctx.save();
+                const waveY = height * 0.55;
+                ctx.beginPath();
+                for (let x = 0; x <= width; x += 10) {
+                    const y = waveY + Math.sin(x * 0.002 + step * 0.01) * 40 + Math.cos(x * 0.0008 + step * 0.004) * 15;
+                    if (x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                const grad = ctx.createLinearGradient(0, 0, width, 0);
+                grad.addColorStop(0, 'rgba(197, 168, 92, 0)');
+                grad.addColorStop(0.5, 'rgba(212, 175, 55, 0.45)');
+                grad.addColorStop(1, 'rgba(197, 168, 92, 0)');
+                ctx.strokeStyle = grad;
+                ctx.lineWidth = 4;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = 'rgba(212, 175, 55, 0.3)';
+                ctx.stroke();
+                ctx.restore();
+
+            } else if (activeBrand === 'aero') {
+                // TEMA 2: Grade Tecnológica / Matrix Laser (Aero Cyber)
+                ctx.save();
+                ctx.strokeStyle = 'rgba(0, 240, 255, 0.08)';
+                ctx.lineWidth = 0.8;
+                
+                const spacing = 50;
+                for (let x = 0; x < width + spacing; x += spacing) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, height);
+                    ctx.stroke();
+                }
+                for (let y = 0; y < height + spacing; y += spacing) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(width, y);
+                    ctx.stroke();
+                }
+
+                // Linha de radar digital seguindo o mouse
+                ctx.beginPath();
+                ctx.arc(mouseX, mouseY, 150 + Math.sin(step * 0.05) * 8, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(0, 240, 255, 0.25)';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                ctx.restore();
+
+            } else if (activeBrand === 'bionature') {
+                // TEMA 3: Bolhas Fluídas e Orgânicas (BioNature)
+                ctx.save();
+                const pulse = 0.5 + Math.sin(step * 0.02) * 0.2;
+                const grad = ctx.createRadialGradient(width/2, height/2, 20, width/2, height/2, Math.max(width, height) * 0.5);
+                grad.addColorStop(0, `rgba(46, 125, 50, ${0.08 * pulse})`);
+                grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, width, height);
+                ctx.restore();
+            }
+
+            // Desenha partículas universais coradas pelo tema ativo
+            particles.forEach(p => {
+                p.y -= p.speedY;
+                p.x += p.speedX;
+
+                if (p.y < -10) {
+                    p.y = height + 10;
+                    p.x = Math.random() * width;
+                }
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = brandsData[activeBrand].theme.primary + '80'; // 50% opacity hex
+                ctx.fill();
+            });
+
+            requestAnimationFrame(drawLoop);
+        }
+
+        // Inicializa o tema padrão e o loop gráfico
+        switchBrand('personality');
+        drawLoop();
+    </script>
+</body>
+</html>
