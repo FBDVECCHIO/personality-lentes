@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=3.73">
+    <link rel="stylesheet" href="style.css?v=3.74">
     <style>
         /* Estilos adicionais específicos para a página do vendedor */
         .vendedor-page-body {
@@ -126,10 +126,10 @@
             font-weight: 700 !important;
         }
         
-        /* Grid responsivo do painel do vendedor (v3.73) */
+        /* Grid responsivo do painel do vendedor (v3.74) */
         .vendedor-dashboard-grid {
             display: grid;
-            grid-template-columns: 260px 1fr 400px;
+            grid-template-columns: 260px 1fr 440px;
             gap: 25px;
             align-items: stretch;
             margin-top: 20px;
@@ -173,7 +173,7 @@
 
     <!-- Conteúdo Principal -->
     <main class="vendedor-content-container">
-        <div class="container" style="max-width: 1280px;">
+        <div class="container" style="max-width: 1360px;">
             
 
 
@@ -330,9 +330,9 @@
                     <div class="vendedor-radar-column" style="display: flex; flex-direction: column; min-height: 380px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--gold-light); letter-spacing: 1.5px;">
-                                🔴 Radar de O.S. Disponíveis (3D)
+                                🔴 Radar de O.S. Disponíveis
                             </span>
-                            <span style="font-size: 10px; color: var(--text-muted);">Estoure a bolha para auto-preencher</span>
+                            <span style="font-size: 10px; color: var(--text-muted);">Estoure a bolha.</span>
                         </div>
                         <div class="glass-card" style="flex-grow: 1; position: relative; overflow: hidden; background: radial-gradient(circle at center, rgba(197, 168, 92, 0.03) 0%, rgba(10, 10, 13, 0.98) 100%); border: 1px dashed rgba(197, 168, 92, 0.25); border-radius: 12px; box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.9); min-height: 340px;">
                             <canvas id="vendedorRadarCanvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer;"></canvas>
@@ -442,6 +442,6 @@
     </footer>
 
     <!-- Lógica JS Dedicada -->
-    <script src="vendedor.js?v=3.73"></script>
+    <script src="vendedor.js?v=3.74"></script>
 </body>
 </html>
