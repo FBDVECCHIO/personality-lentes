@@ -1197,7 +1197,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('Erro: Esta O.S. já foi resgatada e pontuada anteriormente!');
                     btn.disabled = false;
                     if (spinner) spinner.style.display = 'none';
-                    btn.querySelector('.btn-text').textContent = 'Resgatar O.S. e Acumular Pontos 🚀';
+                    btn.querySelector('.btn-text').textContent = 'Resgatar Pontos 🚀';
                     return;
                 }
             }
@@ -1216,7 +1216,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             alert('Erro: Esta O.S. já foi resgatada e pontuada anteriormente no sistema!');
                             btn.disabled = false;
                             if (spinner) spinner.style.display = 'none';
-                            btn.querySelector('.btn-text').textContent = 'Resgatar O.S. e Acumular Pontos 🚀';
+                            btn.querySelector('.btn-text').textContent = 'Resgatar Pontos 🚀';
                             return;
                         }
                     }
@@ -1308,7 +1308,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } finally {
                     btn.disabled = false;
                     if (spinner) spinner.style.display = 'none';
-                    btn.querySelector('.btn-text').textContent = 'Resgatar O.S. e Acumular Pontos 🚀';
+                    btn.querySelector('.btn-text').textContent = 'Resgatar Pontos 🚀';
                 }
             } else {
                 setTimeout(() => {
@@ -1330,7 +1330,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadAuthorizedOsList(activeCpf);
                     btn.disabled = false;
                     if (spinner) spinner.style.display = 'none';
-                    btn.querySelector('.btn-text').textContent = 'Resgatar O.S. e Acumular Pontos 🚀';
+                    btn.querySelector('.btn-text').textContent = 'Resgatar Pontos 🚀';
                 }, 800);
             }
         });

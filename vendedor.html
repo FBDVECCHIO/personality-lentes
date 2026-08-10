@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=3.80">
+    <link rel="stylesheet" href="style.css?v=3.81">
     <style>
         /* Estilos adicionais específicos para a página do vendedor */
         .vendedor-page-body {
@@ -357,7 +357,7 @@
                             <div class="vendedor-sale-form-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
                                 <!-- Ordem de Serviço (O.S.) -->
                                 <div class="input-group" style="margin-bottom: 0;">
-                                    <label for="saleOs" style="font-size: 11px;">Número da O.S. / Pedido Liberado</label>
+                                    <label for="saleOs" style="font-size: 11px;">OS liberada</label>
                                     <select id="saleOs" required style="width: 100%; padding: 10px 14px; background: #121216; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-family: inherit;">
                                         <option value="">Carregando O.S. liberadas...</option>
                                     </select>
@@ -365,13 +365,13 @@
                                 </div>
                                 <!-- Nome do Cliente -->
                                 <div class="input-group" style="margin-bottom: 0;">
-                                    <label for="saleClientName" style="font-size: 11px;">Nome do Paciente / Cliente</label>
+                                    <label for="saleClientName" style="font-size: 11px;">Paciente - Cliente</label>
                                     <input type="text" id="saleClientName" placeholder="Selecione uma O.S. para preencher..." required readonly style="width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; color: #bbb; pointer-events: none;">
                                     <span class="error-msg" id="saleClientNameError" style="display: none; color: #ff5555; font-size: 11px; margin-top: 2px;">Selecione uma O.S.</span>
                                 </div>
                                 <!-- Família da Lente -->
                                 <div class="input-group" style="margin-bottom: 0;">
-                                    <label for="saleLensFamily" style="font-size: 11px;">Família da Lente Vendida</label>
+                                    <label for="saleLensFamily" style="font-size: 11px;">Lente</label>
                                     <select id="saleLensFamily" required style="width: 100%; padding: 10px 14px; background: #121216; border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; color: #bbb; font-family: inherit; pointer-events: none; opacity: 0.8;">
                                         <option value="">Selecione uma O.S. para preencher...</option>
                                     </select>
@@ -379,7 +379,7 @@
                                 </div>
                                 <!-- Família do Antirreflexo -->
                                 <div class="input-group" style="margin-bottom: 0;">
-                                    <label for="saleArFamily" style="font-size: 11px;">Tratamento Antirreflexo</label>
+                                    <label for="saleArFamily" style="font-size: 11px;">Antirreflexo</label>
                                     <select id="saleArFamily" required style="width: 100%; padding: 10px 14px; background: #121216; border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; color: #bbb; font-family: inherit; pointer-events: none; opacity: 0.8;">
                                         <option value="">Selecione uma O.S. para preencher...</option>
                                     </select>
@@ -395,7 +395,7 @@
 
                             <!-- Botão Lançar Venda -->
                             <button type="submit" id="btnSubmitSale" class="btn btn-gold btn-sm" style="width: 100%; margin-top: 20px; font-weight: 700; height: 42px; display: flex; justify-content: center; align-items: center; gap: 8px;">
-                                <span class="btn-text">Resgatar O.S. e Acumular Pontos 🚀</span>
+                                <span class="btn-text">Resgatar Pontos 🚀</span>
                                 <div class="spinner" id="saleSubmitSpinner" style="display: none; width: 14px; height: 14px; border: 2px solid rgba(0,0,0,0.15); border-radius: 50%; border-top-color: black; animation: spin 0.8s linear infinite;"></div>
                             </button>
                         </form>
@@ -447,6 +447,6 @@
     </footer>
 
     <!-- Lógica JS Dedicada -->
-    <script src="vendedor.js?v=3.80"></script>
+    <script src="vendedor.js?v=3.81"></script>
 </body>
 </html>
