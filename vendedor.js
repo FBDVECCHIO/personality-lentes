@@ -25,6 +25,17 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/'/g, "&#039;");
     }
 
+    // Função de Log Diagnóstico para Tela (v3.78)
+    const logDiag = (msg) => {
+        console.log('[DEBUG-RADAR]:', msg);
+        const debugDiv = document.getElementById('radarDebugConsole');
+        if (debugDiv) {
+            const time = new Date().toLocaleTimeString('pt-BR');
+            debugDiv.innerHTML += `<div>[${time}] ${msg}</div>`;
+            debugDiv.scrollTop = debugDiv.scrollHeight;
+        }
+    };
+
     // =============================================================
     // Efeitos de Áudio e Animação 3D Gamificada (v3.73)
     // =============================================================
@@ -865,6 +876,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeLoja = sessionStorage.getItem('active_vendedor_loja');
         const activeCpf = sessionStorage.getItem('active_vendedor_cpf');
 
+        logDiag(`Sessão ativa encontrada - ID: ${activeId} | Nome: ${activeNome} | CPF: ${activeCpf}`);
+
         if (activeId && activeNome && activeLoja && activeCpf) {
             vendedorAuthContainer.style.display = 'none';
             vendedorDashboardPanel.style.display = 'block';
@@ -1015,40 +1028,57 @@ document.addEventListener('DOMContentLoaded', () => {
         const saleOs = document.getElementById('saleOs');
         if (!saleOs) return;
         
+        logDiag(`Iniciando busca de O.S. para o CPF: "${cpf}"`);
         saleOs.innerHTML = '<option value="">Buscando O.S. liberadas...</option>';
         
         const url = getSupabaseUrl();
         const key = getSupabaseKey();
         const osAuthTable = localStorage.getItem('personality_sb_os_autorizadas_table') || 'os_autorizadas_personality';
         
+        logDiag(`Configuração - URL: "${url}" | Tabela: "${osAuthTable}"`);
+        
         let list = [];
         
         if (url && key) {
             try {
                 const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
-                const response = await fetch(`${cleanUrl}/rest/v1/${osAuthTable}?cpf_vendedor=eq.${encodeURIComponent(cpf)}&utilizada=eq.false&order=created_at.desc`, {
+                const endpoint = `${cleanUrl}/rest/v1/${osAuthTable}?cpf_vendedor=eq.${encodeURIComponent(cpf)}&utilizada=eq.false&order=created_at.desc`;
+                logDiag(`Chamando API: ${endpoint}`);
+                
+                const response = await fetch(endpoint, {
                     method: 'GET',
                     headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
                 });
                 if (response.ok) {
                     list = await response.json();
+                    logDiag(`Resposta da API recebida com sucesso. Itens encontrados: ${list.length}`);
+                    if (list.length > 0) {
+                        logDiag(`Primeiro item encontrado: OS = "${list[0].os}", Cliente = "${list[0].cliente_nome}"`);
+                    }
+                } else {
+                    logDiag(`Erro na API (Status ${response.status}): ${response.statusText}`);
                 }
             } catch (error) {
+                logDiag(`Exceção ao buscar O.S. via API: ${error.message}`);
                 console.error('Erro ao buscar OS autorizadas:', error);
             }
         }
         
         if (list.length === 0) {
+            logDiag('Nenhuma OS vinda da API do Supabase. Tentando obter localmente.');
             const local = JSON.parse(localStorage.getItem('personality_local_os_autorizadas')) || [];
             list = local.filter(item => item.cpf_vendedor === cpf && !item.utilizada);
+            logDiag(`Itens encontrados localmente: ${list.length}`);
         }
-        
         
         // Filtra as OS para garantir que nenhuma já tenha sido resgatada anteriormente (v3.75)
         if (list.length > 0) {
+            logDiag(`Filtrando duplicados. Lista inicial: ${list.length}`);
             const localPremios = JSON.parse(localStorage.getItem('personality_local_premios')) || [];
             const localClaimedSet = new Set(localPremios.map(p => p.os));
+            const oldLen = list.length;
             list = list.filter(item => !localClaimedSet.has(item.os));
+            logDiag(`Após filtro contra cache local: ${list.length} (removidos: ${oldLen - list.length})`);
             
             if (url && key) {
                 try {
@@ -1061,11 +1091,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     if (response.ok) {
                         const claimedOs = await response.json();
+                        logDiag(`OS já resgatadas no banco Supabase: ${JSON.stringify(claimedOs)}`);
                         const claimedSet = new Set(claimedOs.map(item => item.os));
+                        const oldLen2 = list.length;
                         list = list.filter(item => !claimedSet.has(item.os));
+                        logDiag(`Após filtro contra Supabase faturados: ${list.length} (removidos: ${oldLen2 - list.length})`);
+                    } else {
+                        logDiag(`Erro ao validar duplicados Supabase (Status ${response.status})`);
                     }
                 } catch (err) {
-                    console.error('Erro ao verificar OS duplicadas no Supabase:', err);
+                    logDiag(`Exceção ao validar duplicados Supabase: ${err.message}`);
                 }
             }
         }
@@ -1077,6 +1112,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (list.length === 0) {
             saleOs.innerHTML = '<option value="">Nenhuma O.S. liberada para seu CPF</option>';
             if (btnSubmit) btnSubmit.disabled = true;
+            logDiag('Resultado Final: Nenhuma O.S. disponível para exibir.');
         } else {
             saleOs.innerHTML = '<option value="">Selecione a O.S. liberada...</option>';
             list.forEach(item => {
@@ -1086,6 +1122,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 saleOs.appendChild(opt);
             });
             if (btnSubmit) btnSubmit.disabled = false;
+            logDiag(`Resultado Final: ${list.length} O.S. adicionada(s) ao dropdown.`);
         }
         initVendedorRadar(list);
     }

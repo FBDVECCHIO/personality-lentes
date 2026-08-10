@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=3.77">
+    <link rel="stylesheet" href="style.css?v=3.78">
     <style>
         /* Estilos adicionais específicos para a página do vendedor */
         .vendedor-page-body {
@@ -343,6 +343,11 @@
                                 <span style="font-size: 10px; opacity: 0.6; text-transform: none; font-weight: 400;">Nenhuma O.S. liberada no momento</span>
                             </div>
                         </div>
+                        <!-- Console de Diagnóstico do Radar (v3.78) -->
+                        <div id="radarDebugConsole" style="margin-top: 8px; font-family: monospace; font-size: 9px; color: #a1a1aa; background: rgba(0,0,0,0.4); padding: 8px; border-radius: 6px; max-height: 80px; overflow-y: auto; text-align: left; border: 1px solid rgba(255,255,255,0.05); line-height: 1.3;">
+                            <div style="color: var(--gold-light); font-weight: bold; margin-bottom: 2px;">📡 Console de Diagnóstico de O.S.:</div>
+                            <div>[INFO] Iniciando monitoramento...</div>
+                        </div>
                     </div>
 
                     <!-- Coluna Direita: Formulário para Lançar Novo Pedido / O.S. (Direto no grid) -->
@@ -442,6 +447,6 @@
     </footer>
 
     <!-- Lógica JS Dedicada -->
-    <script src="vendedor.js?v=3.77"></script>
+    <script src="vendedor.js?v=3.78"></script>
 </body>
 </html>
