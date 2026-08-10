@@ -1071,16 +1071,12 @@ document.addEventListener('DOMContentLoaded', () => {
             logDiag(`Itens encontrados localmente: ${list.length}`);
         }
         
-        // Filtra as OS para garantir que nenhuma já tenha sido resgatada anteriormente (v3.75)
+        // Filtra as OS para garantir que nenhuma já tenha sido resgatada anteriormente (v3.79)
         if (list.length > 0) {
             logDiag(`Filtrando duplicados. Lista inicial: ${list.length}`);
-            const localPremios = JSON.parse(localStorage.getItem('personality_local_premios')) || [];
-            const localClaimedSet = new Set(localPremios.map(p => p.os));
-            const oldLen = list.length;
-            list = list.filter(item => !localClaimedSet.has(item.os));
-            logDiag(`Após filtro contra cache local: ${list.length} (removidos: ${oldLen - list.length})`);
             
             if (url && key) {
+                // Online: O banco de dados é a única fonte da verdade.
                 try {
                     const premiosTable = localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
                     const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
@@ -1093,15 +1089,22 @@ document.addEventListener('DOMContentLoaded', () => {
                         const claimedOs = await response.json();
                         logDiag(`OS já resgatadas no banco Supabase: ${JSON.stringify(claimedOs)}`);
                         const claimedSet = new Set(claimedOs.map(item => item.os));
-                        const oldLen2 = list.length;
+                        const oldLen = list.length;
                         list = list.filter(item => !claimedSet.has(item.os));
-                        logDiag(`Após filtro contra Supabase faturados: ${list.length} (removidos: ${oldLen2 - list.length})`);
+                        logDiag(`Após filtro contra Supabase faturados: ${list.length} (removidos: ${oldLen - list.length})`);
                     } else {
                         logDiag(`Erro ao validar duplicados Supabase (Status ${response.status})`);
                     }
                 } catch (err) {
                     logDiag(`Exceção ao validar duplicados Supabase: ${err.message}`);
                 }
+            } else {
+                // Offline: Usa apenas o cache local como filtro de duplicidade.
+                const localPremios = JSON.parse(localStorage.getItem('personality_local_premios')) || [];
+                const localClaimedSet = new Set(localPremios.map(p => p.os));
+                const oldLen = list.length;
+                list = list.filter(item => !localClaimedSet.has(item.os));
+                logDiag(`Após filtro contra cache local (offline): ${list.length} (removidos: ${oldLen - list.length})`);
             }
         }
 
@@ -1187,14 +1190,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const key = getSupabaseKey();
             const table = localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
 
-            // 1. Verifica duplicados em cache local
-            const localPremios = JSON.parse(localStorage.getItem('personality_local_premios')) || [];
-            if (localPremios.some(item => item.os === osVal)) {
-                alert('Erro: Esta O.S. já foi resgatada e pontuada anteriormente!');
-                btn.disabled = false;
-                if (spinner) spinner.style.display = 'none';
-                btn.querySelector('.btn-text').textContent = 'Resgatar O.S. e Acumular Pontos 🚀';
-                return;
+            // 1. Verifica duplicados em cache local (apenas em modo offline)
+            if (!url || !key) {
+                const localPremios = JSON.parse(localStorage.getItem('personality_local_premios')) || [];
+                if (localPremios.some(item => item.os === osVal)) {
+                    alert('Erro: Esta O.S. já foi resgatada e pontuada anteriormente!');
+                    btn.disabled = false;
+                    if (spinner) spinner.style.display = 'none';
+                    btn.querySelector('.btn-text').textContent = 'Resgatar O.S. e Acumular Pontos 🚀';
+                    return;
+                }
             }
 
             // 2. Verifica duplicados no Supabase
