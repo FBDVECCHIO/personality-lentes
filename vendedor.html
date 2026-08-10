@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=3.65">
+    <link rel="stylesheet" href="style.css?v=3.66">
     <style>
         /* Estilos adicionais específicos para a página do vendedor */
         .vendedor-page-body {
@@ -126,19 +126,70 @@
             font-weight: 700 !important;
         }
         
-        /* Grid responsivo do painel do vendedor (v3.65) */
-        .vendedor-dashboard-grid {
+        /* Layout de Duas Colunas do Dashboard Vendedor (v3.66) */
+        .vendedor-layout-container {
             display: grid;
-            grid-template-columns: 260px 1fr;
+            grid-template-columns: 240px minmax(0, 1fr);
             gap: 25px;
             align-items: start;
+            width: 100%;
             margin-top: 20px;
         }
         @media (max-width: 1024px) {
-            .vendedor-dashboard-grid {
+            .vendedor-layout-container {
                 grid-template-columns: 1fr;
                 gap: 20px;
             }
+        }
+        
+        .vendedor-sidebar-menu {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            box-sizing: border-box;
+            min-height: 380px;
+        }
+        
+        .vendedor-side-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: left;
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .vendedor-side-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .vendedor-side-btn.active {
+            background: rgba(197, 168, 92, 0.05);
+            border-color: var(--border-gold);
+            color: var(--gold-light);
+        }
+
+        /* Controle de exibição das abas do vendedor */
+        .vendedor-section {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+            min-width: 0;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        .vendedor-section.active {
+            display: block;
         }
     </style>
 </head>
@@ -273,58 +324,69 @@
             </div>
 
             <!-- CARD 2: PAINEL DO VENDEDOR LOGADO (Oculto inicialmente) -->
-            <div class="glass-card" id="vendedorDashboardPanel" style="display: none; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.6);">
+            <!-- Reestruturado como layout de duas colunas com menu lateral (v3.66) -->
+            <div class="vendedor-layout-container" id="vendedorDashboardPanel" style="display: none;">
                 
-                <!-- Cabeçalho do Painel do Vendedor -->
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-gray); padding-bottom: 20px; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
-                    <div>
-                        <h3 style="font-family: var(--font-heading); font-size: 22px; color: var(--gold-light);">Olá, <span id="vendedorSessionName">Vendedor</span>!</h3>
-                        <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Ótica: <span id="vendedorSessionStore" style="font-weight: 600; color: #fff;">Nome da Ótica</span></p>
+                <!-- Sidebar do Vendedor (Menu Lateral) -->
+                <aside class="vendedor-sidebar-menu glass-card">
+                    <div class="sidebar-header" style="margin-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px;">
+                        <h3 style="font-family: var(--font-heading); font-size: 16px; color: var(--gold-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Olá, <span id="vendedorSessionName">Vendedor</span>!</h3>
+                        <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Ótica: <span id="vendedorSessionStore" style="font-weight: 600; color: #fff;">Nome da Ótica</span></p>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <span id="inactiveTimerDisplay" style="font-size: 12px; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08);">Inatividade: <b>2:00</b></span>
-                        <button class="btn btn-outline-gold btn-sm" id="btnVendedorLogout" style="border-color: rgba(255, 85, 85, 0.3); color: #fca5a5; padding: 8px 16px;">Sair da Plataforma 🚪</button>
+                    <nav class="sidebar-nav">
+                        <button class="vendedor-side-btn active" data-vendedor-section="resumo">🏆 Saldo de Prêmios</button>
+                        <button class="vendedor-side-btn" data-vendedor-section="resgatar">📥 Resgatar O.S.</button>
+                        <button class="vendedor-side-btn" data-vendedor-section="extrato">📋 Extrato de Prêmios</button>
+                    </nav>
+                    <div style="margin-top: auto; padding-top: 30px; display: flex; flex-direction: column; gap: 8px;">
+                        <span id="inactiveTimerDisplay" style="font-size: 11px; text-align: center; color: var(--text-muted); background: rgba(255,255,255,0.03); padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">Inatividade: <b>2:00</b></span>
+                        <button class="btn btn-outline-gold btn-sm btn-full" id="btnVendedorLogout" style="border-color: rgba(255, 85, 85, 0.3); color: #fca5a5; font-size: 11px; font-weight: 600; height: 36px; display: flex; justify-content: center; align-items: center;">Sair da Plataforma 🚪</button>
                     </div>
-                </div>
+                </aside>
 
-                <!-- Grid em Duas Colunas do Dashboard (v3.63) -->
-                <div class="vendedor-dashboard-grid">
+                <!-- Área de Conteúdo Principal -->
+                <section class="vendedor-content-area" style="width: 100%; min-width: 0;">
                     
-                    <!-- Coluna Esquerda: Métricas (Dados Gerais) -->
-                    <div class="vendedor-sidebar" style="display: flex; flex-direction: column; gap: 20px;">
-                        
-                        <!-- Pontos Validados -->
-                        <div class="glass-card" style="padding: 20px; text-align: center; border: 1px solid rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.03);">
-                            <span style="font-size: 24px; display: block; margin-bottom: 8px;">🏆</span>
-                            <h4 style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #10b981; margin-bottom: 4px;">Pontos Validados</h4>
-                            <div style="font-size: 14px; font-weight: 800; color: #fff;" id="vendedorStatReceberPontos">0 Pontos Validados</div>
-                            <div id="vendedorStatReceber" style="display: none;"></div>
+                    <!-- Seção: Saldo de Prêmios -->
+                    <div class="vendedor-section active" id="sec-vendedor-resumo">
+                        <div class="glass-card" style="padding: 30px;">
+                            <h4 style="font-family: var(--font-heading); font-size: 16px; color: var(--gold-light); margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">🏆 Resumo de Saldo Geral</h4>
+                            
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 25px;">
+                                <!-- A Receber -->
+                                <div class="glass-card" style="padding: 20px; text-align: center; border: 1px solid rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.03);">
+                                    <span style="font-size: 24px; display: block; margin-bottom: 8px;">🏆</span>
+                                    <h4 style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #10b981; margin-bottom: 4px;">Pontos Validados</h4>
+                                    <div style="font-size: 16px; font-weight: 800; color: #fff;" id="vendedorStatReceberPontos">0 Pontos Validados</div>
+                                    <div id="vendedorStatReceber" style="display: none;"></div>
+                                </div>
+                                <!-- Já Pago -->
+                                <div class="glass-card" style="padding: 20px; text-align: center; border: 1px solid rgba(59, 130, 246, 0.3); background: rgba(59, 130, 246, 0.03);">
+                                    <span style="font-size: 24px; display: block; margin-bottom: 8px;">💳</span>
+                                    <h4 style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #3b82f6; margin-bottom: 4px;">Pontos Pagos</h4>
+                                    <div style="font-size: 16px; font-weight: 800; color: #fff;" id="vendedorStatPagoPontos">0 Pontos Pagos</div>
+                                    <div id="vendedorStatPago" style="display: none;"></div>
+                                </div>
+                                <!-- Pendente -->
+                                <div class="glass-card" style="padding: 20px; text-align: center; border: 1px solid rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.03);">
+                                    <span style="font-size: 24px; display: block; margin-bottom: 8px;">⏳</span>
+                                    <h4 style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #f59e0b; margin-bottom: 4px;">Pontos Pendentes</h4>
+                                    <div style="font-size: 16px; font-weight: 800; color: #fff;" id="vendedorStatPendentePontos">0 Pontos Lançados</div>
+                                    <div id="vendedorStatPendente" style="display: none;"></div>
+                                </div>
+                            </div>
+                            
+                            <div style="padding: 20px; background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px;">
+                                <h5 style="color: #fff; font-size: 13px; margin-bottom: 6px;">💡 Dica do Laboratório:</h5>
+                                <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">Resgate as O.S. enviadas pelo laboratório na aba <strong>Resgatar O.S.</strong> para computar seus pontos. A liberação de pagamentos é efetuada periodicamente pela administração da Personality Lenses.</p>
+                            </div>
                         </div>
-
-                        <!-- Pontos Pagos -->
-                        <div class="glass-card" style="padding: 20px; text-align: center; border: 1px solid rgba(59, 130, 246, 0.3); background: rgba(59, 130, 246, 0.03);">
-                            <span style="font-size: 24px; display: block; margin-bottom: 8px;">💳</span>
-                            <h4 style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #3b82f6; margin-bottom: 4px;">Pontos Pagos</h4>
-                            <div style="font-size: 14px; font-weight: 800; color: #fff;" id="vendedorStatPagoPontos">0 Pontos Pagos</div>
-                            <div id="vendedorStatPago" style="display: none;"></div>
-                        </div>
-
-                        <!-- Pontos Lançados / Pendentes -->
-                        <div class="glass-card" style="padding: 20px; text-align: center; border: 1px solid rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.03);">
-                            <span style="font-size: 24px; display: block; margin-bottom: 8px;">⏳</span>
-                            <h4 style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #f59e0b; margin-bottom: 4px;">Pontos Pendentes</h4>
-                            <div style="font-size: 14px; font-weight: 800; color: #fff;" id="vendedorStatPendentePontos">0 Pontos Lançados</div>
-                            <div id="vendedorStatPendente" style="display: none;"></div>
-                        </div>
-
                     </div>
 
-                    <!-- Coluna Direita: Ações e Extrato -->
-                    <div class="vendedor-main-content" style="display: flex; flex-direction: column; gap: 25px;">
-                        
-                        <!-- Formulário para Lançar Novo Pedido / O.S. -->
-                        <div class="glass-card" style="padding: 25px; border: 1px solid rgba(197, 168, 92, 0.2); background: rgba(255,255,255,0.01);">
-                            <h4 style="font-family: var(--font-heading); font-size: 15px; color: var(--gold-light); margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">📥 Resgatar O.S. Liberada (Pontuar)</h4>
+                    <!-- Seção: Resgatar O.S. -->
+                    <div class="vendedor-section" id="sec-vendedor-resgatar">
+                        <div class="glass-card" style="padding: 30px; border: 1px solid rgba(197, 168, 92, 0.2); background: rgba(255,255,255,0.01);">
+                            <h4 style="font-family: var(--font-heading); font-size: 16px; color: var(--gold-light); margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">📥 Resgatar O.S. Liberada (Pontuar)</h4>
                             <form id="vendedorSubmitSaleForm" novalidate>
                                 <div class="vendedor-sale-form-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
                                     <!-- Ordem de Serviço (O.S.) -->
@@ -372,10 +434,12 @@
                                 </button>
                             </form>
                         </div>
+                    </div>
 
-                        <!-- Tabela de Extrato de Prêmios do Vendedor -->
-                        <div class="glass-card" style="padding: 25px;">
-                            <h4 style="font-family: var(--font-heading); font-size: 15px; color: var(--gold-light); margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">📋 Extrato Detalhado de Vendas Resgatadas</h4>
+                    <!-- Seção: Extrato de Prêmios -->
+                    <div class="vendedor-section" id="sec-vendedor-extrato">
+                        <div class="glass-card" style="padding: 30px;">
+                            <h4 style="font-family: var(--font-heading); font-size: 16px; color: var(--gold-light); margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">📋 Extrato Detalhado de Vendas Resgatadas</h4>
                             <div class="table-container" style="overflow-x: auto;">
                                 <table class="leads-table">
                                     <thead>
@@ -395,11 +459,9 @@
                                 </table>
                             </div>
                         </div>
-
                     </div>
 
-                </div>
-
+                </section>
             </div>
 
         </div>
@@ -423,6 +485,6 @@
     </footer>
 
     <!-- Lógica JS Dedicada -->
-    <script src="vendedor.js?v=3.65"></script>
+    <script src="vendedor.js?v=3.66"></script>
 </body>
 </html>

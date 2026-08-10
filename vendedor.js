@@ -987,7 +987,29 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('vendedorStatPendentePontos').textContent = `${ptsPendente} Pontos Lançados`;
     }
 
+    // Navegação entre Seções do Painel do Vendedor (v3.66)
+    const initVendedorNavigation = () => {
+        const sideBtns = document.querySelectorAll('.vendedor-side-btn');
+        const sections = document.querySelectorAll('.vendedor-section');
+
+        sideBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetSec = btn.getAttribute('data-vendedor-section');
+                
+                // Remove active de todos os botões e seções
+                sideBtns.forEach(b => b.classList.remove('active'));
+                sections.forEach(s => s.classList.remove('active'));
+
+                // Adiciona active no botão e seção alvo
+                btn.classList.add('active');
+                const targetEl = document.getElementById(`sec-vendedor-${targetSec}`);
+                if (targetEl) targetEl.classList.add('active');
+            });
+        });
+    };
+
     // Inicialização
+    initVendedorNavigation();
     loadStoresList();
     loadRewardsConfig();
     checkVendedorSession();
