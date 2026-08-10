@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=3.64">
+    <link rel="stylesheet" href="style.css?v=3.65">
     <style>
         /* Estilos adicionais específicos para a página do vendedor */
         .vendedor-page-body {
@@ -70,6 +70,7 @@
         }
         .leads-table {
             width: 100%;
+            min-width: 880px;
             border-collapse: collapse;
             text-align: left;
             font-size: 10px;
@@ -97,12 +98,14 @@
             background: rgba(255, 255, 255, 0.01);
             color: #fff;
         }
-        /* Colunas curtas que não devem quebrar de linha */
-        .leads-table th:nth-child(1), .leads-table td:nth-child(1),
-        .leads-table th:nth-child(2), .leads-table td:nth-child(2),
-        .leads-table th:last-child, .leads-table td:last-child {
-            white-space: nowrap !important;
-        }
+        /* Colunas curtas que não devem quebrar de linha e larguras mínimas (v3.65) */
+        .leads-table th:nth-child(1), .leads-table td:nth-child(1) { width: 90px; white-space: nowrap !important; }
+        .leads-table th:nth-child(2), .leads-table td:nth-child(2) { width: 100px; white-space: nowrap !important; }
+        .leads-table th:nth-child(3), .leads-table td:nth-child(3) { min-width: 140px; }
+        .leads-table th:nth-child(4), .leads-table td:nth-child(4) { min-width: 160px; }
+        .leads-table th:nth-child(5), .leads-table td:nth-child(5) { min-width: 160px; }
+        .leads-table th:nth-child(6), .leads-table td:nth-child(6) { width: 90px; text-align: center; }
+        .leads-table th:last-child, .leads-table td:last-child { width: 100px; text-align: center; white-space: nowrap !important; }
 
         /* Controles, Inputs e Formulários */
         .input-group label {
@@ -123,7 +126,7 @@
             font-weight: 700 !important;
         }
         
-        /* Grid responsivo do painel do vendedor (v3.63) */
+        /* Grid responsivo do painel do vendedor (v3.65) */
         .vendedor-dashboard-grid {
             display: grid;
             grid-template-columns: 260px 1fr;
@@ -131,7 +134,7 @@
             align-items: start;
             margin-top: 20px;
         }
-        @media (max-width: 968px) {
+        @media (max-width: 1024px) {
             .vendedor-dashboard-grid {
                 grid-template-columns: 1fr;
                 gap: 20px;
@@ -420,6 +423,6 @@
     </footer>
 
     <!-- Lógica JS Dedicada -->
-    <script src="vendedor.js?v=3.64"></script>
+    <script src="vendedor.js?v=3.65"></script>
 </body>
 </html>
