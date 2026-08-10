@@ -25,6 +25,363 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/'/g, "&#039;");
     }
 
+    // =============================================================
+    // Efeitos de Áudio e Animação 3D Gamificada (v3.73)
+    // =============================================================
+    const playSynthSound = (type) => {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+            
+            if (type === 'pop') {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(600, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.25, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.25);
+                
+                const osc2 = ctx.createOscillator();
+                const gain2 = ctx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(1800, ctx.currentTime);
+                osc2.frequency.exponentialRampToValueAtTime(2200, ctx.currentTime + 0.2);
+                gain2.gain.setValueAtTime(0.06, ctx.currentTime);
+                gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.22);
+                osc2.connect(gain2);
+                gain2.connect(ctx.destination);
+                osc2.start();
+                osc2.stop(ctx.currentTime + 0.25);
+            } else if (type === 'chime') {
+                const freqs = [261.63, 329.63, 392.00, 523.25];
+                freqs.forEach((freq, index) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, ctx.currentTime + index * 0.08);
+                    gain.gain.setValueAtTime(0.0, ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.1, ctx.currentTime + index * 0.08 + 0.05);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + index * 0.08 + 0.6);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(ctx.currentTime + index * 0.08);
+                    osc.stop(ctx.currentTime + index * 0.08 + 0.75);
+                });
+            }
+        } catch (e) {
+            console.warn('Audio Context block:', e);
+        }
+    };
+
+    const triggerConfettiEffect = () => {
+        try {
+            const duration = 2 * 1000;
+            const end = Date.now() + duration;
+            
+            const confCanvas = document.createElement('canvas');
+            confCanvas.style.position = 'fixed';
+            confCanvas.style.top = '0';
+            confCanvas.style.left = '0';
+            confCanvas.style.width = '100vw';
+            confCanvas.style.height = '100vh';
+            confCanvas.style.pointerEvents = 'none';
+            confCanvas.style.zIndex = '99999';
+            document.body.appendChild(confCanvas);
+            
+            const ctx = confCanvas.getContext('2d');
+            confCanvas.width = window.innerWidth;
+            confCanvas.height = window.innerHeight;
+            
+            const colors = ['#c5a85c', '#ffffff', '#8a6d3b', '#10b981', '#3b82f6'];
+            const particles = [];
+            
+            for (let i = 0; i < 80; i++) {
+                particles.push({
+                    x: Math.random() * confCanvas.width,
+                    y: Math.random() * confCanvas.height - confCanvas.height,
+                    r: Math.random() * 6 + 4,
+                    d: Math.random() * confCanvas.height,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    tilt: Math.random() * 10 - 5,
+                    tiltAngleIncremental: Math.random() * 0.07 + 0.02,
+                    tiltAngle: 0
+                });
+            }
+            
+            const draw = () => {
+                if (Date.now() > end) {
+                    confCanvas.remove();
+                    return;
+                }
+                ctx.clearRect(0, 0, confCanvas.width, confCanvas.height);
+                particles.forEach((p, idx) => {
+                    p.tiltAngle += p.tiltAngleIncremental;
+                    p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
+                    p.x += Math.sin(p.tiltAngle);
+                    p.tilt = Math.sin(p.tiltAngle - idx / 3) * 15;
+                    
+                    ctx.beginPath();
+                    ctx.lineWidth = p.r;
+                    ctx.strokeStyle = p.color;
+                    ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+                    ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+                    ctx.stroke();
+                    
+                    if (p.y > confCanvas.height) {
+                        p.x = Math.random() * confCanvas.width;
+                        p.y = -20;
+                    }
+                });
+                requestAnimationFrame(draw);
+            };
+            draw();
+        } catch (err) {
+            console.warn('Confetti error:', err);
+        }
+    };
+
+    let radarAnimationId = null;
+    let radarBubbles = [];
+    let radarMouse = { x: 0, y: 0 };
+    let radarHoveredBubble = null;
+    
+    function initVendedorRadar(list) {
+        const canvas = document.getElementById('vendedorRadarCanvas');
+        const emptyOverlay = document.getElementById('radarEmptyOverlay');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        
+        if (radarAnimationId) {
+            cancelAnimationFrame(radarAnimationId);
+            radarAnimationId = null;
+        }
+        
+        radarBubbles = [];
+        
+        if (!list || list.length === 0) {
+            if (emptyOverlay) emptyOverlay.style.display = 'block';
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            return;
+        }
+        
+        if (emptyOverlay) emptyOverlay.style.display = 'none';
+        
+        const resizeRadarCanvas = () => {
+            const rect = canvas.parentNode.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        };
+        resizeRadarCanvas();
+        
+        list.forEach((item) => {
+            let pointsVal = 100;
+            if (window.currentRewardsConfig && window.currentRewardsConfig.length > 0) {
+                const lensConf = window.currentRewardsConfig.find(c => c.categoria === 'lente' && c.nome === item.lente_familia) || { pontos: 0 };
+                const arConf = window.currentRewardsConfig.find(c => c.categoria === 'antirreflexo' && c.nome === item.ar_familia) || { pontos: 0 };
+                pointsVal = (lensConf.pontos || 0) + (arConf.pontos || 0) || 100;
+            }
+            
+            const radius = 40 + Math.min(pointsVal / 8, 20);
+            
+            radarBubbles.push({
+                id: item.os,
+                os: item.os,
+                client: item.cliente_nome,
+                lens: item.lente_familia,
+                ar: item.ar_familia,
+                points: pointsVal,
+                radius: radius,
+                x: Math.random() * (canvas.width - radius * 2) + radius,
+                y: Math.random() * (canvas.height - radius * 2) + radius,
+                vx: (0.4 + Math.random() * 0.6) * (Math.random() > 0.5 ? 1 : -1),
+                vy: (0.4 + Math.random() * 0.6) * (Math.random() > 0.5 ? 1 : -1),
+                pulseOffset: Math.random() * 100,
+                opacity: 0,
+                isExploding: false,
+                particles: []
+            });
+        });
+        
+        canvas.onmousemove = (e) => {
+            const rect = canvas.getBoundingClientRect();
+            radarMouse.x = e.clientX - rect.left;
+            radarMouse.y = e.clientY - rect.top;
+        };
+        
+        canvas.onclick = () => {
+            if (radarHoveredBubble && !radarHoveredBubble.isExploding) {
+                const b = radarHoveredBubble;
+                b.isExploding = true;
+                playSynthSound('pop');
+                
+                const colors = ['#c5a85c', '#ffffff', '#8a6d3b', '#ffda79'];
+                for (let i = 0; i < 35; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 1.5 + Math.random() * 4.5;
+                    b.particles.push({
+                        x: b.x,
+                        y: b.y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed - 1,
+                        radius: 1 + Math.random() * 2.5,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        alpha: 1.0,
+                        decay: 0.015 + Math.random() * 0.02
+                    });
+                }
+                
+                const saleOsSelect = document.getElementById('saleOs');
+                if (saleOsSelect) {
+                    saleOsSelect.value = b.os;
+                    saleOsSelect.dispatchEvent(new Event('change'));
+                }
+                
+                const formCard = saleOsSelect.closest('.glass-card') || saleOsSelect.parentNode;
+                if (formCard) {
+                    formCard.style.transition = 'all 0.5s ease';
+                    formCard.style.boxShadow = '0 0 25px rgba(197, 168, 92, 0.4)';
+                    formCard.style.borderColor = '#c5a85c';
+                    setTimeout(() => {
+                        formCard.style.boxShadow = '';
+                        formCard.style.borderColor = '';
+                    }, 1200);
+                }
+                
+                setTimeout(() => {
+                    radarBubbles = radarBubbles.filter(bubble => bubble.id !== b.id);
+                    if (radarBubbles.length === 0 && emptyOverlay) {
+                        emptyOverlay.style.display = 'block';
+                    }
+                }, 1200);
+            }
+        };
+        
+        const loop = () => {
+            if (!canvas.getContext) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.strokeStyle = 'rgba(197, 168, 92, 0.015)';
+            ctx.lineWidth = 1;
+            const size = 30;
+            for (let x = 0; x < canvas.width; x += size) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += size) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            }
+            
+            let hovered = null;
+            
+            radarBubbles.forEach((b) => {
+                if (b.isExploding) {
+                    b.particles.forEach((p) => {
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.vy += 0.03;
+                        p.alpha -= p.decay;
+                        
+                        ctx.save();
+                        ctx.globalAlpha = Math.max(0, p.alpha);
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                        ctx.fillStyle = p.color;
+                        ctx.shadowColor = p.color;
+                        ctx.shadowBlur = 6;
+                        ctx.fill();
+                        ctx.restore();
+                    });
+                    b.particles = b.particles.filter(p => p.alpha > 0);
+                    return;
+                }
+                
+                if (b.opacity < 1) b.opacity += 0.05;
+                
+                b.x += b.vx;
+                b.y += b.vy;
+                b.y += Math.sin(Date.now() * 0.0015 + b.pulseOffset) * 0.08;
+                
+                if (b.x - b.radius < 0) { b.x = b.radius; b.vx *= -1; }
+                else if (b.x + b.radius > canvas.width) { b.x = canvas.width - b.radius; b.vx *= -1; }
+                if (b.y - b.radius < 0) { b.y = b.radius; b.vy *= -1; }
+                else if (b.y + b.radius > canvas.height) { b.y = canvas.height - b.radius; b.vy *= -1; }
+                
+                const dx = radarMouse.x - b.x;
+                const dy = radarMouse.y - b.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                const isHovered = dist < b.radius;
+                
+                if (isHovered) {
+                    hovered = b;
+                }
+                
+                ctx.save();
+                ctx.globalAlpha = b.opacity;
+                ctx.shadowColor = isHovered ? '#c5a85c' : 'rgba(197, 168, 92, 0.3)';
+                ctx.shadowBlur = isHovered ? 20 : 8;
+                
+                const radGrad = ctx.createRadialGradient(
+                    b.x - b.radius * 0.25, b.y - b.radius * 0.25, b.radius * 0.1,
+                    b.x, b.y, b.radius
+                );
+                if (isHovered) {
+                    radGrad.addColorStop(0, 'rgba(255, 255, 255, 0.7)');
+                    radGrad.addColorStop(0.3, 'rgba(197, 168, 92, 0.3)');
+                    radGrad.addColorStop(0.9, 'rgba(197, 168, 92, 0.65)');
+                    radGrad.addColorStop(1, '#c5a85c');
+                } else {
+                    radGrad.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+                    radGrad.addColorStop(0.3, 'rgba(197, 168, 92, 0.08)');
+                    radGrad.addColorStop(0.85, 'rgba(197, 168, 92, 0.3)');
+                    radGrad.addColorStop(1, 'rgba(197, 168, 92, 0.75)');
+                }
+                
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, isHovered ? b.radius * 1.05 : b.radius, 0, Math.PI * 2);
+                ctx.fillStyle = radGrad;
+                ctx.fill();
+                
+                ctx.strokeStyle = isHovered ? '#fff' : 'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = isHovered ? 1.5 : 1;
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.arc(b.x - b.radius * 0.3, b.y - b.radius * 0.3, b.radius * 0.1, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                ctx.fill();
+                
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#fff';
+                ctx.font = `bold 10px 'Montserrat', sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(b.os, b.x, b.y - 6);
+                
+                ctx.beginPath();
+                ctx.roundRect(b.x - 26, b.y + 5, 52, 12, 6);
+                ctx.fillStyle = isHovered ? '#fff' : '#c5a85c';
+                ctx.fill();
+                
+                ctx.fillStyle = '#000';
+                ctx.font = `bold 9px 'Montserrat', sans-serif`;
+                ctx.fillText(`+${b.points} pts`, b.x, b.y + 11);
+                
+                ctx.restore();
+            });
+            
+            radarHoveredBubble = hovered;
+            radarAnimationId = requestAnimationFrame(loop);
+        };
+        
+        radarAnimationId = requestAnimationFrame(loop);
+    }
+
     // Password Visibility Toggle (Olho) (v3.60)
     document.querySelectorAll('.password-toggle-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -703,6 +1060,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (btnSubmit) btnSubmit.disabled = false;
         }
+        initVendedorRadar(list);
     }
 
     const vendedorSubmitSaleForm = document.getElementById('vendedorSubmitSaleForm');
@@ -830,6 +1188,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         localStorage.setItem('personality_local_os_autorizadas', JSON.stringify(localOs));
                     }
 
+                    playSynthSound('chime');
+                    triggerConfettiEffect();
                     alert('Venda resgatada com sucesso! Pontos acumulados.');
                     vendedorSubmitSaleForm.reset();
                     loadVendedorExtrato(activeId);
@@ -858,6 +1218,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         localStorage.setItem('personality_local_os_autorizadas', JSON.stringify(localOs));
                     }
 
+                    playSynthSound('chime');
+                    triggerConfettiEffect();
                     alert('Venda resgatada com sucesso! Pontos acumulados.');
                     vendedorSubmitSaleForm.reset();
                     loadVendedorExtrato(activeId);
