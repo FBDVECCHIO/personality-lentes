@@ -1043,6 +1043,33 @@ document.addEventListener('DOMContentLoaded', () => {
             list = local.filter(item => item.cpf_vendedor === cpf && !item.utilizada);
         }
         
+        
+        // Filtra as OS para garantir que nenhuma já tenha sido resgatada anteriormente (v3.75)
+        if (list.length > 0) {
+            const localPremios = JSON.parse(localStorage.getItem('personality_local_premios')) || [];
+            const localClaimedSet = new Set(localPremios.map(p => p.os));
+            list = list.filter(item => !localClaimedSet.has(item.os));
+            
+            if (url && key) {
+                try {
+                    const premiosTable = localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
+                    const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                    const osListStr = list.map(item => `"${item.os}"`).join(',');
+                    const response = await fetch(`${cleanUrl}/rest/v1/${premiosTable}?os=in.(${osListStr})&select=os`, {
+                        method: 'GET',
+                        headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                    });
+                    if (response.ok) {
+                        const claimedOs = await response.json();
+                        const claimedSet = new Set(claimedOs.map(item => item.os));
+                        list = list.filter(item => !claimedSet.has(item.os));
+                    }
+                } catch (err) {
+                    console.error('Erro ao verificar OS duplicadas no Supabase:', err);
+                }
+            }
+        }
+
         activeAuthorizedOsList = list;
         
         saleOs.innerHTML = '';
@@ -1117,6 +1144,44 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.disabled = true;
             if (spinner) spinner.style.display = 'inline-block';
             btn.querySelector('.btn-text').textContent = 'Enviando Lançamento...';
+
+            // Validação atrativa de O.S. já cadastrada no premios_lancados_personality (v3.75)
+            const url = getSupabaseUrl();
+            const key = getSupabaseKey();
+            const table = localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
+
+            // 1. Verifica duplicados em cache local
+            const localPremios = JSON.parse(localStorage.getItem('personality_local_premios')) || [];
+            if (localPremios.some(item => item.os === osVal)) {
+                alert('Erro: Esta O.S. já foi resgatada e pontuada anteriormente!');
+                btn.disabled = false;
+                if (spinner) spinner.style.display = 'none';
+                btn.querySelector('.btn-text').textContent = 'Resgatar O.S. e Acumular Pontos 🚀';
+                return;
+            }
+
+            // 2. Verifica duplicados no Supabase
+            if (url && key) {
+                try {
+                    const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                    const checkRes = await fetch(`${cleanUrl}/rest/v1/${table}?os=eq.${encodeURIComponent(osVal)}&select=os`, {
+                        method: 'GET',
+                        headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                    });
+                    if (checkRes.ok) {
+                        const existing = await checkRes.json();
+                        if (existing && existing.length > 0) {
+                            alert('Erro: Esta O.S. já foi resgatada e pontuada anteriormente no sistema!');
+                            btn.disabled = false;
+                            if (spinner) spinner.style.display = 'none';
+                            btn.querySelector('.btn-text').textContent = 'Resgatar O.S. e Acumular Pontos 🚀';
+                            return;
+                        }
+                    }
+                } catch (err) {
+                    console.error('Erro de validação de duplicidade na rede:', err);
+                }
+            }
 
             const activeId = sessionStorage.getItem('active_vendedor_id');
             const activeNome = sessionStorage.getItem('active_vendedor_nome');
