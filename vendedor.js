@@ -1209,9 +1209,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 created_at: new Date().toISOString()
             };
 
-            const url = getSupabaseUrl();
-            const key = getSupabaseKey();
-            const table = localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
             const osAuthTable = localStorage.getItem('personality_sb_os_autorizadas_table') || 'os_autorizadas_personality';
 
             if (url && key) {
