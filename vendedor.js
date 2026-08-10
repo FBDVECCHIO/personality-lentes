@@ -182,9 +182,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         list.forEach((item) => {
             let pointsVal = 100;
-            if (window.currentRewardsConfig && window.currentRewardsConfig.length > 0) {
-                const lensConf = window.currentRewardsConfig.find(c => c.categoria === 'lente' && c.nome === item.lente_familia) || { pontos: 0 };
-                const arConf = window.currentRewardsConfig.find(c => c.categoria === 'antirreflexo' && c.nome === item.ar_familia) || { pontos: 0 };
+            if (currentRewardsConfig && currentRewardsConfig.length > 0) {
+                const lensConf = currentRewardsConfig.find(c => c.categoria === 'lente' && c.nome === item.lente_familia) || { pontos: 0 };
+                const arConf = currentRewardsConfig.find(c => c.categoria === 'antirreflexo' && c.nome === item.ar_familia) || { pontos: 0 };
                 pointsVal = (lensConf.pontos || 0) + (arConf.pontos || 0) || 100;
             }
             
@@ -1054,7 +1054,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     const premiosTable = localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
                     const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
-                    const osListStr = list.map(item => `"${item.os}"`).join(',');
+                    const osListStr = list.map(item => encodeURIComponent(item.os)).join(',');
                     const response = await fetch(`${cleanUrl}/rest/v1/${premiosTable}?os=in.(${osListStr})&select=os`, {
                         method: 'GET',
                         headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
