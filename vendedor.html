@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=3.61">
+    <link rel="stylesheet" href="style.css?v=3.63">
     <style>
         /* Estilos adicionais específicos para a página do vendedor */
         .vendedor-page-body {
@@ -121,6 +121,21 @@
         #btnVendedorRegister {
             font-size: 12px !important;
             font-weight: 700 !important;
+        }
+        
+        /* Grid responsivo do painel do vendedor (v3.63) */
+        .vendedor-dashboard-grid {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 25px;
+            align-items: start;
+            margin-top: 20px;
+        }
+        @media (max-width: 968px) {
+            .vendedor-dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
         }
     </style>
 </head>
@@ -269,103 +284,117 @@
                     </div>
                 </div>
 
-                <!-- Grid de Métricas de Prêmios (Saldo, Pago, Pendente) -->
-                <div class="vendedor-metrics-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 40px;">
-                    <!-- A Receber -->
-                    <div class="glass-card" style="padding: 20px; text-align: center; border: 1px solid rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.03);">
-                        <span style="font-size: 28px; display: block; margin-bottom: 8px;">🏆</span>
-                        <h4 style="font-size: 13px; font-weight: 700; text-transform: uppercase; color: #10b981; margin-bottom: 4px;">Pontos Validados</h4>
-                        <div style="font-size: 22px; font-weight: 800; color: #fff;" id="vendedorStatReceberPontos">0 Pontos Validados</div>
-                        <div id="vendedorStatReceber" style="display: none;"></div>
-                    </div>
-                    <!-- Já Pago -->
-                    <div class="glass-card" style="padding: 20px; text-align: center; border: 1px solid rgba(59, 130, 246, 0.3); background: rgba(59, 130, 246, 0.03);">
-                        <span style="font-size: 28px; display: block; margin-bottom: 8px;">💳</span>
-                        <h4 style="font-size: 13px; font-weight: 700; text-transform: uppercase; color: #3b82f6; margin-bottom: 4px;">Pontos Pagos</h4>
-                        <div style="font-size: 22px; font-weight: 800; color: #fff;" id="vendedorStatPagoPontos">0 Pontos Pagos</div>
-                        <div id="vendedorStatPago" style="display: none;"></div>
-                    </div>
-                    <!-- Pendente -->
-                    <div class="glass-card" style="padding: 20px; text-align: center; border: 1px solid rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.03);">
-                        <span style="font-size: 28px; display: block; margin-bottom: 8px;">⏳</span>
-                        <h4 style="font-size: 13px; font-weight: 700; text-transform: uppercase; color: #f59e0b; margin-bottom: 4px;">Pontos Pendentes</h4>
-                        <div style="font-size: 22px; font-weight: 800; color: #fff;" id="vendedorStatPendentePontos">0 Pontos Lançados</div>
-                        <div id="vendedorStatPendente" style="display: none;"></div>
-                    </div>
-                </div>
+                <!-- Grid em Duas Colunas do Dashboard (v3.63) -->
+                <div class="vendedor-dashboard-grid">
+                    
+                    <!-- Coluna Esquerda: Métricas (Dados Gerais) -->
+                    <div class="vendedor-sidebar" style="display: flex; flex-direction: column; gap: 20px;">
+                        
+                        <!-- Pontos Validados -->
+                        <div class="glass-card" style="padding: 20px; text-align: center; border: 1px solid rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.03);">
+                            <span style="font-size: 24px; display: block; margin-bottom: 8px;">🏆</span>
+                            <h4 style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #10b981; margin-bottom: 4px;">Pontos Validados</h4>
+                            <div style="font-size: 14px; font-weight: 800; color: #fff;" id="vendedorStatReceberPontos">0 Pontos Validados</div>
+                            <div id="vendedorStatReceber" style="display: none;"></div>
+                        </div>
 
-                <!-- Formulário para Lançar Novo Pedido / O.S. -->
-                <div class="glass-card" style="padding: 30px; border: 1px solid rgba(197, 168, 92, 0.2); background: rgba(255,255,255,0.01); margin-bottom: 45px;">
-                    <h4 style="font-family: var(--font-heading); font-size: 17px; color: var(--gold-light); margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">📥 Resgatar O.S. Liberada (Pontuar)</h4>
-                    <form id="vendedorSubmitSaleForm" novalidate>
-                        <div class="vendedor-sale-form-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
-                            <!-- Ordem de Serviço (O.S.) -->
-                            <div class="input-group" style="margin-bottom: 0;">
-                                <label for="saleOs" style="font-size: 13px;">Número da O.S. / Pedido Liberado</label>
-                                <select id="saleOs" required style="width: 100%; padding: 10px 14px; background: #121216; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-family: inherit;">
-                                    <option value="">Carregando O.S. liberadas...</option>
-                                </select>
-                                <span class="error-msg" id="saleOsError" style="display: none; color: #ff5555; font-size: 11px; margin-top: 2px;">Selecione uma O.S.</span>
-                            </div>
-                            <!-- Nome do Cliente -->
-                            <div class="input-group" style="margin-bottom: 0;">
-                                <label for="saleClientName" style="font-size: 13px;">Nome do Paciente / Cliente</label>
-                                <input type="text" id="saleClientName" placeholder="Selecione uma O.S. para preencher..." required readonly style="width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; color: #bbb; pointer-events: none;">
-                                <span class="error-msg" id="saleClientNameError" style="display: none; color: #ff5555; font-size: 11px; margin-top: 2px;">Selecione uma O.S.</span>
-                            </div>
-                            <!-- Família da Lente -->
-                            <div class="input-group" style="margin-bottom: 0;">
-                                <label for="saleLensFamily" style="font-size: 13px;">Família da Lente Vendida</label>
-                                <select id="saleLensFamily" required style="width: 100%; padding: 10px 14px; background: #121216; border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; color: #bbb; font-family: inherit; pointer-events: none; opacity: 0.8;">
-                                    <option value="">Selecione uma O.S. para preencher...</option>
-                                </select>
-                                <span class="error-msg" id="saleLensFamilyError" style="display: none; color: #ff5555; font-size: 11px; margin-top: 2px;">Escolha a lente.</span>
-                            </div>
-                            <!-- Família do Antirreflexo -->
-                            <div class="input-group" style="margin-bottom: 0;">
-                                <label for="saleArFamily" style="font-size: 13px;">Tratamento Antirreflexo</label>
-                                <select id="saleArFamily" required style="width: 100%; padding: 10px 14px; background: #121216; border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; color: #bbb; font-family: inherit; pointer-events: none; opacity: 0.8;">
-                                    <option value="">Selecione uma O.S. para preencher...</option>
-                                </select>
-                                <span class="error-msg" id="saleArFamilyError" style="display: none; color: #ff5555; font-size: 11px; margin-top: 2px;">Escolha o antirreflexo.</span>
-                            </div>
-                            <!-- Data da Venda -->
-                            <div class="input-group" style="margin-bottom: 0; grid-column: span 2;">
-                                <label for="saleDate" style="font-size: 13px;">Data da Venda</label>
-                                <input type="date" id="saleDate" required readonly style="width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; color: #bbb; font-family: inherit; pointer-events: none;">
-                                <span class="error-msg" id="saleDateError" style="display: none; color: #ff5555; font-size: 11px; margin-top: 2px;">Selecione a data da venda.</span>
+                        <!-- Pontos Pagos -->
+                        <div class="glass-card" style="padding: 20px; text-align: center; border: 1px solid rgba(59, 130, 246, 0.3); background: rgba(59, 130, 246, 0.03);">
+                            <span style="font-size: 24px; display: block; margin-bottom: 8px;">💳</span>
+                            <h4 style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #3b82f6; margin-bottom: 4px;">Pontos Pagos</h4>
+                            <div style="font-size: 14px; font-weight: 800; color: #fff;" id="vendedorStatPagoPontos">0 Pontos Pagos</div>
+                            <div id="vendedorStatPago" style="display: none;"></div>
+                        </div>
+
+                        <!-- Pontos Lançados / Pendentes -->
+                        <div class="glass-card" style="padding: 20px; text-align: center; border: 1px solid rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.03);">
+                            <span style="font-size: 24px; display: block; margin-bottom: 8px;">⏳</span>
+                            <h4 style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #f59e0b; margin-bottom: 4px;">Pontos Pendentes</h4>
+                            <div style="font-size: 14px; font-weight: 800; color: #fff;" id="vendedorStatPendentePontos">0 Pontos Lançados</div>
+                            <div id="vendedorStatPendente" style="display: none;"></div>
+                        </div>
+
+                    </div>
+
+                    <!-- Coluna Direita: Ações e Extrato -->
+                    <div class="vendedor-main-content" style="display: flex; flex-direction: column; gap: 25px;">
+                        
+                        <!-- Formulário para Lançar Novo Pedido / O.S. -->
+                        <div class="glass-card" style="padding: 25px; border: 1px solid rgba(197, 168, 92, 0.2); background: rgba(255,255,255,0.01);">
+                            <h4 style="font-family: var(--font-heading); font-size: 15px; color: var(--gold-light); margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">📥 Resgatar O.S. Liberada (Pontuar)</h4>
+                            <form id="vendedorSubmitSaleForm" novalidate>
+                                <div class="vendedor-sale-form-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                                    <!-- Ordem de Serviço (O.S.) -->
+                                    <div class="input-group" style="margin-bottom: 0;">
+                                        <label for="saleOs" style="font-size: 11px;">Número da O.S. / Pedido Liberado</label>
+                                        <select id="saleOs" required style="width: 100%; padding: 10px 14px; background: #121216; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-family: inherit;">
+                                            <option value="">Carregando O.S. liberadas...</option>
+                                        </select>
+                                        <span class="error-msg" id="saleOsError" style="display: none; color: #ff5555; font-size: 11px; margin-top: 2px;">Selecione uma O.S.</span>
+                                    </div>
+                                    <!-- Nome do Cliente -->
+                                    <div class="input-group" style="margin-bottom: 0;">
+                                        <label for="saleClientName" style="font-size: 11px;">Nome do Paciente / Cliente</label>
+                                        <input type="text" id="saleClientName" placeholder="Selecione uma O.S. para preencher..." required readonly style="width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; color: #bbb; pointer-events: none;">
+                                        <span class="error-msg" id="saleClientNameError" style="display: none; color: #ff5555; font-size: 11px; margin-top: 2px;">Selecione uma O.S.</span>
+                                    </div>
+                                    <!-- Família da Lente -->
+                                    <div class="input-group" style="margin-bottom: 0;">
+                                        <label for="saleLensFamily" style="font-size: 11px;">Família da Lente Vendida</label>
+                                        <select id="saleLensFamily" required style="width: 100%; padding: 10px 14px; background: #121216; border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; color: #bbb; font-family: inherit; pointer-events: none; opacity: 0.8;">
+                                            <option value="">Selecione uma O.S. para preencher...</option>
+                                        </select>
+                                        <span class="error-msg" id="saleLensFamilyError" style="display: none; color: #ff5555; font-size: 11px; margin-top: 2px;">Escolha a lente.</span>
+                                    </div>
+                                    <!-- Família do Antirreflexo -->
+                                    <div class="input-group" style="margin-bottom: 0;">
+                                        <label for="saleArFamily" style="font-size: 11px;">Tratamento Antirreflexo</label>
+                                        <select id="saleArFamily" required style="width: 100%; padding: 10px 14px; background: #121216; border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; color: #bbb; font-family: inherit; pointer-events: none; opacity: 0.8;">
+                                            <option value="">Selecione uma O.S. para preencher...</option>
+                                        </select>
+                                        <span class="error-msg" id="saleArFamilyError" style="display: none; color: #ff5555; font-size: 11px; margin-top: 2px;">Escolha o antirreflexo.</span>
+                                    </div>
+                                    <!-- Data da Venda -->
+                                    <div class="input-group" style="margin-bottom: 0; grid-column: span 2;">
+                                        <label for="saleDate" style="font-size: 11px;">Data da Venda</label>
+                                        <input type="date" id="saleDate" required readonly style="width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; color: #bbb; font-family: inherit; pointer-events: none;">
+                                        <span class="error-msg" id="saleDateError" style="display: none; color: #ff5555; font-size: 11px; margin-top: 2px;">Selecione a data da venda.</span>
+                                    </div>
+                                </div>
+
+                                <!-- Botão Lançar Venda -->
+                                <button type="submit" id="btnSubmitSale" class="btn btn-gold btn-sm" style="width: 100%; margin-top: 20px; font-weight: 700; height: 42px; display: flex; justify-content: center; align-items: center; gap: 8px;">
+                                    <span class="btn-text">Resgatar O.S. e Acumular Pontos 🚀</span>
+                                    <div class="spinner" id="saleSubmitSpinner" style="display: none; width: 14px; height: 14px; border: 2px solid rgba(0,0,0,0.15); border-radius: 50%; border-top-color: black; animation: spin 0.8s linear infinite;"></div>
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Tabela de Extrato de Prêmios do Vendedor -->
+                        <div class="glass-card" style="padding: 25px;">
+                            <h4 style="font-family: var(--font-heading); font-size: 15px; color: var(--gold-light); margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">📋 Extrato Detalhado de Vendas Resgatadas</h4>
+                            <div class="table-container" style="overflow-x: auto;">
+                                <table class="leads-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Data</th>
+                                            <th>O.S.</th>
+                                            <th>Cliente</th>
+                                            <th>Lente</th>
+                                            <th>Antirreflexo</th>
+                                            <th>Pontuação</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="vendedorExtratoTableBody">
+                                        <!-- Preenchido dinamicamente via JS -->
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
 
-                        <!-- Botão Lançar Venda -->
-                        <button type="submit" id="btnSubmitSale" class="btn btn-gold btn-sm" style="width: 100%; margin-top: 20px; font-weight: 700; height: 42px; display: flex; justify-content: center; align-items: center; gap: 8px;">
-                            <span class="btn-text">Resgatar O.S. e Acumular Pontos 🚀</span>
-                            <div class="spinner" id="saleSubmitSpinner" style="display: none; width: 14px; height: 14px; border: 2px solid rgba(0,0,0,0.15); border-radius: 50%; border-top-color: black; animation: spin 0.8s linear infinite;"></div>
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Tabela de Extrato de Prêmios do Vendedor -->
-                <div>
-                    <h4 style="font-family: var(--font-heading); font-size: 17px; color: var(--gold-light); margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">📋 Extrato Detalhado de Vendas Resgatadas</h4>
-                    <div class="table-container" style="overflow-x: auto;">
-                        <table class="leads-table">
-                            <thead>
-                                <tr>
-                                    <th>Data</th>
-                                    <th>O.S.</th>
-                                    <th>Cliente</th>
-                                    <th>Lente</th>
-                                    <th>Antirreflexo</th>
-                                    <th>Pontuação</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="vendedorExtratoTableBody">
-                                <!-- Preenchido dinamicamente via JS -->
-                            </tbody>
-                        </table>
                     </div>
+
                 </div>
 
             </div>
@@ -391,6 +420,6 @@
     </footer>
 
     <!-- Lógica JS Dedicada -->
-    <script src="vendedor.js?v=3.61"></script>
+    <script src="vendedor.js?v=3.63"></script>
 </body>
 </html>
