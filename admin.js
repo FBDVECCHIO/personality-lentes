@@ -1281,7 +1281,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     statusPill = `<span style="color:#10b981; font-weight:700; display:block; margin-bottom: 4px;">Aprovado ✅</span><small style="color:var(--text-muted);">${m.info}</small>`;
                 } else {
                     statusPill = `<span style="color:#f59e0b; font-weight:700; display:block; margin-bottom: 4px;">Pendente ⏳</span><small style="color:var(--text-muted);">${m.info}</small>`;
-                    approvalBtn = `<button class="btn btn-sm btn-success btn-approve-seller" data-id="${m.id}" style="margin-right: 5px; padding: 4px 8px; font-size:11px; font-weight:700; background:#10b981; border-color:#10b981; color:#000;">Aprovar ✅</button>`;
+                    approvalBtn = `<button class="icon-btn btn-approve-seller" data-id="${m.id}" title="Aprovar Vendedor" style="background:none; border:none; color:#10b981; cursor:pointer; font-size:14px; margin-right:8px; padding:2px;">✅</button>`;
                 }
             }
 
@@ -1295,9 +1295,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${escapeHtml(m.loja_clinica)}</td>
                 <td>${statusPill}</td>
                 <td>${escapeHtml(formattedDate)}</td>
-                <td>
+                <td style="white-space: nowrap; text-align: center;">
                     ${approvalBtn}
-                    <button class="btn btn-sm btn-outline-gold btn-delete-member" data-id="${m.id}" data-type="${m.tipo}" style="border-color: rgba(255, 85, 85, 0.3); color: #fca5a5; padding: 4px 8px; font-size:11px;">🗑️ Apagar</button>
+                    <button class="icon-btn btn-edit-member" data-id="${m.id}" data-type="${m.tipo}" title="Alterar Cadastro" style="background:none; border:none; color:var(--gold-light); cursor:pointer; font-size:14px; margin-right:8px; padding:2px;">✏️</button>
+                    <button class="icon-btn btn-delete-member" data-id="${m.id}" data-type="${m.tipo}" title="Excluir Cadastro" style="background:none; border:none; color:#f87171; cursor:pointer; font-size:14px; margin-right:8px; padding:2px;">🗑️</button>
+                    ${m.tipo === 'vend' ? `<button class="icon-btn btn-password-member" data-id="${m.id}" title="Definir Nova Senha" style="background:none; border:none; color:#60a5fa; cursor:pointer; font-size:14px; padding:2px;">🔑</button>` : ''}
                 </td>
             `;
             profTableBody.appendChild(tr);
@@ -1321,6 +1323,84 @@ document.addEventListener('DOMContentLoaded', () => {
                 const id = btn.getAttribute('data-id');
                 if (confirm('Deseja realmente aprovar este vendedor?')) {
                     await approveSellerRecord(id);
+                }
+            });
+        });
+
+        // Adiciona listeners para edição de membro (Alterar) (v3.82)
+        profTableBody.querySelectorAll('.btn-edit-member').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                const tipo = btn.getAttribute('data-type');
+                const member = loadedMembersList.find(m => m.id === id && m.tipo === tipo);
+                if (!member) return;
+
+                document.getElementById('editMemberId').value = member.id;
+                document.getElementById('editMemberType').value = member.tipo;
+                document.getElementById('editMemberNome').value = member.nome;
+                document.getElementById('editMemberCpfCnpj').value = member.cpf_cnpj;
+                document.getElementById('editMemberEmail').value = member.email;
+                document.getElementById('editMemberWhatsapp').value = member.whatsapp;
+                document.getElementById('editMemberLojaClinica').value = member.loja_clinica;
+
+                if (member.tipo === 'vend') {
+                    document.getElementById('editMemberCpfLabel').textContent = 'CPF';
+                    document.getElementById('editMemberLojaLabel').textContent = 'Loja';
+                    document.getElementById('editMemberTitle').textContent = '✏️ Editar Vendedor';
+                } else {
+                    document.getElementById('editMemberCpfLabel').textContent = 'CPF / CNPJ';
+                    document.getElementById('editMemberLojaLabel').textContent = 'Clínica';
+                    document.getElementById('editMemberTitle').textContent = '✏️ Editar Profissional';
+                }
+
+                document.getElementById('editMemberModal').style.display = 'flex';
+            });
+        });
+
+        // Adiciona listeners para redefinição de senha (v3.82)
+        profTableBody.querySelectorAll('.btn-password-member').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.getAttribute('data-id');
+                const member = loadedMembersList.find(m => m.id === id && m.tipo === 'vend');
+                if (!member) return;
+
+                const newPassword = prompt(`Digite a nova senha de acesso para o vendedor ${member.nome}:`);
+                if (newPassword === null) return;
+                const cleanPass = newPassword.trim();
+                if (cleanPass.length < 4) {
+                    alert('A senha deve conter no mínimo 4 caracteres!');
+                    return;
+                }
+
+                const url = getSupabaseUrl();
+                const key = getSupabaseKey();
+                const vendTable = localStorage.getItem('personality_sb_vendedores_table') || 'vendedores_personality';
+
+                if (url && key) {
+                    try {
+                        const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                        const response = await fetch(`${cleanUrl}/rest/v1/${vendTable}?id=eq.${id}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'apikey': key,
+                                'Authorization': `Bearer ${key}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ senha: cleanPass })
+                        });
+                        if (response.ok) {
+                            alert('Senha de acesso do vendedor alterada com sucesso!');
+                        } else {
+                            throw new Error('Falha no Supabase.');
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        updateVendedorPasswordLocally(id, cleanPass);
+                        alert('Senha atualizada localmente.');
+                    }
+                } else {
+                    updateVendedorPasswordLocally(id, cleanPass);
+                    alert('Senha local atualizada com sucesso.');
                 }
             });
         });
@@ -1413,6 +1493,133 @@ document.addEventListener('DOMContentLoaded', () => {
             const filtered = local.filter(v => v.id !== id);
             localStorage.setItem('personality_local_vendedores', JSON.stringify(filtered));
         }
+    }
+
+    function updateVendedorPasswordLocally(id, newPass) {
+        const local = JSON.parse(localStorage.getItem('personality_local_vendedores')) || [];
+        const found = local.find(v => v.id === id);
+        if (found) {
+            found.senha = newPass;
+            localStorage.setItem('personality_local_vendedores', JSON.stringify(local));
+        }
+    }
+
+    function updateProfLocally(id, data) {
+        const local = JSON.parse(localStorage.getItem('personality_professionals')) || [];
+        const idx = local.findIndex(p => p.id === id);
+        if (idx !== -1) {
+            local[idx] = { ...local[idx], ...data };
+            localStorage.setItem('personality_professionals', JSON.stringify(local));
+        }
+    }
+
+    function updateVendedorLocally(id, data) {
+        const local = JSON.parse(localStorage.getItem('personality_local_vendedores')) || [];
+        const idx = local.findIndex(v => v.id === id);
+        if (idx !== -1) {
+            local[idx] = { ...local[idx], ...data };
+            localStorage.setItem('personality_local_vendedores', JSON.stringify(local));
+        }
+    }
+
+    // Modal de Edição de Membro (v3.82)
+    const editMemberForm = document.getElementById('editMemberForm');
+    const btnCancelEditMember = document.getElementById('btnCancelEditMember');
+    const editMemberModal = document.getElementById('editMemberModal');
+
+    if (btnCancelEditMember && editMemberModal) {
+        btnCancelEditMember.addEventListener('click', () => {
+            editMemberModal.style.display = 'none';
+        });
+    }
+
+    if (editMemberForm && editMemberModal) {
+        editMemberForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const id = document.getElementById('editMemberId').value;
+            const tipo = document.getElementById('editMemberType').value;
+            const nome = document.getElementById('editMemberNome').value.trim();
+            const cpfCnpj = document.getElementById('editMemberCpfCnpj').value.trim();
+            const email = document.getElementById('editMemberEmail').value.trim();
+            const whatsapp = document.getElementById('editMemberWhatsapp').value.trim();
+            const lojaClinica = document.getElementById('editMemberLojaClinica').value.trim();
+
+            if (!nome || !cpfCnpj || !email || !whatsapp || !lojaClinica) {
+                alert('Por favor, preencha todos os campos obrigatórios.');
+                return;
+            }
+
+            const url = getSupabaseUrl();
+            const key = getSupabaseKey();
+
+            if (tipo === 'prof') {
+                const profsTable = localStorage.getItem('personality_sb_profs_table') || 'profissionais_personality';
+                if (url && key) {
+                    try {
+                        const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                        const response = await fetch(`${cleanUrl}/rest/v1/${profsTable}?id=eq.${id}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'apikey': key,
+                                'Authorization': `Bearer ${key}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                nome: nome,
+                                cpf_cnpj: cpfCnpj,
+                                email: email,
+                                whatsapp: whatsapp,
+                                clinica: lojaClinica
+                            })
+                        });
+                        if (!response.ok) throw new Error('Falha no Supabase');
+                        alert('Profissional atualizado com sucesso!');
+                    } catch (err) {
+                        console.error(err);
+                        updateProfLocally(id, { nome, cpf_cnpj: cpfCnpj, email, whatsapp, clinica: lojaClinica });
+                        alert('Profissional atualizado localmente.');
+                    }
+                } else {
+                    updateProfLocally(id, { nome, cpf_cnpj: cpfCnpj, email, whatsapp, clinica: lojaClinica });
+                    alert('Profissional local atualizado com sucesso.');
+                }
+            } else {
+                const vendTable = localStorage.getItem('personality_sb_vendedores_table') || 'vendedores_personality';
+                if (url && key) {
+                    try {
+                        const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                        const response = await fetch(`${cleanUrl}/rest/v1/${vendTable}?id=eq.${id}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'apikey': key,
+                                'Authorization': `Bearer ${key}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                nome: nome,
+                                cpf: cpfCnpj,
+                                email: email,
+                                whatsapp: whatsapp,
+                                loja: lojaClinica
+                            })
+                        });
+                        if (!response.ok) throw new Error('Falha no Supabase');
+                        alert('Vendedor atualizado com sucesso!');
+                    } catch (err) {
+                        console.error(err);
+                        updateVendedorLocally(id, { nome, cpf: cpfCnpj, email, whatsapp, loja: lojaClinica });
+                        alert('Vendedor atualizado localmente.');
+                    }
+                } else {
+                    updateVendedorLocally(id, { nome, cpf: cpfCnpj, email, whatsapp, loja: lojaClinica });
+                    alert('Vendedor local atualizado com sucesso.');
+                }
+            }
+
+            editMemberModal.style.display = 'none';
+            loadProfessionals();
+        });
     }
 
     // Limpar Banco de Membros
@@ -1675,6 +1882,245 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
         alert('Família removida com sucesso!');
         loadRewardsConfig();
+    }
+
+    // Modelo de Importação e Upload de Prêmios em Lote (v3.82)
+    function downloadRewardCSVTemplate() {
+        const headers = ["Lente", "R$ Lente", "Tratamento", "R$ Tratamento", "Tecnologia", "Índice", "Família"];
+        const rows = [
+            ["Gold Design IA", "50.00", "Antirreflexo Premium (Super Clean)", "20.00", "IA", "1.61", "Gold"],
+            ["Premium HD IA", "60.00", "Filtro Azul (Blue Control)", "15.00", "IA", "1.67", "Premium"]
+        ];
+        
+        let csvContent = "\ufeff"; // BOM para compatibilidade com o Excel UTF-8 no Windows/BR
+        csvContent += headers.join(";") + "\n";
+        rows.forEach(row => {
+            csvContent += row.join(";") + "\n";
+        });
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", "modelo_importacao_premios.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    async function processRewardCSV(text) {
+        const lines = text.split(/\r?\n/);
+        if (lines.length < 2) {
+            alert("A planilha está vazia ou inválida!");
+            return;
+        }
+
+        // Identifica o delimitador
+        const firstLine = lines[0];
+        let delimiter = ";";
+        if (firstLine.includes(",")) {
+            const commas = (firstLine.match(/,/g) || []).length;
+            const semicolons = (firstLine.match(/;/g) || []).length;
+            if (commas > semicolons) {
+                delimiter = ",";
+            }
+        }
+
+        const headers = firstLine.split(delimiter).map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
+        const idxLente = headers.indexOf("lente") !== -1 ? headers.indexOf("lente") : 0;
+        const idxValLente = headers.findIndex(h => h.includes("r$ lente") || h.includes("r$lente") || h.includes("valor lente")) !== -1
+            ? headers.findIndex(h => h.includes("r$ lente") || h.includes("r$lente") || h.includes("valor lente"))
+            : 1;
+        const idxTratamento = headers.indexOf("tratamento") !== -1 ? headers.indexOf("tratamento") : 2;
+        const idxValTratamento = headers.findIndex(h => h.includes("r$ tratamento") || h.includes("r$tratamento") || h.includes("valor tratamento")) !== -1
+            ? headers.findIndex(h => h.includes("r$ tratamento") || h.includes("r$tratamento") || h.includes("valor tratamento"))
+            : 3;
+
+        const toInsert = [];
+        const toUpdate = [];
+        const localPremiosMap = new Map();
+
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+
+            const cols = line.split(delimiter).map(c => c.trim().replace(/^"|"$/g, ''));
+            if (cols.length < 4) continue;
+
+            // 1. Processa Lente
+            const lenteNome = cols[idxLente];
+            const lenteValRaw = cols[idxValLente];
+            if (lenteNome && lenteNome.toLowerCase() !== "lente" && lenteNome.trim() !== "") {
+                const val = parseFloat(lenteValRaw.replace(",", ".")) || 0;
+                const keyMap = `lente_${lenteNome.toLowerCase()}`;
+                localPremiosMap.set(keyMap, {
+                    categoria: "lente",
+                    nome: lenteNome,
+                    pontos: val,
+                    valor: val
+                });
+            }
+
+            // 2. Processa Tratamento
+            const tratamentoNome = cols[idxTratamento];
+            const tratamentoValRaw = cols[idxValTratamento];
+            if (tratamentoNome && tratamentoNome.toLowerCase() !== "tratamento" && tratamentoNome.trim() !== "") {
+                const val = parseFloat(tratamentoValRaw.replace(",", ".")) || 0;
+                const keyMap = `antirreflexo_${tratamentoNome.toLowerCase()}`;
+                localPremiosMap.set(keyMap, {
+                    categoria: "antirreflexo",
+                    nome: tratamentoNome,
+                    pontos: val,
+                    valor: val
+                });
+            }
+        }
+
+        if (localPremiosMap.size === 0) {
+            alert("Nenhum produto válido encontrado na planilha!");
+            return;
+        }
+
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
+        const configTable = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
+
+        for (const [keyMap, item] of localPremiosMap.entries()) {
+            const existing = adminPremiosConfig.find(existing => 
+                existing.categoria === item.categoria && 
+                existing.nome.toLowerCase() === item.nome.toLowerCase()
+            );
+
+            if (existing) {
+                existing.valor = item.valor;
+                existing.pontos = item.pontos;
+                toUpdate.push(existing);
+            } else {
+                toInsert.push(item);
+            }
+        }
+
+        let successCount = 0;
+        let updateCount = 0;
+
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                
+                // Atualizações no Supabase
+                for (const item of toUpdate) {
+                    if (item.id) {
+                        const res = await fetch(`${cleanUrl}/rest/v1/${configTable}?id=eq.${item.id}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'apikey': key,
+                                'Authorization': `Bearer ${key}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                pontos: item.pontos,
+                                valor: item.valor
+                            })
+                        });
+                        if (res.ok) updateCount++;
+                    } else {
+                        const res = await fetch(`${cleanUrl}/rest/v1/${configTable}?nome=eq.${encodeURIComponent(item.nome)}&categoria=eq.${item.categoria}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'apikey': key,
+                                'Authorization': `Bearer ${key}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                pontos: item.pontos,
+                                valor: item.valor
+                            })
+                        });
+                        if (res.ok) updateCount++;
+                    }
+                }
+
+                // Inserções no Supabase
+                if (toInsert.length > 0) {
+                    const res = await fetch(`${cleanUrl}/rest/v1/${configTable}`, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': key,
+                            'Authorization': `Bearer ${key}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=representation'
+                        },
+                        body: JSON.stringify(toInsert)
+                    });
+                    if (res.ok) {
+                        const insertedItems = await res.json();
+                        insertedItems.forEach(inserted => {
+                            adminPremiosConfig.push(inserted);
+                        });
+                        successCount += insertedItems.length;
+                    } else {
+                        throw new Error('Falha ao inserir novos produtos.');
+                    }
+                }
+            } catch (error) {
+                console.error("Erro na importação Supabase:", error);
+                alert("Erro ao enviar dados para o banco. Salvando alterações localmente.");
+                toInsert.forEach(item => {
+                    adminPremiosConfig.push({
+                        id: Math.random().toString(36).substring(2, 15),
+                        ...item
+                    });
+                    successCount++;
+                });
+                toUpdate.forEach(item => {
+                    updateCount++;
+                });
+            }
+        } else {
+            toInsert.forEach(item => {
+                adminPremiosConfig.push({
+                    id: Math.random().toString(36).substring(2, 15),
+                    ...item
+                });
+                successCount++;
+            });
+            toUpdate.forEach(item => {
+                updateCount++;
+            });
+        }
+
+        localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
+        alert(`Importação concluída com sucesso!\n\n- ${successCount} novos produtos adicionados\n- ${updateCount} produtos existentes atualizados`);
+        loadRewardsConfig();
+    }
+
+    const btnDownloadTemplateReward = document.getElementById('btnDownloadTemplateReward');
+    const btnUploadTemplateReward = document.getElementById('btnUploadTemplateReward');
+    const fileImportReward = document.getElementById('fileImportReward');
+
+    if (btnDownloadTemplateReward) {
+        btnDownloadTemplateReward.addEventListener('click', () => {
+            downloadRewardCSVTemplate();
+        });
+    }
+
+    if (btnUploadTemplateReward && fileImportReward) {
+        btnUploadTemplateReward.addEventListener('click', () => {
+            fileImportReward.click();
+        });
+        
+        fileImportReward.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = async (evt) => {
+                const text = evt.target.result;
+                await processRewardCSV(text);
+                fileImportReward.value = '';
+            };
+            reader.readAsText(file, 'UTF-8');
+        });
     }
 
     // Carga em Massa de Catálogo Completo Personality (v3.60)

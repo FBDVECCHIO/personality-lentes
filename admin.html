@@ -8,8 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=3.61">
-    <link rel="stylesheet" href="admin.css?v=3.61">
+    <link rel="stylesheet" href="style.css?v=3.82">
+    <link rel="stylesheet" href="admin.css?v=3.82">
 </head>
 <body class="admin-body">
     <!-- Modal de Autenticação do Painel Master (Bloqueio por Senha) -->
@@ -1009,7 +1009,12 @@ create policy "Permitir delete em os_autorizadas_personality" on os_autorizadas_
                             <h2>💸 Configuração de <span class="gold-text">Prêmios de Lentes e Tratamentos</span></h2>
                             <p>Configure quantos pontos e qual valor financeiro (em R$) cada balconista ganha por par de lente ou tratamento antirreflexo vendido.</p>
                         </div>
-                        <button type="button" class="btn btn-gold btn-xs" id="btnBulkImportCatalog" style="padding: 8px 12px; font-weight: 700;">📦 Importar Catálogo Completo Personality</button>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button type="button" class="btn btn-gold btn-xs" id="btnBulkImportCatalog" style="padding: 8px 12px; font-weight: 700;">📦 Importar Catálogo Completo Personality</button>
+                            <button type="button" class="btn btn-gold btn-xs" id="btnDownloadTemplateReward" style="padding: 8px 12px; font-weight: 700;">📥 Modelo Planilha</button>
+                            <button type="button" class="btn btn-gold btn-xs" id="btnUploadTemplateReward" style="padding: 8px 12px; font-weight: 700;">📤 Importar Lote (CSV)</button>
+                            <input type="file" id="fileImportReward" accept=".csv" style="display: none;" />
+                        </div>
                     </div>
 
                     <form id="rewardsConfigForm" style="margin-top: 20px;">
@@ -1335,6 +1340,47 @@ create policy "Permitir delete em os_autorizadas_personality" on os_autorizadas_
         </div>
     </footer>
 
-    <script src="admin.js?v=3.61"></script>
+    <!-- Modal de Edição de Membro (v3.82) -->
+    <div id="editMemberModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
+        <div class="glass-card" style="width: 100%; max-width: 500px; padding: 30px; border: 1px solid rgba(197,168,92,0.3); border-radius: 12px; box-sizing: border-box; background: #0a0a0d;">
+            <h3 style="font-family: var(--font-heading); color: var(--gold-light); margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;" id="editMemberTitle">✏️ Editar Cadastro</h3>
+            <form id="editMemberForm">
+                <input type="hidden" id="editMemberId" />
+                <input type="hidden" id="editMemberType" />
+                
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label for="editMemberNome" style="font-size: 12px; color: #ccc; display: block; margin-bottom: 6px;">Nome Completo</label>
+                    <input type="text" id="editMemberNome" required style="width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-family: inherit;" />
+                </div>
+                
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label for="editMemberCpfCnpj" style="font-size: 12px; color: #ccc; display: block; margin-bottom: 6px;" id="editMemberCpfLabel">CPF / CNPJ</label>
+                    <input type="text" id="editMemberCpfCnpj" required style="width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-family: inherit;" />
+                </div>
+                
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label for="editMemberEmail" style="font-size: 12px; color: #ccc; display: block; margin-bottom: 6px;">E-mail</label>
+                    <input type="email" id="editMemberEmail" required style="width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-family: inherit;" />
+                </div>
+                
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label for="editMemberPageWhatsapp" style="font-size: 12px; color: #ccc; display: block; margin-bottom: 6px;">WhatsApp</label>
+                    <input type="text" id="editMemberWhatsapp" required style="width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-family: inherit;" />
+                </div>
+                
+                <div class="input-group" style="margin-bottom: 20px;">
+                    <label for="editMemberLojaClinica" style="font-size: 12px; color: #ccc; display: block; margin-bottom: 6px;" id="editMemberLojaLabel">Loja / Clínica</label>
+                    <input type="text" id="editMemberLojaClinica" required style="width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-family: inherit;" />
+                </div>
+                
+                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="btn btn-outline-gold btn-sm" id="btnCancelEditMember" style="padding: 8px 16px;">Cancelar</button>
+                    <button type="submit" class="btn btn-gold btn-sm" style="padding: 8px 16px; font-weight: 700;">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin.js?v=3.82"></script>
 </body>
 </html>
