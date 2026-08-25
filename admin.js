@@ -1729,23 +1729,44 @@ document.addEventListener('DOMContentLoaded', () => {
     // -------------------------------------------------------------
     // 5.1 Configuração de Valores de Prêmios
     // -------------------------------------------------------------
-    const rewardsConfigForm = document.getElementById('rewardsConfigForm');
-    const rewardsLentesConfigBody = document.getElementById('rewardsLentesConfigBody');
-    const rewardsArConfigBody = document.getElementById('rewardsArConfigBody');
+    // Elementos de Configuração de Prêmios Unificados (v3.82)
+    const unifiedRewardsTableBody = document.getElementById('unifiedRewardsTableBody');
+    const selectAllProducts = document.getElementById('selectAllProducts');
+    const bulkPointsInput = document.getElementById('bulkPointsInput');
+    const btnApplyBulkPoints = document.getElementById('btnApplyBulkPoints');
+    const btnPrintSelectedRewards = document.getElementById('btnPrintSelectedRewards');
+    
+    // Inputs de Filtros
+    const filterProdName = document.getElementById('filterProdName');
+    const filterProdPrice = document.getElementById('filterProdPrice');
+    const filterProdType = document.getElementById('filterProdType');
+    const filterProdTech = document.getElementById('filterProdTech');
+    const filterProdFamily = document.getElementById('filterProdFamily');
+    const filterProdIR = document.getElementById('filterProdIR');
+    const filterProdPoints = document.getElementById('filterProdPoints');
+    
+    // Paginação
+    const btnPrevPage = document.getElementById('btnPrevPage');
+    const btnNextPage = document.getElementById('btnNextPage');
+    const pageIndicator = document.getElementById('pageIndicator');
 
     let adminPremiosConfig = [
-        { categoria: 'lente', nome: 'Linha IA (Exclusivos)', pontos: 50, valor: 50 },
-        { categoria: 'lente', nome: 'Linha Tradicional', pontos: 20, valor: 20 },
-        { categoria: 'lente', nome: '1.61 Gold', pontos: 30, valor: 30 },
-        { categoria: 'antirreflexo', nome: 'Anti-Reflexo Premium (Classic)', pontos: 10, valor: 10 },
-        { categoria: 'antirreflexo', nome: 'Filtro Azul (Blue Control)', pontos: 15, valor: 15 },
-        { categoria: 'antirreflexo', nome: 'Sem Tratamento Especial', pontos: 0, valor: 0 }
+        { id: "def-1", categoria: 'lente', nome: 'Gold Design IA', pontos: 50, valor: 150.00, tipo: 'Multifocal', tecnologia: 'Transitions', familia: 'Linha IA', ir: '1.67' },
+        { id: "def-2", categoria: 'lente', nome: 'Premium HD IA', pontos: 60, valor: 180.00, tipo: 'Multifocal', tecnologia: 'Bluecut', familia: 'Linha IA', ir: '1.61' },
+        { id: "def-3", categoria: 'lente', nome: 'Tecno Line IA', pontos: 40, valor: 120.00, tipo: 'Multifocal', tecnologia: 'Espelhado', familia: 'Linha IA', ir: '1.56' },
+        { id: "def-4", categoria: 'antirreflexo', nome: 'Antirreflexo Classic', pontos: 10, valor: 40.00, tipo: 'Antirreflexo', tecnologia: 'Nenhum', familia: 'Linha Tradicional', ir: 'N/A' },
+        { id: "def-5", categoria: 'antirreflexo', nome: 'Antirreflexo Premium (Super Clean)', pontos: 20, valor: 60.00, tipo: 'Antirreflexo', tecnologia: 'Nenhum', familia: 'Linha Tradicional', ir: 'N/A' },
+        { id: "def-6", categoria: 'antirreflexo', nome: 'Filtro Azul (Blue Control)', pontos: 15, valor: 55.00, tipo: 'Antirreflexo', tecnologia: 'Bluecut', familia: 'Linha Tradicional', ir: 'N/A' }
     ];
 
     let editingProductIndex = null;
+    let currentRewardsPage = 1;
+    const rewardsItemsPerPage = 25;
+    let selectedRewardIds = new Set();
+    let filteredRewardsList = [];
 
     async function loadRewardsConfig() {
-        if (!rewardsLentesConfigBody || !rewardsArConfigBody) return;
+        if (!unifiedRewardsTableBody) return;
 
         const url = getSupabaseUrl();
         const key = getSupabaseKey();
@@ -1780,84 +1801,406 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        renderRewardsConfig();
-    }
-
-    function renderRewardsConfig() {
-        if (!rewardsLentesConfigBody || !rewardsArConfigBody) return;
-
-        rewardsLentesConfigBody.innerHTML = '';
-        rewardsArConfigBody.innerHTML = '';
-
-        adminPremiosConfig.forEach((item, index) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><strong>${escapeHtml(item.nome)}</strong></td>
-                <td>
-                    <input type="number" class="config-points-input" data-index="${index}" value="${item.pontos}" min="0" required style="width: 80px; padding: 6px 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color:#fff;"> Pts
-                </td>
-                <td>
-                    R$ <input type="number" step="0.01" class="config-value-input" data-index="${index}" value="${item.valor}" min="0" required style="width: 100px; padding: 6px 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color:#fff;">
-                </td>
-                <td>
-                    <button type="button" class="btn btn-xs btn-outline-gold btn-edit-reward-config" data-index="${index}" style="margin-right: 5px; padding: 4px 8px; font-size:11px; background:none; border-color: rgba(197, 168, 92, 0.4); color: var(--gold-light);">✏️ Editar</button>
-                    <button type="button" class="btn btn-xs btn-outline-gold btn-delete-reward-config" data-name="${escapeHtml(item.nome)}" style="border-color: rgba(255,85,85,0.3); color:#fca5a5; padding: 4px 8px; font-size:11px; background:none;">🗑️ Deletar</button>
-                </td>
-            `;
-            if (item.categoria === 'lente') {
-                rewardsLentesConfigBody.appendChild(tr);
-            } else {
-                rewardsArConfigBody.appendChild(tr);
+        // Garante que todo item tenha um ID único
+        adminPremiosConfig.forEach(item => {
+            if (!item.id) {
+                item.id = Math.random().toString(36).substring(2, 15);
             }
         });
 
-        // Adiciona listeners para deleção
-        const deleteConfigBtns = document.querySelectorAll('.btn-delete-reward-config');
-        deleteConfigBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const name = btn.getAttribute('data-name');
-                deleteRewardConfigItem(name);
-            });
+        renderUnifiedRewardsTable();
+    }
+
+    function renderUnifiedRewardsTable() {
+        if (!unifiedRewardsTableBody) return;
+
+        const qName = (filterProdName ? filterProdName.value : '').toLowerCase().trim();
+        const qPrice = (filterProdPrice ? filterProdPrice.value : '').toLowerCase().trim();
+        const qType = (filterProdType ? filterProdType.value : '');
+        const qTech = (filterProdTech ? filterProdTech.value : '').toLowerCase().trim();
+        const qFamily = (filterProdFamily ? filterProdFamily.value : '').toLowerCase().trim();
+        const qIR = (filterProdIR ? filterProdIR.value : '').toLowerCase().trim();
+        const qPoints = (filterProdPoints ? filterProdPoints.value : '').toLowerCase().trim();
+
+        // Filtra lista global
+        filteredRewardsList = adminPremiosConfig.filter(item => {
+            if (qName && !(item.nome || '').toLowerCase().includes(qName)) return false;
+            if (qPrice && !String(item.valor || '').toLowerCase().includes(qPrice)) return false;
+            if (qType && item.tipo !== qType) return false;
+            if (qTech && !(item.tecnologia || '').toLowerCase().includes(qTech)) return false;
+            if (qFamily && !(item.familia || '').toLowerCase().includes(qFamily)) return false;
+            if (qIR && !String(item.ir || '').toLowerCase().includes(qIR)) return false;
+            if (qPoints && !String(item.pontos || '').toLowerCase().includes(qPoints)) return false;
+            return true;
         });
 
-        // Adiciona listeners para edição
-        const editConfigBtns = document.querySelectorAll('.btn-edit-reward-config');
-        editConfigBtns.forEach(btn => {
+        // Paginação
+        const totalPages = Math.ceil(filteredRewardsList.length / rewardsItemsPerPage) || 1;
+        if (currentRewardsPage > totalPages) currentRewardsPage = totalPages;
+        if (currentRewardsPage < 1) currentRewardsPage = 1;
+
+        if (pageIndicator) {
+            pageIndicator.textContent = `Página ${currentRewardsPage} de ${totalPages} (Total: ${filteredRewardsList.length} itens)`;
+        }
+        if (btnPrevPage) btnPrevPage.disabled = currentRewardsPage === 1;
+        if (btnNextPage) btnNextPage.disabled = currentRewardsPage === totalPages;
+
+        const startIndex = (currentRewardsPage - 1) * rewardsItemsPerPage;
+        const paginated = filteredRewardsList.slice(startIndex, startIndex + rewardsItemsPerPage);
+
+        unifiedRewardsTableBody.innerHTML = '';
+
+        if (paginated.length === 0) {
+            unifiedRewardsTableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 30px 0;">Nenhum produto correspondente aos filtros.</td></tr>`;
+            return;
+        }
+
+        paginated.forEach((item, index) => {
+            const actualIndexInGlobal = adminPremiosConfig.findIndex(p => p.id === item.id);
+            const tr = document.createElement('tr');
+            
+            const isChecked = selectedRewardIds.has(item.id);
+
+            tr.innerHTML = `
+                <td style="text-align: center;"><input type="checkbox" class="select-prod-checkbox" data-id="${item.id}" ${isChecked ? 'checked' : ''} style="transform: scale(1.2); cursor: pointer;" /></td>
+                <td><strong>${escapeHtml(item.nome)}</strong></td>
+                <td>R$ ${Number(item.valor || 0).toFixed(2)}</td>
+                <td><span class="store-badge" style="margin-top:0; font-weight:700; background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1);">${escapeHtml(item.tipo || 'Lente')}</span></td>
+                <td>${escapeHtml(item.tecnologia || 'Nenhum')}</td>
+                <td>${escapeHtml(item.familia || 'N/A')}</td>
+                <td><code>${escapeHtml(item.ir || 'N/A')}</code></td>
+                <td><strong>${item.pontos || 0} Pts</strong></td>
+                <td style="text-align: center; white-space: nowrap;">
+                    <button type="button" class="icon-btn btn-edit-reward-config" data-index="${actualIndexInGlobal}" title="Editar Produto" style="background:none; border:none; color:var(--gold-light); cursor:pointer; font-size:14px; margin-right:8px; padding:2px;">✏️</button>
+                    <button type="button" class="icon-btn btn-delete-reward-config" data-id="${item.id}" data-name="${escapeHtml(item.nome)}" title="Excluir Produto" style="background:none; border:none; color:#f87171; cursor:pointer; font-size:14px; padding:2px;">🗑️</button>
+                </td>
+            `;
+
+            // Vincular checkbox
+            const chk = tr.querySelector('.select-prod-checkbox');
+            if (chk) {
+                chk.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        selectedRewardIds.add(item.id);
+                    } else {
+                        selectedRewardIds.delete(item.id);
+                        if (selectAllProducts) selectAllProducts.checked = false;
+                    }
+                });
+            }
+
+            unifiedRewardsTableBody.appendChild(tr);
+        });
+
+        // Vincular cliques de edição
+        unifiedRewardsTableBody.querySelectorAll('.btn-edit-reward-config').forEach(btn => {
             btn.addEventListener('click', () => {
                 const idx = parseInt(btn.getAttribute('data-index'));
                 startEditingRewardConfig(idx);
             });
         });
+
+        // Vincular cliques de exclusão
+        unifiedRewardsTableBody.querySelectorAll('.btn-delete-reward-config').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                const name = btn.getAttribute('data-name');
+                deleteRewardConfigItem(id, name);
+            });
+        });
+    }
+
+    // Vincular filtros
+    [filterProdName, filterProdPrice, filterProdType, filterProdTech, filterProdFamily, filterProdIR, filterProdPoints].forEach(el => {
+        if (el) {
+            el.addEventListener('input', () => {
+                currentRewardsPage = 1;
+                renderUnifiedRewardsTable();
+            });
+            if (el.tagName === 'SELECT') {
+                el.addEventListener('change', () => {
+                    currentRewardsPage = 1;
+                    renderUnifiedRewardsTable();
+                });
+            }
+        }
+    });
+
+    // Vincular select all
+    if (selectAllProducts) {
+        selectAllProducts.addEventListener('change', (e) => {
+            const checked = e.target.checked;
+            const checkBoxes = unifiedRewardsTableBody.querySelectorAll('.select-prod-checkbox');
+            checkBoxes.forEach(cb => {
+                const id = cb.getAttribute('data-id');
+                cb.checked = checked;
+                if (checked) {
+                    selectedRewardIds.add(id);
+                } else {
+                    selectedRewardIds.delete(id);
+                }
+            });
+        });
+    }
+
+    // Vincular paginação
+    if (btnPrevPage) {
+        btnPrevPage.addEventListener('click', () => {
+            if (currentRewardsPage > 1) {
+                currentRewardsPage--;
+                renderUnifiedRewardsTable();
+            }
+        });
+    }
+    if (btnNextPage) {
+        btnNextPage.addEventListener('click', () => {
+            const totalPages = Math.ceil(filteredRewardsList.length / rewardsItemsPerPage) || 1;
+            if (currentRewardsPage < totalPages) {
+                currentRewardsPage++;
+                renderUnifiedRewardsTable();
+            }
+        });
+    }
+
+    // Aplicar Regra de Pontos em Lote
+    if (btnApplyBulkPoints && bulkPointsInput) {
+        btnApplyBulkPoints.addEventListener('click', async () => {
+            const pts = parseInt(bulkPointsInput.value);
+            if (isNaN(pts) || pts < 0) {
+                alert('Por favor, informe uma pontuação válida (número maior ou igual a 0).');
+                return;
+            }
+            if (selectedRewardIds.size === 0) {
+                alert('Nenhum produto selecionado! Marque os checkboxes da tabela.');
+                return;
+            }
+
+            if (!confirm(`Deseja aplicar a pontuação de ${pts} Pts a todos os ${selectedRewardIds.size} produtos selecionados?`)) return;
+
+            adminPremiosConfig.forEach(item => {
+                if (selectedRewardIds.has(item.id)) {
+                    item.pontos = pts;
+                }
+            });
+
+            await saveAllRewardsToSupabase();
+            alert('Pontuação em lote aplicada com sucesso!');
+            bulkPointsInput.value = '';
+            selectedRewardIds.clear();
+            if (selectAllProducts) selectAllProducts.checked = false;
+            renderUnifiedRewardsTable();
+        });
+    }
+
+    // Gerar PDF da Seleção
+    if (btnPrintSelectedRewards) {
+        btnPrintSelectedRewards.addEventListener('click', () => {
+            let itemsToPrint = [];
+            if (selectedRewardIds.size > 0) {
+                itemsToPrint = adminPremiosConfig.filter(p => selectedRewardIds.has(p.id));
+            } else {
+                itemsToPrint = filteredRewardsList;
+            }
+
+            if (itemsToPrint.length === 0) {
+                alert('Nenhum produto disponível para gerar PDF!');
+                return;
+            }
+
+            generateRewardsPDF(itemsToPrint);
+        });
+    }
+
+    function generateRewardsPDF(items) {
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alert('Por favor, permita pop-ups para abrir a versão de impressão!');
+            return;
+        }
+
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <title>Tabela de Prêmios - Personality Lenses</title>
+                <style>
+                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 30px; color: #1a1a1a; }
+                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #c5a85c; padding-bottom: 15px; margin-bottom: 30px; }
+                    .header h1 { font-size: 24px; color: #c5a85c; margin: 0; text-transform: uppercase; font-weight: 800; }
+                    .header span { font-size: 11px; color: #666; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    th, td { border: 1px solid #ddd; padding: 10px 12px; text-align: left; font-size: 11px; }
+                    th { background-color: #f5f5f7; color: #333; font-weight: bold; text-transform: uppercase; }
+                    tr:nth-child(even) { background-color: #fafafa; }
+                    .pts-column { font-weight: bold; color: #c5a85c; }
+                    .footer { margin-top: 40px; font-size: 10px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 15px; }
+                    @media print {
+                        body { padding: 0; }
+                        .no-print { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div>
+                        <h1>Catálogo de Prêmios</h1>
+                        <span>Personality Lenses - Tabela Oficial de Incentivo a Vendas</span>
+                    </div>
+                    <div>
+                        <span>Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</span>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Produto (Nome)</th>
+                            <th>Preço de Referência (R$)</th>
+                            <th>Tipo</th>
+                            <th>Tecnologia</th>
+                            <th>Família</th>
+                            <th>Índice (IR)</th>
+                            <th>Pontuação da Campanha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${items.map(item => `
+                            <tr>
+                                <td><strong>${escapeHtml(item.nome)}</strong></td>
+                                <td>R$ ${Number(item.valor || 0).toFixed(2)}</td>
+                                <td>${escapeHtml(item.tipo || 'Lente')}</td>
+                                <td>${escapeHtml(item.tecnologia || 'Nenhum')}</td>
+                                <td>${escapeHtml(item.familia || 'N/A')}</td>
+                                <td><code>${escapeHtml(item.ir || 'N/A')}</code></td>
+                                <td class="pts-column">${item.pontos || 0} Pts</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <div class="footer">
+                    Documento interno de controle de pontuação da campanha de vendas. Gerado eletronicamente por Personality Lenses.
+                </div>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(() => { window.close(); }, 500);
+                    }
+                </script>
+            </body>
+            </html>
+        `;
+        printWindow.document.write(html);
+        printWindow.document.close();
+    }
+
+    async function saveAllRewardsToSupabase() {
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
+        const configTable = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
+        
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                for (const item of adminPremiosConfig) {
+                    const payload = {
+                        categoria: item.categoria,
+                        nome: item.nome,
+                        pontos: item.pontos,
+                        valor: item.valor,
+                        tipo: item.tipo,
+                        tecnologia: item.tecnologia,
+                        familia: item.familia,
+                        ir: item.ir
+                    };
+                    
+                    let endpoint = `${cleanUrl}/rest/v1/${configTable}`;
+                    let method = 'POST';
+                    
+                    if (item.id && !item.id.startsWith('def-') && item.id.length > 8) {
+                        endpoint = `${cleanUrl}/rest/v1/${configTable}?id=eq.${item.id}`;
+                        method = 'PATCH';
+                    } else {
+                        // Tenta achar por nome e categoria no Supabase
+                        const checkRes = await fetch(`${cleanUrl}/rest/v1/${configTable}?nome=eq.${encodeURIComponent(item.nome)}&categoria=eq.${item.categoria}`, {
+                            method: 'GET',
+                            headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                        });
+                        if (checkRes.ok) {
+                            const existing = await checkRes.json();
+                            if (existing && existing.length > 0) {
+                                endpoint = `${cleanUrl}/rest/v1/${configTable}?id=eq.${existing[0].id}`;
+                                method = 'PATCH';
+                                item.id = existing[0].id;
+                            }
+                        }
+                    }
+                    
+                    const response = await fetch(endpoint, {
+                        method: method,
+                        headers: {
+                            'apikey': key,
+                            'Authorization': `Bearer ${key}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    // Fallback para tabela Supabase antiga
+                    if (!response.ok && response.status === 400) {
+                        const standardPayload = {
+                            categoria: item.categoria,
+                            nome: item.nome,
+                            pontos: item.pontos,
+                            valor: item.valor
+                        };
+                        await fetch(endpoint, {
+                            method: method,
+                            headers: {
+                                'apikey': key,
+                                'Authorization': `Bearer ${key}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(standardPayload)
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error("Erro ao salvar lote no Supabase:", error);
+            }
+        }
+        localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
     }
 
     function startEditingRewardConfig(index) {
         editingProductIndex = index;
         const item = adminPremiosConfig[index];
         
-        document.getElementById('newProdCategory').value = item.categoria;
-        document.getElementById('newProdName').value = item.nome;
-        document.getElementById('newProdPoints').value = item.pontos;
-        document.getElementById('newProdValue').value = item.valor;
+        document.getElementById('newProdName').value = item.nome || '';
+        document.getElementById('newProdValue').value = item.valor || 0;
+        document.getElementById('newProdType').value = item.tipo || 'Multifocal';
+        document.getElementById('newProdTech').value = item.tecnologia || '';
+        document.getElementById('newProdFamily').value = item.familia || '';
+        document.getElementById('newProdIR').value = item.ir || '';
 
-        const formCard = document.getElementById('addRewardProductForm').closest('.section-card');
-        if (formCard) {
-            const h2 = formCard.querySelector('h2');
-            if (h2) h2.innerHTML = `✏️ Editar Família de Produto: <span class="gold-text">${escapeHtml(item.nome)}</span>`;
-        }
-        
-        const submitBtn = document.getElementById('addRewardProductForm').querySelector('button[type="submit"]');
+        const submitBtn = document.getElementById('btnSubmitRewardForm');
         if (submitBtn) {
             submitBtn.innerHTML = 'Salvar Alterações 💾';
             submitBtn.style.background = 'var(--gold-light)';
             submitBtn.style.color = '#000';
         }
         
+        const titleEl = document.getElementById('manualRewardTitle');
+        if (titleEl) {
+            titleEl.innerHTML = `✏️ Editar Produto: <span class="gold-text">${escapeHtml(item.nome)}</span>`;
+        }
+
         // Scroll para o formulário
-        document.getElementById('addRewardProductForm').scrollIntoView({ behavior: 'smooth' });
+        const formEl = document.getElementById('addRewardProductForm');
+        if (formEl) formEl.scrollIntoView({ behavior: 'smooth' });
     }
 
-    async function deleteRewardConfigItem(name) {
-        if (!confirm(`Deseja realmente remover a família "${name}" da lista de prêmios?`)) return;
+    async function deleteRewardConfigItem(id, name) {
+        if (!confirm(`Deseja realmente remover o produto "${name}" da lista de prêmios?`)) return;
 
         const url = getSupabaseUrl();
         const key = getSupabaseKey();
@@ -1866,33 +2209,43 @@ document.addEventListener('DOMContentLoaded', () => {
         if (url && key) {
             try {
                 const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
-                const res = await fetch(`${cleanUrl}/rest/v1/${configTable}?nome=eq.${encodeURIComponent(name)}`, {
-                    method: 'DELETE',
-                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
-                });
-                if (!res.ok) {
-                    throw new Error('Falha ao excluir no Supabase.');
+                // Se tiver id válido (não default/local), deleta por id
+                if (id && !id.startsWith('def-') && id.length > 8) {
+                    const res = await fetch(`${cleanUrl}/rest/v1/${configTable}?id=eq.${id}`, {
+                        method: 'DELETE',
+                        headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                    });
+                    if (!res.ok) throw new Error('Falha ao excluir no Supabase por ID.');
+                } else {
+                    // Fallback para deletar por nome e categoria
+                    const item = adminPremiosConfig.find(p => p.id === id);
+                    if (item) {
+                        const res = await fetch(`${cleanUrl}/rest/v1/${configTable}?nome=eq.${encodeURIComponent(item.nome)}&categoria=eq.${item.categoria}`, {
+                            method: 'DELETE',
+                            headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                        });
+                        if (!res.ok) throw new Error('Falha ao excluir no Supabase por nome.');
+                    }
                 }
             } catch (err) {
                 console.error(err);
             }
         }
         
-        adminPremiosConfig = adminPremiosConfig.filter(item => item.nome !== name);
+        adminPremiosConfig = adminPremiosConfig.filter(item => item.id !== id);
         localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
-        alert('Família removida com sucesso!');
+        alert('Produto removido com sucesso!');
         loadRewardsConfig();
     }
 
-    // Modelo de Importação e Upload de Prêmios em Lote (v3.82)
     function downloadRewardCSVTemplate() {
-        const headers = ["Lente", "R$ Lente", "Tratamento", "R$ Tratamento", "Tecnologia", "Índice", "Família"];
+        const headers = ["Produto", "Preço", "Tipo", "Tecnologia", "Família", "IR"];
         const rows = [
-            ["Gold Design IA", "50.00", "Antirreflexo Premium (Super Clean)", "20.00", "IA", "1.61", "Gold"],
-            ["Premium HD IA", "60.00", "Filtro Azul (Blue Control)", "15.00", "IA", "1.67", "Premium"]
+            ["Gold Design IA 1.67", "150.00", "Multifocal", "Transitions", "Linha IA", "1.67"],
+            ["Antirreflexo Premium (Super Clean)", "60.00", "Antirreflexo", "Nenhum", "Linha Tradicional", "N/A"]
         ];
         
-        let csvContent = "\ufeff"; // BOM para compatibilidade com o Excel UTF-8 no Windows/BR
+        let csvContent = "\ufeff"; // BOM para Excel
         csvContent += headers.join(";") + "\n";
         rows.forEach(row => {
             csvContent += row.join(";") + "\n";
@@ -1902,7 +2255,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
-        link.setAttribute("download", "modelo_importacao_premios.csv");
+        link.setAttribute("download", "modelo_importacao_premios_lentes.csv");
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -1927,14 +2280,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const headers = firstLine.split(delimiter).map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
-        const idxLente = headers.indexOf("lente") !== -1 ? headers.indexOf("lente") : 0;
-        const idxValLente = headers.findIndex(h => h.includes("r$ lente") || h.includes("r$lente") || h.includes("valor lente")) !== -1
-            ? headers.findIndex(h => h.includes("r$ lente") || h.includes("r$lente") || h.includes("valor lente"))
-            : 1;
-        const idxTratamento = headers.indexOf("tratamento") !== -1 ? headers.indexOf("tratamento") : 2;
-        const idxValTratamento = headers.findIndex(h => h.includes("r$ tratamento") || h.includes("r$tratamento") || h.includes("valor tratamento")) !== -1
-            ? headers.findIndex(h => h.includes("r$ tratamento") || h.includes("r$tratamento") || h.includes("valor tratamento"))
-            : 3;
+        
+        // Mapeamento das colunas
+        const idxProd = headers.indexOf("produto");
+        const idxPreco = headers.findIndex(h => h.includes("preço") || h.includes("preco") || h.includes("valor"));
+        const idxTipo = headers.indexOf("tipo");
+        const idxTecnologia = headers.indexOf("tecnologia");
+        const idxFamilia = headers.indexOf("família") !== -1 ? headers.indexOf("família") : headers.indexOf("familia");
+        const idxIR = headers.findIndex(h => h.includes("ir") || h.includes("refração") || h.includes("refracao") || h.includes("índice") || h.includes("indice"));
+
+        if (idxProd === -1 || idxPreco === -1) {
+            alert("As colunas 'Produto' e 'Preço' são obrigatórias na planilha!");
+            return;
+        }
 
         const toInsert = [];
         const toUpdate = [];
@@ -1945,35 +2303,33 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!line) continue;
 
             const cols = line.split(delimiter).map(c => c.trim().replace(/^"|"$/g, ''));
-            if (cols.length < 4) continue;
+            if (cols.length < 2) continue;
 
-            // 1. Processa Lente
-            const lenteNome = cols[idxLente];
-            const lenteValRaw = cols[idxValLente];
-            if (lenteNome && lenteNome.toLowerCase() !== "lente" && lenteNome.trim() !== "") {
-                const val = parseFloat(lenteValRaw.replace(",", ".")) || 0;
-                const keyMap = `lente_${lenteNome.toLowerCase()}`;
-                localPremiosMap.set(keyMap, {
-                    categoria: "lente",
-                    nome: lenteNome,
-                    pontos: val,
-                    valor: val
-                });
-            }
+            const nome = cols[idxProd];
+            if (!nome || nome.toLowerCase() === "produto" || nome.trim() === "") continue;
 
-            // 2. Processa Tratamento
-            const tratamentoNome = cols[idxTratamento];
-            const tratamentoValRaw = cols[idxValTratamento];
-            if (tratamentoNome && tratamentoNome.toLowerCase() !== "tratamento" && tratamentoNome.trim() !== "") {
-                const val = parseFloat(tratamentoValRaw.replace(",", ".")) || 0;
-                const keyMap = `antirreflexo_${tratamentoNome.toLowerCase()}`;
-                localPremiosMap.set(keyMap, {
-                    categoria: "antirreflexo",
-                    nome: tratamentoNome,
-                    pontos: val,
-                    valor: val
-                });
-            }
+            const precoRaw = cols[idxPreco] || "0";
+            const preco = parseFloat(precoRaw.replace(",", ".")) || 0;
+            
+            const tipo = idxTipo !== -1 ? cols[idxTipo] : "Multifocal";
+            const tecnologia = idxTecnologia !== -1 ? cols[idxTecnologia] : "Nenhum";
+            const familia = idxFamilia !== -1 ? cols[idxFamilia] : "N/A";
+            const ir = idxIR !== -1 ? cols[idxIR] : "N/A";
+
+            // Se for "Antirreflexo" (case insensitive), categoria = "antirreflexo", caso contrário "lente"
+            const categoria = (tipo.toLowerCase() === "antirreflexo") ? "antirreflexo" : "lente";
+
+            const keyMap = `${categoria}_${nome.toLowerCase()}`;
+            localPremiosMap.set(keyMap, {
+                categoria,
+                nome,
+                valor: preco,
+                pontos: preco, // inicializa pontos = valor
+                tipo,
+                tecnologia,
+                familia,
+                ir
+            });
         }
 
         if (localPremiosMap.size === 0) {
@@ -1993,9 +2349,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (existing) {
                 existing.valor = item.valor;
-                existing.pontos = item.pontos;
+                existing.tipo = item.tipo;
+                existing.tecnologia = item.tecnologia;
+                existing.familia = item.familia;
+                existing.ir = item.ir;
+                // Mantém pontos existentes ou inicializa se for 0
+                if (!existing.pontos) existing.pontos = item.pontos;
                 toUpdate.push(existing);
             } else {
+                item.id = Math.random().toString(36).substring(2, 15);
                 toInsert.push(item);
             }
         }
@@ -2009,67 +2371,119 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Atualizações no Supabase
                 for (const item of toUpdate) {
-                    if (item.id) {
-                        const res = await fetch(`${cleanUrl}/rest/v1/${configTable}?id=eq.${item.id}`, {
-                            method: 'PATCH',
-                            headers: {
-                                'apikey': key,
-                                'Authorization': `Bearer ${key}`,
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                pontos: item.pontos,
-                                valor: item.valor
-                            })
-                        });
-                        if (res.ok) updateCount++;
+                    const payload = {
+                        categoria: item.categoria,
+                        nome: item.nome,
+                        pontos: item.pontos,
+                        valor: item.valor,
+                        tipo: item.tipo,
+                        tecnologia: item.tecnologia,
+                        familia: item.familia,
+                        ir: item.ir
+                    };
+                    
+                    let endpoint = `${cleanUrl}/rest/v1/${configTable}`;
+                    let method = 'POST';
+
+                    if (item.id && !item.id.startsWith('def-') && item.id.length > 8) {
+                        endpoint = `${cleanUrl}/rest/v1/${configTable}?id=eq.${item.id}`;
+                        method = 'PATCH';
                     } else {
-                        const res = await fetch(`${cleanUrl}/rest/v1/${configTable}?nome=eq.${encodeURIComponent(item.nome)}&categoria=eq.${item.categoria}`, {
-                            method: 'PATCH',
+                        // Acha no Supabase pelo nome/categoria
+                        const checkRes = await fetch(`${cleanUrl}/rest/v1/${configTable}?nome=eq.${encodeURIComponent(item.nome)}&categoria=eq.${item.categoria}`, {
+                            method: 'GET',
+                            headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                        });
+                        if (checkRes.ok) {
+                            const existing = await checkRes.json();
+                            if (existing && existing.length > 0) {
+                                endpoint = `${cleanUrl}/rest/v1/${configTable}?id=eq.${existing[0].id}`;
+                                method = 'PATCH';
+                                item.id = existing[0].id;
+                            }
+                        }
+                    }
+
+                    const res = await fetch(endpoint, {
+                        method: method,
+                        headers: {
+                            'apikey': key,
+                            'Authorization': `Bearer ${key}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    // Fallback se colunas estendidas não existirem no banco
+                    if (!res.ok && res.status === 400) {
+                        const standardPayload = {
+                            categoria: item.categoria,
+                            nome: item.nome,
+                            pontos: item.pontos,
+                            valor: item.valor
+                        };
+                        await fetch(endpoint, {
+                            method: method,
                             headers: {
                                 'apikey': key,
                                 'Authorization': `Bearer ${key}`,
                                 'Content-Type': 'application/json'
                             },
-                            body: JSON.stringify({
-                                pontos: item.pontos,
-                                valor: item.valor
-                            })
+                            body: JSON.stringify(standardPayload)
                         });
-                        if (res.ok) updateCount++;
                     }
+                    updateCount++;
                 }
 
                 // Inserções no Supabase
-                if (toInsert.length > 0) {
+                for (const item of toInsert) {
+                    const payload = {
+                        categoria: item.categoria,
+                        nome: item.nome,
+                        pontos: item.pontos,
+                        valor: item.valor,
+                        tipo: item.tipo,
+                        tecnologia: item.tecnologia,
+                        familia: item.familia,
+                        ir: item.ir
+                    };
+                    
                     const res = await fetch(`${cleanUrl}/rest/v1/${configTable}`, {
                         method: 'POST',
                         headers: {
                             'apikey': key,
                             'Authorization': `Bearer ${key}`,
-                            'Content-Type': 'application/json',
-                            'Prefer': 'return=representation'
+                            'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify(toInsert)
+                        body: JSON.stringify(payload)
                     });
-                    if (res.ok) {
-                        const insertedItems = await res.json();
-                        insertedItems.forEach(inserted => {
-                            adminPremiosConfig.push(inserted);
+                    
+                    // Fallback se colunas estendidas não existirem
+                    if (!res.ok && res.status === 400) {
+                        const standardPayload = {
+                            categoria: item.categoria,
+                            nome: item.nome,
+                            pontos: item.pontos,
+                            valor: item.valor
+                        };
+                        await fetch(`${cleanUrl}/rest/v1/${configTable}`, {
+                            method: 'POST',
+                            headers: {
+                                'apikey': key,
+                                'Authorization': `Bearer ${key}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(standardPayload)
                         });
-                        successCount += insertedItems.length;
-                    } else {
-                        throw new Error('Falha ao inserir novos produtos.');
                     }
+                    adminPremiosConfig.push(item);
+                    successCount++;
                 }
             } catch (error) {
                 console.error("Erro na importação Supabase:", error);
                 alert("Erro ao enviar dados para o banco. Salvando alterações localmente.");
                 toInsert.forEach(item => {
-                    adminPremiosConfig.push({
-                        id: Math.random().toString(36).substring(2, 15),
-                        ...item
-                    });
+                    adminPremiosConfig.push(item);
                     successCount++;
                 });
                 toUpdate.forEach(item => {
@@ -2078,10 +2492,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             toInsert.forEach(item => {
-                adminPremiosConfig.push({
-                    id: Math.random().toString(36).substring(2, 15),
-                    ...item
-                });
+                adminPremiosConfig.push(item);
                 successCount++;
             });
             toUpdate.forEach(item => {
@@ -2094,6 +2505,208 @@ document.addEventListener('DOMContentLoaded', () => {
         loadRewardsConfig();
     }
 
+    // Listener para o formulário de adicionar/editar produto de prêmio
+    const addRewardProductForm = document.getElementById('addRewardProductForm');
+    if (addRewardProductForm) {
+        addRewardProductForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const nameVal = document.getElementById('newProdName').value.trim();
+            const valueVal = Number(document.getElementById('newProdValue').value);
+            const tipoVal = document.getElementById('newProdType').value;
+            const techVal = document.getElementById('newProdTech').value.trim() || 'Nenhum';
+            const familyVal = document.getElementById('newProdFamily').value.trim() || 'N/A';
+            const irVal = document.getElementById('newProdIR').value.trim() || 'N/A';
+
+            if (!nameVal) return;
+
+            // Define a categoria
+            const categoryVal = (tipoVal.toLowerCase() === 'antirreflexo') ? 'antirreflexo' : 'lente';
+
+            const url = getSupabaseUrl();
+            const key = getSupabaseKey();
+            const configTable = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
+
+            if (editingProductIndex !== null) {
+                // Modo Edição!
+                const originalItem = adminPremiosConfig[editingProductIndex];
+                
+                // Evita duplicação se o nome mudou e já existe outro com esse novo nome
+                if (originalItem.nome.toLowerCase() !== nameVal.toLowerCase()) {
+                    const duplicate = adminPremiosConfig.find((item, idx) => idx !== editingProductIndex && item.nome.toLowerCase() === nameVal.toLowerCase());
+                    if (duplicate) {
+                        alert('Já existe outro produto cadastrado com este nome!');
+                        return;
+                    }
+                }
+
+                const updatedProduct = {
+                    ...originalItem,
+                    categoria: categoryVal,
+                    nome: nameVal,
+                    valor: valueVal,
+                    tipo: tipoVal,
+                    tecnologia: techVal,
+                    familia: familyVal,
+                    ir: irVal
+                };
+
+                if (url && key) {
+                    try {
+                        const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                        const payload = {
+                            categoria: categoryVal,
+                            nome: nameVal,
+                            pontos: updatedProduct.pontos,
+                            valor: valueVal,
+                            tipo: tipoVal,
+                            tecnologia: techVal,
+                            familia: familyVal,
+                            ir: irVal
+                        };
+                        
+                        let endpoint = `${cleanUrl}/rest/v1/${configTable}`;
+                        let method = 'POST';
+
+                        // Se o nome mudou, atualiza usando o id ou primeiro deleta e reinsere se não tiver id
+                        if (originalItem.id && !originalItem.id.startsWith('def-') && originalItem.id.length > 8) {
+                            endpoint = `${cleanUrl}/rest/v1/${configTable}?id=eq.${originalItem.id}`;
+                            method = 'PATCH';
+                        } else {
+                            // Sem id: deleta pelo nome antigo e insere o novo
+                            await fetch(`${cleanUrl}/rest/v1/${configTable}?nome=eq.${encodeURIComponent(originalItem.nome)}&categoria=eq.${originalItem.categoria}`, {
+                                method: 'DELETE',
+                                headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                            });
+                        }
+                        
+                        const res = await fetch(endpoint, {
+                            method: method,
+                            headers: {
+                                'apikey': key,
+                                'Authorization': `Bearer ${key}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(payload)
+                        });
+
+                        // Fallback se falhar
+                        if (!res.ok && res.status === 400) {
+                            const standardPayload = {
+                                categoria: categoryVal,
+                                nome: nameVal,
+                                pontos: updatedProduct.pontos,
+                                valor: valueVal
+                            };
+                            await fetch(endpoint, {
+                                method: method,
+                                headers: {
+                                    'apikey': key,
+                                    'Authorization': `Bearer ${key}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(standardPayload)
+                            });
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    }
+                }
+
+                adminPremiosConfig[editingProductIndex] = updatedProduct;
+                localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
+                
+                alert('Produto editado com sucesso!');
+                
+                // Reseta modo edição
+                editingProductIndex = null;
+                const titleEl = document.getElementById('manualRewardTitle');
+                if (titleEl) titleEl.innerHTML = '➕ Adicionar Novo Produto para Prêmios';
+
+                const submitBtn = document.getElementById('btnSubmitRewardForm');
+                if (submitBtn) {
+                    submitBtn.innerHTML = 'Adicionar Produto ➕';
+                    submitBtn.style.background = '';
+                    submitBtn.style.color = '';
+                }
+
+            } else {
+                // Modo Adição!
+                const duplicate = adminPremiosConfig.find(item => item.nome.toLowerCase() === nameVal.toLowerCase());
+                if (duplicate) {
+                    alert('Já existe um produto cadastrado com este nome!');
+                    return;
+                }
+
+                const newProduct = {
+                    id: Math.random().toString(36).substring(2, 15),
+                    categoria: categoryVal,
+                    nome: nameVal,
+                    pontos: valueVal, // inicia pontos com o mesmo valor do preço
+                    valor: valueVal,
+                    tipo: tipoVal,
+                    tecnologia: techVal,
+                    familia: familyVal,
+                    ir: irVal
+                };
+
+                if (url && key) {
+                    try {
+                        const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                        const payload = {
+                            categoria: categoryVal,
+                            nome: nameVal,
+                            pontos: newProduct.pontos,
+                            valor: valueVal,
+                            tipo: tipoVal,
+                            tecnologia: techVal,
+                            familia: familyVal,
+                            ir: irVal
+                        };
+                        const res = await fetch(`${cleanUrl}/rest/v1/${configTable}`, {
+                            method: 'POST',
+                            headers: {
+                                'apikey': key,
+                                'Authorization': `Bearer ${key}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(payload)
+                        });
+                        
+                        if (!res.ok && res.status === 400) {
+                            const standardPayload = {
+                                categoria: categoryVal,
+                                nome: nameVal,
+                                pontos: newProduct.pontos,
+                                valor: valueVal
+                            };
+                            await fetch(`${cleanUrl}/rest/v1/${configTable}`, {
+                                method: 'POST',
+                                headers: {
+                                    'apikey': key,
+                                    'Authorization': `Bearer ${key}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(standardPayload)
+                            });
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    }
+                }
+
+                adminPremiosConfig.push(newProduct);
+                localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
+                
+                alert('Produto adicionado com sucesso!');
+            }
+
+            addRewardProductForm.reset();
+            loadRewardsConfig();
+        });
+    }
+
+    // Vincula botões de download e upload de planilha modelo
     const btnDownloadTemplateReward = document.getElementById('btnDownloadTemplateReward');
     const btnUploadTemplateReward = document.getElementById('btnUploadTemplateReward');
     const fileImportReward = document.getElementById('fileImportReward');
@@ -2120,332 +2733,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 fileImportReward.value = '';
             };
             reader.readAsText(file, 'UTF-8');
-        });
-    }
-
-    // Carga em Massa de Catálogo Completo Personality (v3.60)
-    const btnBulkImportCatalog = document.getElementById('btnBulkImportCatalog');
-    if (btnBulkImportCatalog) {
-        btnBulkImportCatalog.addEventListener('click', async () => {
-            const confirmMsg = "Tem certeza que deseja importar em massa o catálogo completo de lentes e tratamentos da Personality?\n\nOs produtos serão cadastrados com 0 pontos e 0 prêmio em R$, e você poderá configurar o que pagará por produto clicando no botão Editar (✏️) na listagem abaixo.";
-            if (!confirm(confirmMsg)) return;
-
-            const catalog = [
-                // Linha IA (Lentes de Inteligência Artificial)
-                { categoria: 'lente', nome: 'Gold Design IA', pontos: 0, valor: 0 },
-                { categoria: 'lente', nome: 'Premium HD IA', pontos: 0, valor: 0 },
-                { categoria: 'lente', nome: 'Tecno Line IA', pontos: 0, valor: 0 },
-                { categoria: 'lente', nome: 'Gold Design Office IA', pontos: 0, valor: 0 },
-                { categoria: 'lente', nome: 'Gold Comfort IA', pontos: 0, valor: 0 },
-                { categoria: 'lente', nome: 'Gold Premium IA', pontos: 0, valor: 0 },
-
-                // Linha Tradicional (Lentes Digitais/Tradicionais)
-                { categoria: 'lente', nome: 'Gold Design Digital', pontos: 0, valor: 0 },
-                { categoria: 'lente', nome: 'Premium HD Digital', pontos: 0, valor: 0 },
-                { categoria: 'lente', nome: 'Tecno Line Digital', pontos: 0, valor: 0 },
-                { categoria: 'lente', nome: 'Maxvision Digital', pontos: 0, valor: 0 },
-                { categoria: 'lente', nome: 'Multi Premium', pontos: 0, valor: 0 },
-                { categoria: 'lente', nome: 'Gold Line', pontos: 0, valor: 0 },
-                { categoria: 'lente', nome: 'Gold Design Office', pontos: 0, valor: 0 },
-                { categoria: 'lente', nome: 'Gold Comfort', pontos: 0, valor: 0 },
-                { categoria: 'lente', nome: 'Gold Premium', pontos: 0, valor: 0 },
-
-                // Tratamentos (Antirreflexos)
-                { categoria: 'antirreflexo', nome: 'Antirreflexo Classic', pontos: 0, valor: 0 },
-                { categoria: 'antirreflexo', nome: 'Antirreflexo Premium (Super Clean)', pontos: 0, valor: 0 },
-                { categoria: 'antirreflexo', nome: 'Filtro Azul (Blue Control)', pontos: 0, valor: 0 },
-                { categoria: 'antirreflexo', nome: 'Fotossensível (Active Transitions)', pontos: 0, valor: 0 },
-                { categoria: 'antirreflexo', nome: 'Sem Antirreflexo (Básico)', pontos: 0, valor: 0 }
-            ];
-
-            // Filtra os itens que já existem
-            const newItems = [];
-            catalog.forEach(item => {
-                const exists = adminPremiosConfig.some(existing => existing.nome.toLowerCase() === item.nome.toLowerCase());
-                if (!exists) {
-                    newItems.push(item);
-                }
-            });
-
-            if (newItems.length === 0) {
-                alert("Todos os produtos do catálogo já estão cadastrados na lista!");
-                return;
-            }
-
-            const url = getSupabaseUrl();
-            const key = getSupabaseKey();
-            const configTable = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
-
-            btnBulkImportCatalog.disabled = true;
-            btnBulkImportCatalog.textContent = 'Importando... ⏳';
-
-            if (url && key) {
-                try {
-                    const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
-                    const response = await fetch(`${cleanUrl}/rest/v1/${configTable}`, {
-                        method: 'POST',
-                        headers: {
-                            'apikey': key,
-                            'Authorization': `Bearer ${key}`,
-                            'Content-Type': 'application/json',
-                            'Prefer': 'return=minimal'
-                        },
-                        body: JSON.stringify(newItems)
-                    });
-
-                    if (response.ok) {
-                        alert(`${newItems.length} novos itens do catálogo importados com sucesso!`);
-                    } else {
-                        throw new Error('Falha no upload para a base online.');
-                    }
-                } catch (error) {
-                    console.error(error);
-                    alert("Aviso: Conexão online indisponível. Salvando importação localmente.");
-                }
-            } else {
-                alert(`${newItems.length} novos itens do catálogo importados localmente!`);
-            }
-
-            // Atualiza memória local e renderiza
-            adminPremiosConfig.push(...newItems);
-            localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
-            
-            btnBulkImportCatalog.disabled = false;
-            btnBulkImportCatalog.textContent = '📦 Importar Catálogo Completo Personality';
-
-            loadRewardsConfig();
-        });
-    }
-
-    // Listener para o formulário de adicionar novo produto de prêmio
-    const addRewardProductForm = document.getElementById('addRewardProductForm');
-    if (addRewardProductForm) {
-        addRewardProductForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const categoryVal = document.getElementById('newProdCategory').value;
-            const nameVal = document.getElementById('newProdName').value.trim();
-            const pointsVal = Number(document.getElementById('newProdPoints').value);
-            const valueVal = Number(document.getElementById('newProdValue').value);
-
-            if (!nameVal) return;
-
-            const url = getSupabaseUrl();
-            const key = getSupabaseKey();
-            const configTable = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
-
-            if (editingProductIndex !== null) {
-                // Modo Edição!
-                const originalItem = adminPremiosConfig[editingProductIndex];
-                
-                // Evita duplicação se o nome mudou e já existe outro com esse novo nome
-                if (originalItem.nome.toLowerCase() !== nameVal.toLowerCase()) {
-                    const duplicate = adminPremiosConfig.find((item, idx) => idx !== editingProductIndex && item.nome.toLowerCase() === nameVal.toLowerCase());
-                    if (duplicate) {
-                        alert('Já existe outra família cadastrada com este nome!');
-                        return;
-                    }
-                }
-
-                const updatedProduct = {
-                    ...originalItem,
-                    categoria: categoryVal,
-                    nome: nameVal,
-                    pontos: pointsVal,
-                    valor: valueVal
-                };
-
-                if (url && key) {
-                    try {
-                        const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
-                        
-                        // Se o nome mudou, atualiza usando o id ou primeiro deleta e reinsere se não tiver id
-                        if (originalItem.id) {
-                            const res = await fetch(`${cleanUrl}/rest/v1/${configTable}?id=eq.${originalItem.id}`, {
-                                method: 'PATCH',
-                                headers: {
-                                    'apikey': key,
-                                    'Authorization': `Bearer ${key}`,
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                    categoria: categoryVal,
-                                    nome: nameVal,
-                                    pontos: pointsVal,
-                                    valor: valueVal
-                                })
-                            });
-                            if (!res.ok) throw new Error('Erro ao editar no Supabase.');
-                        } else {
-                            // Sem id: deleta pelo nome antigo e insere o novo
-                            await fetch(`${cleanUrl}/rest/v1/${configTable}?nome=eq.${encodeURIComponent(originalItem.nome)}`, {
-                                method: 'DELETE',
-                                headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
-                            });
-                            
-                            await fetch(`${cleanUrl}/rest/v1/${configTable}`, {
-                                method: 'POST',
-                                headers: {
-                                    'apikey': key,
-                                    'Authorization': `Bearer ${key}`,
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                    categoria: categoryVal,
-                                    nome: nameVal,
-                                    pontos: pointsVal,
-                                    valor: valueVal
-                                })
-                            });
-                        }
-                    } catch (err) {
-                        console.error(err);
-                    }
-                }
-
-                adminPremiosConfig[editingProductIndex] = updatedProduct;
-                localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
-                
-                alert('Família de produto editada com sucesso!');
-                
-                // Reseta modo edição
-                editingProductIndex = null;
-                const formCard = addRewardProductForm.closest('.section-card');
-                if (formCard) {
-                    const h2 = formCard.querySelector('h2');
-                    if (h2) h2.innerHTML = '➕ Adicionar Nova Família de Produto para Prêmios';
-                }
-                const submitBtn = addRewardProductForm.querySelector('button[type="submit"]');
-                if (submitBtn) {
-                    submitBtn.innerHTML = 'Adicionar Família ➕';
-                    submitBtn.style.background = '';
-                    submitBtn.style.color = '';
-                }
-
-            } else {
-                // Modo Adição!
-                const duplicate = adminPremiosConfig.find(item => item.nome.toLowerCase() === nameVal.toLowerCase());
-                if (duplicate) {
-                    alert('Já existe uma família cadastrada com este nome!');
-                    return;
-                }
-
-                const newProduct = {
-                    categoria: categoryVal,
-                    nome: nameVal,
-                    pontos: pointsVal,
-                    valor: valueVal
-                };
-
-                if (url && key) {
-                    try {
-                        const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
-                        const res = await fetch(`${cleanUrl}/rest/v1/${configTable}`, {
-                            method: 'POST',
-                            headers: {
-                                'apikey': key,
-                                'Authorization': `Bearer ${key}`,
-                                'Content-Type': 'application/json',
-                                'Prefer': 'return=minimal'
-                            },
-                            body: JSON.stringify(newProduct)
-                        });
-                        if (!res.ok) {
-                            throw new Error('Erro ao salvar no Supabase.');
-                        }
-                    } catch (err) {
-                        console.error(err);
-                    }
-                }
-
-                adminPremiosConfig.push(newProduct);
-                localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
-                
-                alert('Nova família de produto adicionada com sucesso!');
-            }
-
-            addRewardProductForm.reset();
-            loadRewardsConfig();
-        });
-    }
-
-    if (rewardsConfigForm) {
-        rewardsConfigForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            // Atualiza o array local
-            const pointsInputs = rewardsConfigForm.querySelectorAll('.config-points-input');
-            const valueInputs = rewardsConfigForm.querySelectorAll('.config-value-input');
-
-            pointsInputs.forEach(input => {
-                const idx = parseInt(input.getAttribute('data-index'));
-                adminPremiosConfig[idx].pontos = Number(input.value);
-            });
-
-            valueInputs.forEach(input => {
-                const idx = parseInt(input.getAttribute('data-index'));
-                adminPremiosConfig[idx].valor = Number(input.value);
-            });
-
-            const url = getSupabaseUrl();
-            const key = getSupabaseKey();
-            const configTable = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
-
-            if (url && key) {
-                try {
-                    const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
-                    
-                    // Executa o upsert/insert para cada linha
-                    for (const item of adminPremiosConfig) {
-                        const bodyData = {
-                            categoria: item.categoria,
-                            nome: item.nome,
-                            pontos: item.pontos,
-                            valor: item.valor
-                        };
-                        
-                        // Primeiro tenta dar select pelo nome para ver se atualiza ou insere
-                        const checkRes = await fetch(`${cleanUrl}/rest/v1/${configTable}?nome=eq.${encodeURIComponent(item.nome)}`, {
-                            method: 'GET',
-                            headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
-                        });
-                        
-                        let method = 'POST';
-                        let endpoint = `${cleanUrl}/rest/v1/${configTable}`;
-                        
-                        if (checkRes.ok) {
-                            const exist = await checkRes.json();
-                            if (exist && exist.length > 0) {
-                                method = 'PATCH';
-                                endpoint = `${cleanUrl}/rest/v1/${configTable}?nome=eq.${encodeURIComponent(item.nome)}`;
-                            }
-                        }
-                        
-                        await fetch(endpoint, {
-                            method: method,
-                            headers: {
-                                'apikey': key,
-                                'Authorization': `Bearer ${key}`,
-                                'Content-Type': 'application/json',
-                                'Prefer': 'return=minimal'
-                            },
-                            body: JSON.stringify(bodyData)
-                        });
-                    }
-
-                    localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
-                    alert('Valores de prêmios salvos com sucesso no Supabase!');
-                } catch (err) {
-                    console.error(err);
-                    localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
-                    alert('Houve erro no Supabase. Configuração salva localmente.');
-                }
-            } else {
-                localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
-                alert('Valores de prêmios locais salvos com sucesso!');
-            }
-
-            loadRewardsConfig();
         });
     }
 

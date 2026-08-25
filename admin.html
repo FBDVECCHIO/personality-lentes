@@ -976,30 +976,43 @@ create policy "Permitir delete em os_autorizadas_personality" on os_autorizadas_
             <div class="admin-section" id="sec-premios-config">
                 <div class="glass-card section-card" style="margin-bottom: 25px;">
                     <div class="card-header">
-                        <h2>➕ Adicionar Nova Família de Produto para Prêmios</h2>
-                        <p>Cadastre novas famílias de lentes ou tratamentos antirreflexo no sistema.</p>
+                        <h2 id="manualRewardTitle">➕ Adicionar Novo Produto para Prêmios</h2>
+                        <p>Cadastre novos produtos (lentes ou tratamentos) e defina seus dados de classificação.</p>
                     </div>
-                    <form id="addRewardProductForm" style="display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 15px; align-items: end; margin-top: 15px;">
+                    <form id="addRewardProductForm" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; align-items: end; margin-top: 15px;">
                         <div class="input-group" style="margin-bottom: 0;">
-                            <label for="newProdCategory" style="font-size: 12px; margin-bottom: 6px;">Categoria</label>
-                            <select id="newProdCategory" required style="width:100%; padding: 10px; background:#121216; border: 1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff; font-family:inherit;">
-                                <option value="lente">Lente 🕶️</option>
-                                <option value="antirreflexo">Antirreflexo ✨</option>
+                            <label for="newProdName" style="font-size: 12px; margin-bottom: 6px;">Produto (Nome)</label>
+                            <input type="text" id="newProdName" placeholder="Ex: Gold Design IA 1.67" required style="width:100%; padding: 10px; background:rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff; font-family:inherit;">
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label for="newProdValue" style="font-size: 12px; margin-bottom: 6px;">Preço (R$)</label>
+                            <input type="number" step="0.01" id="newProdValue" placeholder="Ex: 150.00" required min="0" style="width:100%; padding: 10px; background:rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff; font-family:inherit;">
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label for="newProdType" style="font-size: 12px; margin-bottom: 6px;">Tipo</label>
+                            <select id="newProdType" required style="width:100%; padding: 10px; background:#121216; border: 1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff; font-family:inherit;">
+                                <option value="Multifocal">Multifocal</option>
+                                <option value="Office">Office</option>
+                                <option value="Visão Simples">Visão Simples</option>
+                                <option value="Antirreflexo">Antirreflexo</option>
+                                <option value="Lente Pronta">Lente Pronta</option>
                             </select>
                         </div>
                         <div class="input-group" style="margin-bottom: 0;">
-                            <label for="newProdName" style="font-size: 12px; margin-bottom: 6px;">Nome do Produto</label>
-                            <input type="text" id="newProdName" placeholder="Ex: Lente 1.67 Premium" required style="width:100%; padding: 10px; background:rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff; font-family:inherit;">
+                            <label for="newProdTech" style="font-size: 12px; margin-bottom: 6px;">Tecnologia</label>
+                            <input type="text" id="newProdTech" placeholder="Ex: Transitions, Polarizado, Bluecut..." style="width:100%; padding: 10px; background:rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff; font-family:inherit;">
                         </div>
                         <div class="input-group" style="margin-bottom: 0;">
-                            <label for="newProdPoints" style="font-size: 12px; margin-bottom: 6px;">Pontos por Par</label>
-                            <input type="number" id="newProdPoints" placeholder="Ex: 40" required min="0" style="width:100%; padding: 10px; background:rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff; font-family:inherit;">
+                            <label for="newProdFamily" style="font-size: 12px; margin-bottom: 6px;">Família</label>
+                            <input type="text" id="newProdFamily" placeholder="Ex: Linha IA, Linha Tradicional..." style="width:100%; padding: 10px; background:rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff; font-family:inherit;">
                         </div>
                         <div class="input-group" style="margin-bottom: 0;">
-                            <label for="newProdValue" style="font-size: 12px; margin-bottom: 6px;">Prêmio por Par (R$)</label>
-                            <input type="number" step="0.01" id="newProdValue" placeholder="Ex: 40.00" required min="0" style="width:100%; padding: 10px; background:rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff; font-family:inherit;">
+                            <label for="newProdIR" style="font-size: 12px; margin-bottom: 6px;">IR (Índice de Refração)</label>
+                            <input type="text" id="newProdIR" placeholder="Ex: 1.50, 1.56, 1.61, 1.67..." style="width:100%; padding: 10px; background:rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff; font-family:inherit;">
                         </div>
-                        <button type="submit" class="btn btn-gold btn-sm" style="font-weight: 700; height: 38px; padding: 0 20px;">Adicionar Família ➕</button>
+                        <div style="grid-column: span 3; display: flex; justify-content: flex-end; margin-top: 10px;">
+                            <button type="submit" class="btn btn-gold btn-sm" id="btnSubmitRewardForm" style="font-weight: 700; height: 38px; padding: 0 30px;">Adicionar Produto ➕</button>
+                        </div>
                     </form>
                 </div>
 
@@ -1007,55 +1020,75 @@ create policy "Permitir delete em os_autorizadas_personality" on os_autorizadas_
                     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
                         <div>
                             <h2>💸 Configuração de <span class="gold-text">Prêmios de Lentes e Tratamentos</span></h2>
-                            <p>Configure quantos pontos e qual valor financeiro (em R$) cada balconista ganha por par de lente ou tratamento antirreflexo vendido.</p>
+                            <p>Configure a pontuação e os prêmios dos produtos ativos na campanha.</p>
                         </div>
                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            <button type="button" class="btn btn-gold btn-xs" id="btnBulkImportCatalog" style="padding: 8px 12px; font-weight: 700;">📦 Importar Catálogo Completo Personality</button>
+                            <button type="button" class="btn btn-gold btn-xs" id="btnBulkImportCatalog" style="padding: 8px 12px; font-weight: 700;">📦 Catálogo Padrão</button>
                             <button type="button" class="btn btn-gold btn-xs" id="btnDownloadTemplateReward" style="padding: 8px 12px; font-weight: 700;">📥 Modelo Planilha</button>
                             <button type="button" class="btn btn-gold btn-xs" id="btnUploadTemplateReward" style="padding: 8px 12px; font-weight: 700;">📤 Importar Lote (CSV)</button>
                             <input type="file" id="fileImportReward" accept=".csv" style="display: none;" />
                         </div>
                     </div>
 
-                    <form id="rewardsConfigForm" style="margin-top: 20px;">
-                        <!-- Lentes -->
-                        <h3 style="font-family: var(--font-heading); color: var(--gold-light); font-size: 18px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">🕶️ Famílias de Lentes</h3>
-                        <div class="table-container" style="margin-bottom: 30px;">
-                            <table class="leads-table">
-                                <thead>
-                                    <tr>
-                                        <th>Família de Lente</th>
-                                        <th>Pontos por Par</th>
-                                        <th>Prêmio por Par (R$)</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="rewardsLentesConfigBody">
-                                    <!-- Preenchido via JS -->
-                                </tbody>
-                            </table>
+                    <!-- Barra de Ações em Lote (v3.82) -->
+                    <div class="bulk-actions-bar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-top: 20px; padding: 12px 20px; background: rgba(197, 168, 92, 0.05); border: 1px solid rgba(197, 168, 92, 0.2); border-radius: 8px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 13px; font-weight: 700; color: var(--gold-light);">Regra de Pontuação em Lote:</span>
+                            <input type="number" id="bulkPointsInput" placeholder="Pontos (ex: 50)" style="width: 140px; padding: 6px 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #fff; font-size: 12px; font-family: inherit;" />
+                            <button type="button" class="btn btn-gold btn-xs" id="btnApplyBulkPoints" style="padding: 7px 15px; font-weight: 700;">Aplicar ⚡</button>
                         </div>
-
-                        <!-- Antirreflexos -->
-                        <h3 style="font-family: var(--font-heading); color: var(--gold-light); font-size: 18px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">✨ Famílias de Antirreflexo</h3>
-                        <div class="table-container" style="margin-bottom: 20px;">
-                            <table class="leads-table">
-                                <thead>
-                                    <tr>
-                                        <th>Tratamento Antirreflexo</th>
-                                        <th>Pontos por Par</th>
-                                        <th>Prêmio por Par (R$)</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="rewardsArConfigBody">
-                                    <!-- Preenchido via JS -->
-                                </tbody>
-                            </table>
+                        <div>
+                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnPrintSelectedRewards" style="padding: 7px 15px; font-weight: 700;">📄 Gerar PDF (Seleção)</button>
                         </div>
+                    </div>
 
-                        <button type="submit" class="btn btn-gold btn-sm" style="font-weight: 700; height: 38px; padding: 0 24px;">💾 Salvar Alterações de Valores</button>
-                    </form>
+                    <div class="table-container" style="margin-top: 20px; margin-bottom: 20px;">
+                        <table class="leads-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px; text-align: center;"><input type="checkbox" id="selectAllProducts" style="transform: scale(1.2); cursor: pointer;" /></th>
+                                    <th>Produto</th>
+                                    <th style="width: 100px;">Preço (R$)</th>
+                                    <th style="width: 120px;">Tipo</th>
+                                    <th style="width: 120px;">Tecnologia</th>
+                                    <th style="width: 120px;">Família</th>
+                                    <th style="width: 80px;">IR</th>
+                                    <th style="width: 100px;">Pontos</th>
+                                    <th style="width: 80px; text-align: center;">Ações</th>
+                                </tr>
+                                <tr class="filter-row" style="background: rgba(255,255,255,0.02);">
+                                    <th></th>
+                                    <th><input type="text" id="filterProdName" placeholder="Filtrar..." style="width: 100%; padding: 4px 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px; border-radius: 4px; font-family: inherit;" /></th>
+                                    <th><input type="text" id="filterProdPrice" placeholder="Filtrar..." style="width: 100%; padding: 4px 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px; border-radius: 4px; font-family: inherit;" /></th>
+                                    <th>
+                                        <select id="filterProdType" style="width: 100%; padding: 4px 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px; border-radius: 4px; font-family: inherit;">
+                                            <option value="">Todos</option>
+                                            <option value="Multifocal">Multifocal</option>
+                                            <option value="Office">Office</option>
+                                            <option value="Visão Simples">Visão Simples</option>
+                                            <option value="Antirreflexo">Antirreflexo</option>
+                                            <option value="Lente Pronta">Lente Pronta</option>
+                                        </select>
+                                    </th>
+                                    <th><input type="text" id="filterProdTech" placeholder="Filtrar..." style="width: 100%; padding: 4px 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px; border-radius: 4px; font-family: inherit;" /></th>
+                                    <th><input type="text" id="filterProdFamily" placeholder="Filtrar..." style="width: 100%; padding: 4px 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px; border-radius: 4px; font-family: inherit;" /></th>
+                                    <th><input type="text" id="filterProdIR" placeholder="Filtrar..." style="width: 100%; padding: 4px 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px; border-radius: 4px; font-family: inherit;" /></th>
+                                    <th><input type="text" id="filterProdPoints" placeholder="Filtrar..." style="width: 100%; padding: 4px 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px; border-radius: 4px; font-family: inherit;" /></th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="unifiedRewardsTableBody">
+                                <!-- Preenchido via JS consolidado -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Controles de Paginação (v3.82) -->
+                    <div class="pagination-container" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px;">
+                        <button type="button" class="btn btn-outline-gold btn-xs" id="btnPrevPage" style="padding: 6px 12px; font-weight: 700;">◀ Anterior</button>
+                        <span style="font-size: 12px; color: var(--text-muted);" id="pageIndicator">Página 1 de 1</span>
+                        <button type="button" class="btn btn-outline-gold btn-xs" id="btnNextPage" style="padding: 6px 12px; font-weight: 700;">Próxima ▶</button>
+                    </div>
                 </div>
             </div>
 
