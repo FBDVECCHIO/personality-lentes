@@ -4668,6 +4668,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 if (res.ok) {
                     rewardsConfig = await res.json();
+                    rewardsConfig.forEach(p => {
+                        const localItem = adminPremiosConfig.find(lp => lp.nome === p.nome || lp.id === p.id);
+                        if (localItem && localItem.permitido === false) {
+                            p.permitido = false;
+                        }
+                    });
                 }
             } catch (err) {
                 console.error(err);
