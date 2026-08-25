@@ -1086,6 +1086,7 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                                     <th style="width: 120px;">Família</th>
                                     <th style="width: 80px;">IR</th>
                                     <th style="width: 100px;">Pontos/$</th>
+                                    <th style="width: 80px; text-align: center;">Ativo</th>
                                     <th style="width: 80px; text-align: center;">Ações</th>
                                 </tr>
                                 <tr class="filter-row" style="background: rgba(255,255,255,0.02);">
@@ -1113,6 +1114,7 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                                         </select>
                                     </th>
                                     <th><input type="text" id="filterProdPoints" placeholder="Filtrar..." style="width: 100%; padding: 4px 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px; border-radius: 4px; font-family: inherit;" /></th>
+                                    <th></th>
                                     <th><button type="button" id="btnClearFilters" title="Limpar Filtros" style="background: none; border: 1px solid rgba(255,255,255,0.2); color: #fca5a5; border-radius: 4px; padding: 4px 2px; font-size: 10px; cursor: pointer; display: block; width: 100%; text-align: center;">🧹 Limpar</button></th>
                                 </tr>
                             </thead>
@@ -1160,9 +1162,9 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
 
                         <!-- Seletor e Filtro de Lentes e Tratamentos (Busca Aprimorada Integrada) -->
                         <div style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-                            <h4 style="font-size: 12px; text-transform: uppercase; color: var(--gold-light); margin-bottom: 15px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">🔍 Localizar Lente (Composição e Filtros)</h4>
+                            <h4 style="font-size: 12px; text-transform: uppercase; color: var(--gold-light); margin-bottom: 15px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">🔍 Localizar Produto e Pontuação</h4>
                             
-                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 15px;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
                                 
                                 <!-- Família -->
                                 <div style="flex: 1.2; min-width: 120px;">
@@ -1183,6 +1185,16 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                                 </div>
                                 
                                 <span style="font-size: 18px; font-weight: bold; color: rgba(197, 168, 92, 0.4); margin-top: 15px;">+</span>
+
+                                <!-- IR -->
+                                <div style="flex: 1; min-width: 90px;">
+                                    <label for="authFilterIR" style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 4px;">IR (Índice)</label>
+                                    <select id="authFilterIR" style="width: 100%; padding: 8px; background: #121216; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 12px; font-family: inherit;">
+                                        <option value="">Todos</option>
+                                    </select>
+                                </div>
+                                
+                                <span style="font-size: 18px; font-weight: bold; color: rgba(197, 168, 92, 0.4); margin-top: 15px;">+</span>
                                 
                                 <!-- Lente -->
                                 <div style="flex: 3; min-width: 250px;">
@@ -1194,37 +1206,14 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                                 
                                 <span style="font-size: 18px; font-weight: bold; color: rgba(197, 168, 92, 0.4); margin-top: 15px;">+</span>
                                 
-                                <!-- Tecnologia -->
-                                <div style="flex: 1.2; min-width: 120px;">
-                                    <label for="authFilterTech" style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 4px;">Tecnologia</label>
-                                    <select id="authFilterTech" style="width: 100%; padding: 8px; background: #121216; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 12px; font-family: inherit;">
-                                        <option value="">Todas</option>
+                                <!-- Tratamento -->
+                                <div style="flex: 3; min-width: 250px;">
+                                    <label for="authOsAr" style="font-size: 10px; color: var(--gold-light); display: block; margin-bottom: 4px; font-weight:700;">Tratamento Antirreflexo</label>
+                                    <select id="authOsAr" style="width: 100%; padding: 8px; background: #121216; border: 1px solid rgba(197, 168, 92, 0.4); border-radius: 6px; color: #fff; font-size: 12px; font-family: inherit; font-weight: bold;">
+                                        <option value="">Selecione o antirreflexo...</option>
                                     </select>
                                 </div>
                                 
-                                <span style="font-size: 18px; font-weight: bold; color: rgba(197, 168, 92, 0.4); margin-top: 15px;">+</span>
-                                
-                                <!-- IR -->
-                                <div style="flex: 1; min-width: 90px;">
-                                    <label for="authFilterIR" style="font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 4px;">IR (Índice)</label>
-                                    <select id="authFilterIR" style="width: 100%; padding: 8px; background: #121216; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 12px; font-family: inherit;">
-                                        <option value="">Todos</option>
-                                    </select>
-                                </div>
-                                
-                            </div>
-
-                            <!-- Sinal de soma intermediário -->
-                            <div style="display: flex; justify-content: center; align-items: center; margin: 15px 0;">
-                                <span style="font-size: 24px; font-weight: bold; color: var(--gold-light); background: rgba(197, 168, 92, 0.1); width: 42px; height: 42px; display: flex; justify-content: center; align-items: center; border-radius: 50%; border: 2px dashed rgba(197, 168, 92, 0.3);">+</span>
-                            </div>
-
-                            <!-- Bloco Tratamento -->
-                            <div>
-                                <label for="authOsAr" style="font-size: 11px; color: var(--gold-light); display: block; margin-bottom: 6px; font-weight:700; text-transform: uppercase;">⚡ Tratamento Antirreflexo Selecionado</label>
-                                <select id="authOsAr" style="width: 100%; padding: 10px; background: #121216; border: 1px solid rgba(197, 168, 92, 0.4); border-radius: 6px; color: #fff; font-size: 12px; font-family: inherit; font-weight: bold;">
-                                    <option value="">Selecione o antirreflexo...</option>
-                                </select>
                             </div>
                         </div>
 
@@ -1250,15 +1239,13 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                         <table class="leads-table">
                             <thead>
                                 <tr>
+                                    <th style="width: 40px; text-align: center;">Detalhes</th>
                                     <th>O.S. / Pedido</th>
                                     <th>Vendedor</th>
-                                    <th>CPF</th>
-                                    <th>Loja</th>
-                                    <th>Cliente</th>
-                                    <th>Lente</th>
-                                    <th>Antirreflexo</th>
+                                    <th>Pontuação Total</th>
+                                    <th>Lentes + AR</th>
                                     <th>Status</th>
-                                    <th>Ações</th>
+                                    <th style="text-align: center; width: 140px;">Ações</th>
                                 </tr>
                             </thead>
                             <tbody id="authOsTableBody">

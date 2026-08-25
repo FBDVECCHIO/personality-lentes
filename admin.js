@@ -1949,6 +1949,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${escapeHtml(item.familia || 'N/A')}</td>
                 <td><code>${escapeHtml(item.ir || 'N/A')}</code></td>
                 <td><strong>${item.pontos || 0} / R$ ${((item.pontos || 0) * valorPontoConfig).toFixed(2)}</strong></td>
+                <td style="text-align: center;"><input type="checkbox" class="toggle-permitido-checkbox" data-id="${item.id}" ${item.permitido !== false ? 'checked' : ''} style="transform: scale(1.1); cursor: pointer;" /></td>
                 <td style="text-align: center; white-space: nowrap;">
                     <button type="button" class="icon-btn btn-edit-reward-config" data-index="${actualIndexInGlobal}" title="Editar Produto" style="background:none; border:none; color:var(--gold-light); cursor:pointer; font-size:14px; margin-right:8px; padding:2px;">✏️</button>
                     <button type="button" class="icon-btn btn-delete-reward-config" data-id="${item.id}" data-name="${escapeHtml(item.nome)}" title="Excluir Produto" style="background:none; border:none; color:#f87171; cursor:pointer; font-size:14px; padding:2px;">🗑️</button>
@@ -1965,6 +1966,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         selectedRewardIds.delete(item.id);
                         if (selectAllProducts) selectAllProducts.checked = false;
                     }
+                });
+            }
+
+            // Vincular checkbox Permitido/Ativo
+            const chkPermitido = tr.querySelector('.toggle-permitido-checkbox');
+            if (chkPermitido) {
+                chkPermitido.addEventListener('change', (e) => {
+                    toggleProductPermitido(item.id, e.target.checked);
                 });
             }
 
@@ -1987,6 +1996,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 deleteRewardConfigItem(id, name);
             });
         });
+    }
+
+    async function toggleProductPermitido(id, isChecked) {
+        const item = adminPremiosConfig.find(p => p.id === id);
+        if (!item) return;
+        
+        item.permitido = isChecked;
+        localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
+        
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
+        const configTable = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
+        
+        if (url && key && id && !id.startsWith('def-') && id.length > 8) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const endpoint = `${cleanUrl}/rest/v1/${configTable}?id=eq.${encodeURIComponent(id)}`;
+                await fetch(endpoint, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': key,
+                        'Authorization': `Bearer ${key}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({ permitido: isChecked })
+                });
+            } catch (err) {
+                console.error("Erro ao atualizar status permitido no Supabase:", err);
+            }
+        }
+        
+        // Atualiza os seletores de liberação inline
+        initAuthFiltersAndProducts();
     }
 
     // Vincular filtros
@@ -4612,12 +4655,14 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAuthOsTable(authorizedList, approvedVendedores);
     }
 
+    let editingAuthOsNumber = null;
+
     function renderAuthOsTable(items, sellersList) {
         if (!authOsTableBody) return;
         authOsTableBody.innerHTML = '';
 
         if (items.length === 0) {
-            authOsTableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted);">Nenhuma O.S. autorizada no momento.</td></tr>`;
+            authOsTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Nenhuma O.S. autorizada no momento.</td></tr>`;
             return;
         }
 
@@ -4625,23 +4670,59 @@ document.addEventListener('DOMContentLoaded', () => {
             // Acha o nome do vendedor correspondente ao CPF
             const vend = sellersList.find(v => v.cpf === item.cpf_vendedor) || { nome: 'Desconhecido', loja: item.loja || 'N/A' };
 
+            // Calcula a pontuação total da Lente + AR
+            const lProd = adminPremiosConfig.find(p => p.nome === item.lente_familia) || { pontos: 0 };
+            const arProd = adminPremiosConfig.find(p => p.nome === item.ar_familia) || { pontos: 0 };
+            const totalPts = (Number(lProd.pontos) || 0) + (Number(arProd.pontos) || 0);
+
+            // Linha Principal
             const tr = document.createElement('tr');
             tr.innerHTML = `
+                <td style="text-align: center;">
+                    <button type="button" class="btn-toggle-os-details" style="background: none; border: none; color: var(--gold-light); font-size: 16px; cursor: pointer; padding: 4px;">➕</button>
+                </td>
                 <td><strong>${escapeHtml(item.os)}</strong></td>
                 <td>${escapeHtml(vend.nome)}</td>
-                <td>${escapeHtml(item.cpf_vendedor)}</td>
-                <td>${escapeHtml(item.loja || vend.loja)}</td>
-                <td>${escapeHtml(item.cliente_nome)}</td>
-                <td><span class="gold-text">${escapeHtml(item.lente_familia)}</span></td>
-                <td><span style="color: #93c5fd;">${escapeHtml(item.ar_familia)}</span></td>
+                <td><strong>${totalPts} Pts</strong></td>
+                <td style="font-size: 11px;">
+                    <div><span class="badge" style="background: rgba(197, 168, 92, 0.15); color: var(--gold-light); font-size: 10px; padding: 1px 4px; border-radius: 3px;">Lente</span> ${escapeHtml(item.lente_familia)}</div>
+                    <div style="margin-top: 4px;"><span class="badge" style="background: rgba(147, 197, 253, 0.15); color: #93c5fd; font-size: 10px; padding: 1px 4px; border-radius: 3px;">AR</span> ${escapeHtml(item.ar_familia)}</div>
+                </td>
                 <td>
                     ${item.utilizada ? '<span class="badge badge-success" style="background:#10b981; color:#fff; padding: 2px 6px; border-radius: 4px; font-size:11px;">Resgatada ✅</span>' : '<span class="badge badge-warning" style="background:#f59e0b; color:#000; padding: 2px 6px; border-radius: 4px; font-size:11px;">Pendente ⏳</span>'}
                 </td>
-                <td>
-                    <button class="btn btn-xs btn-danger btn-delete-auth-os" data-os="${escapeHtml(item.os)}" style="padding: 4px 8px; font-size:11px; border-color: rgba(255,85,85,0.3); color:#fca5a5; background:none;">Cancel 🗑️</button>
+                <td style="text-align: center; white-space: nowrap;">
+                    <button type="button" class="btn btn-xs btn-outline-gold btn-edit-auth-os" style="padding: 4px 8px; font-size:11px; margin-right: 6px;">✏️ Editar</button>
+                    <button type="button" class="btn btn-xs btn-danger btn-delete-auth-os" style="padding: 4px 8px; font-size:11px; border-color: rgba(255,85,85,0.3); color:#fca5a5; background:none;">Excluir 🗑️</button>
                 </td>
             `;
 
+            // Linha de Detalhes Adicionais (+)
+            const trDetails = document.createElement('tr');
+            trDetails.style.display = 'none';
+            trDetails.innerHTML = `
+                <td></td>
+                <td colspan="6" style="background: rgba(0,0,0,0.25); padding: 12px 15px; border-radius: 6px;">
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; font-size: 11px;">
+                        <div><strong style="color: var(--gold-light);">CPF Vendedor:</strong><br>${escapeHtml(item.cpf_vendedor)}</div>
+                        <div><strong style="color: var(--gold-light);">Loja / Clínica:</strong><br>${escapeHtml(item.loja || vend.loja)}</div>
+                        <div><strong style="color: var(--gold-light);">Paciente / Cliente:</strong><br>${escapeHtml(item.cliente_nome)}</div>
+                        <div><strong style="color: var(--gold-light);">Data de Liberação:</strong><br>${item.created_at ? new Date(item.created_at).toLocaleString('pt-BR') : 'N/A'}</div>
+                    </div>
+                </td>
+            `;
+
+            // Vincular toggle de detalhes
+            const btnToggle = tr.querySelector('.btn-toggle-os-details');
+            if (btnToggle) {
+                btnToggle.addEventListener('click', () => {
+                    const isHidden = trDetails.style.display === 'none';
+                    trDetails.style.display = isHidden ? 'table-row' : 'none';
+                    btnToggle.textContent = isHidden ? '➖' : '➕';
+                });
+            }
+
+            // Vincular Excluir
             const btnDel = tr.querySelector('.btn-delete-auth-os');
             if (btnDel) {
                 btnDel.addEventListener('click', () => {
@@ -4649,8 +4730,63 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
+            // Vincular Editar
+            const btnEdit = tr.querySelector('.btn-edit-auth-os');
+            if (btnEdit) {
+                btnEdit.addEventListener('click', () => {
+                    startEditingAuthOs(item);
+                });
+            }
+
             authOsTableBody.appendChild(tr);
+            authOsTableBody.appendChild(trDetails);
         });
+    }
+
+    function startEditingAuthOs(item) {
+        editingAuthOsNumber = item.os;
+        
+        if (authOsNumber) {
+            authOsNumber.value = item.os;
+            authOsNumber.readOnly = true;
+            authOsNumber.style.opacity = '0.6';
+        }
+        if (authOsSellerCpf) {
+            authOsSellerCpf.value = item.cpf_vendedor;
+        }
+        if (authOsClientName) {
+            authOsClientName.value = item.cliente_nome;
+        }
+
+        // Recupera os filtros associados à Lente
+        const lProd = adminPremiosConfig.find(p => p.nome === item.lente_familia);
+        if (lProd) {
+            if (authFilterFamily) authFilterFamily.value = lProd.familia || '';
+            if (authFilterType) authFilterType.value = lProd.tipo || '';
+            if (authFilterIR) authFilterIR.value = lProd.ir || '';
+        }
+        
+        // Atualiza os selects com base no filtro
+        filterAuthProducts();
+        
+        // Seleciona a lente e tratamento nos selects dinâmicos
+        if (authOsLens) authOsLens.value = item.lente_familia;
+        if (authOsAr) authOsAr.value = item.ar_familia;
+        
+        updateAuthOsSummary();
+
+        // Altera o texto do botão de submissão
+        const submitBtn = authOsForm ? authOsForm.querySelector('button[type="submit"]') : null;
+        if (submitBtn) {
+            submitBtn.innerHTML = 'Salvar O.S. 💾';
+            submitBtn.style.background = '#10b981';
+            submitBtn.style.color = '#fff';
+            submitBtn.className = 'btn btn-success btn-sm';
+        }
+
+        if (authOsForm) {
+            authOsForm.scrollIntoView({ behavior: 'smooth' });
+        }
     }
 
     async function deleteAuthOs(osNumber) {
@@ -4680,7 +4816,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadPremiosAutorizarSection();
     }
 
-    // Submit do formulário de liberação de O.S.
+    // Submit do formulário de liberação de O.S. (suporta Edição)
     if (authOsForm) {
         authOsForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -4726,62 +4862,133 @@ document.addEventListener('DOMContentLoaded', () => {
                 storeVal = approvedVendedores[0].loja;
             }
 
-            const newAuth = {
-                os: osVal,
-                cpf_vendedor: cpfVal,
-                loja: storeVal,
-                cliente_nome: clientVal,
-                lente_familia: lensVal,
-                ar_familia: arVal,
-                utilizada: false,
-                created_at: new Date().toISOString()
-            };
+            const isEditMode = editingAuthOsNumber !== null;
 
-            if (url && key) {
-                try {
-                    const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
-                    const checkRes = await fetch(`${cleanUrl}/rest/v1/${osAuthTable}?os=eq.${encodeURIComponent(osVal)}`, {
-                        method: 'GET',
-                        headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
-                    });
-                    if (checkRes.ok) {
-                        const existing = await checkRes.json();
-                        if (existing && existing.length > 0) {
-                            alert('Erro: Esta O.S. já foi liberada no sistema anteriormente!');
-                            return;
+            if (isEditMode) {
+                // Modo EDIÇÃO
+                if (url && key) {
+                    try {
+                        const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                        const res = await fetch(`${cleanUrl}/rest/v1/${osAuthTable}?os=eq.${encodeURIComponent(editingAuthOsNumber)}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'apikey': key,
+                                'Authorization': `Bearer ${key}`,
+                                'Content-Type': 'application/json',
+                                'Prefer': 'return=minimal'
+                            },
+                            body: JSON.stringify({
+                                cpf_vendedor: cpfVal,
+                                loja: storeVal,
+                                cliente_nome: clientVal,
+                                lente_familia: lensVal,
+                                ar_familia: arVal
+                            })
+                        });
+                        if (!res.ok) {
+                            throw new Error('Falha ao atualizar no Supabase.');
                         }
+                    } catch (err) {
+                        console.error(err);
+                        updateAuthOsLocally(editingAuthOsNumber, {
+                            cpf_vendedor: cpfVal,
+                            loja: storeVal,
+                            cliente_nome: clientVal,
+                            lente_familia: lensVal,
+                            ar_familia: arVal
+                        });
                     }
-
-                    const res = await fetch(`${cleanUrl}/rest/v1/${osAuthTable}`, {
-                        method: 'POST',
-                        headers: {
-                            'apikey': key,
-                            'Authorization': `Bearer ${key}`,
-                            'Content-Type': 'application/json',
-                            'Prefer': 'return=minimal'
-                        },
-                        body: JSON.stringify(newAuth)
+                } else {
+                    updateAuthOsLocally(editingAuthOsNumber, {
+                        cpf_vendedor: cpfVal,
+                        loja: storeVal,
+                        cliente_nome: clientVal,
+                        lente_familia: lensVal,
+                        ar_familia: arVal
                     });
-                    if (!res.ok) {
-                        throw new Error('Falha ao registrar no Supabase.');
+                }
+                
+                alert(`O.S. ${editingAuthOsNumber} atualizada com sucesso!`);
+            } else {
+                // Modo CRIAÇÃO
+                const newAuth = {
+                    os: osVal,
+                    cpf_vendedor: cpfVal,
+                    loja: storeVal,
+                    cliente_nome: clientVal,
+                    lente_familia: lensVal,
+                    ar_familia: arVal,
+                    utilizada: false,
+                    created_at: new Date().toISOString()
+                };
+
+                if (url && key) {
+                    try {
+                        const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                        const checkRes = await fetch(`${cleanUrl}/rest/v1/${osAuthTable}?os=eq.${encodeURIComponent(osVal)}`, {
+                            method: 'GET',
+                            headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                        });
+                        if (checkRes.ok) {
+                            const existing = await checkRes.json();
+                            if (existing && existing.length > 0) {
+                                alert('Erro: Esta O.S. já foi liberada no sistema anteriormente!');
+                                return;
+                            }
+                        }
+
+                        const res = await fetch(`${cleanUrl}/rest/v1/${osAuthTable}`, {
+                            method: 'POST',
+                            headers: {
+                                'apikey': key,
+                                'Authorization': `Bearer ${key}`,
+                                'Content-Type': 'application/json',
+                                'Prefer': 'return=minimal'
+                            },
+                            body: JSON.stringify(newAuth)
+                        });
+                        if (!res.ok) {
+                            throw new Error('Falha ao registrar no Supabase.');
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        saveAuthOsLocally(newAuth);
                     }
-                } catch (err) {
-                    console.error(err);
+                } else {
+                    const local = JSON.parse(localStorage.getItem('personality_local_os_autorizadas')) || [];
+                    if (local.find(item => item.os === osVal)) {
+                        alert('Erro: Esta O.S. já foi liberada no sistema anteriormente!');
+                        return;
+                    }
                     saveAuthOsLocally(newAuth);
                 }
-            } else {
-                const local = JSON.parse(localStorage.getItem('personality_local_os_autorizadas')) || [];
-                if (local.find(item => item.os === osVal)) {
-                    alert('Erro: Esta O.S. já foi liberada no sistema anteriormente!');
-                    return;
-                }
-                saveAuthOsLocally(newAuth);
+                
+                alert(`O.S. ${osVal} liberada com sucesso para o vendedor!`);
+            }
+
+            // Reseta estado de edição
+            editingAuthOsNumber = null;
+            if (authOsNumber) {
+                authOsNumber.readOnly = false;
+                authOsNumber.style.opacity = '1';
+            }
+            const submitBtn = authOsForm.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.innerHTML = 'Liberar O.S. 🚀';
+                submitBtn.style.background = '';
+                submitBtn.style.color = '';
+                submitBtn.className = 'btn btn-gold btn-sm';
             }
 
             authOsForm.reset();
-            alert(`O.S. ${osVal} liberada com sucesso para o vendedor!`);
             loadPremiosAutorizarSection();
         });
+    }
+
+    function updateAuthOsLocally(osNum, data) {
+        let local = JSON.parse(localStorage.getItem('personality_local_os_autorizadas')) || [];
+        local = local.map(item => item.os === osNum ? { ...item, ...data } : item);
+        localStorage.setItem('personality_local_os_autorizadas', JSON.stringify(local));
     }
 
     function saveAuthOsLocally(data) {
@@ -4796,7 +5003,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Lógica de Filtragem e Soma da Liberação de O.S. (v3.83)
     function initAuthFiltersAndProducts() {
-        const sourceList = rewardsConfig.length > 0 ? rewardsConfig : adminPremiosConfig;
+        const sourceList = (rewardsConfig.length > 0 ? rewardsConfig : adminPremiosConfig).filter(p => p.permitido !== false);
         
         // Filtra apenas as lentes para popular os filtros da lente
         const lensItems = sourceList.filter(p => p.categoria === 'lente');
@@ -4859,7 +5066,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function filterAuthProducts() {
-        const sourceList = rewardsConfig.length > 0 ? rewardsConfig : adminPremiosConfig;
+        const sourceList = (rewardsConfig.length > 0 ? rewardsConfig : adminPremiosConfig).filter(p => p.permitido !== false);
 
         const fam = authFilterFamily ? authFilterFamily.value : '';
         const typ = authFilterType ? authFilterType.value : '';
@@ -4961,9 +5168,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (authOsLens) authOsLens.addEventListener('change', updateAuthOsSummary);
     if (authOsAr) authOsAr.addEventListener('change', updateAuthOsSummary);
 
-    // Ajusta o reset do form para resetar também os filtros inline e a soma
+    // Ajusta o reset do form para resetar também os filtros inline, a soma e o estado de edição
     if (authOsForm) {
         authOsForm.addEventListener('reset', () => {
+            editingAuthOsNumber = null;
+            if (authOsNumber) {
+                authOsNumber.readOnly = false;
+                authOsNumber.style.opacity = '1';
+            }
+            const submitBtn = authOsForm.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.innerHTML = 'Liberar O.S. 🚀';
+                submitBtn.style.background = '';
+                submitBtn.style.color = '';
+                submitBtn.className = 'btn btn-gold btn-sm';
+            }
             setTimeout(() => {
                 if (authFilterFamily) authFilterFamily.value = '';
                 if (authFilterType) authFilterType.value = '';
