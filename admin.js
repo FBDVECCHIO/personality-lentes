@@ -4797,12 +4797,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Lógica de Filtragem e Soma da Liberação de O.S. (v3.83)
     function initAuthFiltersAndProducts() {
         const sourceList = rewardsConfig.length > 0 ? rewardsConfig : adminPremiosConfig;
+        
+        // Filtra apenas as lentes para popular os filtros da lente
+        const lensItems = sourceList.filter(p => p.categoria === 'lente');
 
-        // Extrai famílias, tipos, tecnologias e IR únicos
-        const families = [...new Set(sourceList.map(p => p.familia || ''))].filter(Boolean).sort();
-        const types = [...new Set(sourceList.map(p => p.tipo || ''))].filter(Boolean).sort();
-        const techs = [...new Set(sourceList.map(p => p.tecnologia || ''))].filter(Boolean).sort();
-        const irs = [...new Set(sourceList.map(p => p.ir || ''))].filter(Boolean).sort();
+        // Extrai famílias, tipos, tecnologias e IR únicos apenas das Lentes
+        const families = [...new Set(lensItems.map(p => p.familia || ''))].filter(Boolean).sort();
+        const types = [...new Set(lensItems.map(p => p.tipo || ''))].filter(Boolean).sort();
+        const techs = [...new Set(lensItems.map(p => p.tecnologia || ''))].filter(Boolean).sort();
+        const irs = [...new Set(lensItems.map(p => p.ir || ''))].filter(Boolean).sort();
 
         if (authFilterFamily) {
             const currentVal = authFilterFamily.value;
@@ -4818,7 +4821,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (authFilterType) {
             const currentVal = authFilterType.value;
-            authFilterType.innerHTML = '<option value="">Todos</option>';
+            authFilterType.innerHTML = '<option value="">Todos (Exceto Tratamento)</option>';
             types.forEach(t => {
                 const opt = document.createElement('option');
                 opt.value = t;
@@ -4863,8 +4866,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const tec = authFilterTech ? authFilterTech.value : '';
         const ir = authFilterIR ? authFilterIR.value : '';
 
-        // Filtra a lista com base nas seleções dos filtros auxiliares
-        const filtered = sourceList.filter(p => {
+        // Filtra apenas lentes com base nos filtros da lente
+        const filteredLenses = sourceList.filter(p => {
+            if (p.categoria !== 'lente') return false;
             if (fam && p.familia !== fam) return false;
             if (typ && p.tipo !== typ) return false;
             if (tec && p.tecnologia !== tec) return false;
@@ -4872,11 +4876,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return true;
         });
 
-        // Popula Lentes (categoria === 'lente')
+        // Popula Lentes
         if (authOsLens) {
             const currentLensVal = authOsLens.value;
             authOsLens.innerHTML = '<option value="">Selecione a lente...</option>';
-            filtered.filter(p => p.categoria === 'lente').forEach(p => {
+            filteredLenses.forEach(p => {
                 const opt = document.createElement('option');
                 opt.value = p.nome;
                 opt.textContent = `${p.nome} (${p.pontos} Pts)`;
@@ -4892,11 +4896,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Popula Antirreflexo (categoria === 'antirreflexo')
+        // Popula Tratamentos (Sempre mostra todos os tratamentos cadastrados)
         if (authOsAr) {
             const currentArVal = authOsAr.value;
             authOsAr.innerHTML = '<option value="">Selecione o antirreflexo...</option>';
-            filtered.filter(p => p.categoria === 'antirreflexo').forEach(p => {
+            sourceList.filter(p => p.categoria === 'antirreflexo').forEach(p => {
                 const opt = document.createElement('option');
                 opt.value = p.nome;
                 opt.textContent = `${p.nome} (${p.pontos} Pts)`;
