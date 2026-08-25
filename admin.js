@@ -2370,7 +2370,26 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!nome || nome.toLowerCase() === "produto" || nome.trim() === "") continue;
 
             const precoRaw = cols[idxPreco] || "0";
-            const preco = parseFloat(precoRaw.replace(",", ".")) || 0;
+            // Remove R$, espaços e qualquer caractere que não seja número, ponto ou vírgula
+            let cleanPreco = precoRaw.replace(/[^\d.,]/g, "").trim();
+            
+            let preco = 0;
+            if (cleanPreco) {
+                // Se tem vírgula e ponto, remove o ponto e troca a vírgula por ponto (ex: 1.250,50 -> 1250.50)
+                if (cleanPreco.includes(",") && cleanPreco.includes(".")) {
+                    cleanPreco = cleanPreco.replace(/\./g, "").replace(",", ".");
+                } else if (cleanPreco.includes(",")) {
+                    // Se só tem vírgula, troca por ponto (ex: 1250,50 -> 1250.50)
+                    cleanPreco = cleanPreco.replace(",", ".");
+                } else if (cleanPreco.includes(".")) {
+                    // Se só tem ponto: verifica se é separador de milhar (ex: 10.136 -> 10136)
+                    const parts = cleanPreco.split(".");
+                    if (parts[parts.length - 1].length === 3) {
+                        cleanPreco = cleanPreco.replace(/\./g, "");
+                    }
+                }
+                preco = parseFloat(cleanPreco) || 0;
+            }
             
             const tipo = idxTipo !== -1 ? cols[idxTipo] : "Multifocal";
             const tecnologia = idxTecnologia !== -1 ? cols[idxTecnologia] : "Nenhum";
@@ -2498,7 +2517,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
-        alert(`Importação em lote concluída com sucesso!\n\nForam carregados ${allItemsToUpsert.length} produtos.`);
+        alert(`✅ SUCESSO DE IMPORTAÇÃO!\n\nPlanilha carregada e sincronizada com êxito no banco de dados Supabase!\n\nTotal de produtos salvos: ${allItemsToUpsert.length}`);
         loadRewardsConfig();
     }
 
