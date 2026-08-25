@@ -2342,13 +2342,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     .toLowerCase();
         });
         
-        // Mapeamento das colunas (robusto usando includes)
-        const idxProd = headers.findIndex(h => h.includes("produto") || h.includes("lente") || h === "nome");
-        const idxPreco = headers.findIndex(h => h.includes("preço") || h.includes("preco") || h.includes("valor") || h.includes("r$"));
-        const idxTipo = headers.findIndex(h => h.includes("tipo"));
-        const idxTecnologia = headers.findIndex(h => h.includes("tecnologia") || h.includes("tech"));
-        const idxFamilia = headers.findIndex(h => h.includes("família") || h.includes("familia"));
-        const idxIR = headers.findIndex(h => h.includes("ir") || h.includes("refração") || h.includes("refracao") || h.includes("índice") || h.includes("indice"));
+        // Mapeamento das colunas (robusto usando prefixos/substrings para contornar falhas de encoding)
+        const idxProd = headers.findIndex(h => h.includes("prod") || h.includes("lent") || h.includes("nome"));
+        const idxPreco = headers.findIndex(h => h.includes("pre") || h.includes("val") || h.includes("r$") || h.includes("preo"));
+        const idxTipo = headers.findIndex(h => h.includes("tip"));
+        const idxTecnologia = headers.findIndex(h => h.includes("tec") || h.includes("tech"));
+        const idxFamilia = headers.findIndex(h => h.includes("fam"));
+        const idxIR = headers.findIndex(h => h.includes("ir") || h.includes("ref") || h.includes("ind"));
 
         if (idxProd === -1 || idxPreco === -1) {
             alert(`As colunas 'Produto' e 'Preço' são obrigatórias na planilha!\n\nCabeçalhos identificados na planilha: ${JSON.stringify(headers)}\nDelimitador detectado: "${delimiter}"\nPrimeira linha lida: "${firstLine}"`);
