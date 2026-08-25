@@ -1736,6 +1736,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnApplyBulkPoints = document.getElementById('btnApplyBulkPoints');
     const btnPrintSelectedRewards = document.getElementById('btnPrintSelectedRewards');
     const btnDeleteBulkRewards = document.getElementById('btnDeleteBulkRewards');
+    const btnClearAllRewards = document.getElementById('btnClearAllRewards');
     
     // Inputs de Filtros
     const filterProdName = document.getElementById('filterProdName');
@@ -2056,6 +2057,53 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
 
             alert('Exclusão em lote concluída com sucesso!');
+            selectedRewardIds.clear();
+            if (selectAllProducts) selectAllProducts.checked = false;
+            renderUnifiedRewardsTable();
+        });
+    }
+
+    // Deletar Toda a Base de Prêmios (v3.82)
+    if (btnClearAllRewards) {
+        btnClearAllRewards.addEventListener('click', async () => {
+            if (!confirm("⚠️ ATENÇÃO: Você está prestes a DELETAR TODA A BASE de produtos e prêmios configurados!\n\nEsta ação é definitiva e removerá todos os itens do banco de dados online e local. Deseja continuar?")) {
+                return;
+            }
+
+            if (!confirm("🚨 CONFIRMAÇÃO FINAL: Confirmar exclusão definitiva de todo o catálogo de prêmios?")) {
+                return;
+            }
+
+            const url = getSupabaseUrl();
+            const key = getSupabaseKey();
+            const configTable = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
+
+            if (url && key) {
+                try {
+                    const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                    // Deleta todas as linhas do banco (filtro id=not.is.null)
+                    const endpoint = `${cleanUrl}/rest/v1/${configTable}?id=not.is.null`;
+                    const res = await fetch(endpoint, {
+                        method: 'DELETE',
+                        headers: {
+                            'apikey': key,
+                            'Authorization': `Bearer ${key}`
+                        }
+                    });
+                    if (!res.ok) {
+                        throw new Error('Falha ao limpar a tabela no Supabase.');
+                    }
+                } catch (err) {
+                    console.error("Erro ao deletar base online:", err);
+                    alert("Ocorreu um erro ao excluir no Supabase. A base local foi limpa.");
+                }
+            }
+
+            // Limpa a memória local
+            adminPremiosConfig = [];
+            localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
+
+            alert('Base de prêmios deletada com sucesso!');
             selectedRewardIds.clear();
             if (selectAllProducts) selectAllProducts.checked = false;
             renderUnifiedRewardsTable();
