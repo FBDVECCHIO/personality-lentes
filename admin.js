@@ -1948,7 +1948,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${escapeHtml(item.tecnologia || 'Nenhum')}</td>
                 <td>${escapeHtml(item.familia || 'N/A')}</td>
                 <td><code>${escapeHtml(item.ir || 'N/A')}</code></td>
-                <td><strong>${item.pontos || 0} Pts</strong></td>
+                <td><strong>${item.pontos || 0} / R$ ${((item.pontos || 0) * valorPontoConfig).toFixed(2)}</strong></td>
                 <td style="text-align: center; white-space: nowrap;">
                     <button type="button" class="icon-btn btn-edit-reward-config" data-index="${actualIndexInGlobal}" title="Editar Produto" style="background:none; border:none; color:var(--gold-light); cursor:pointer; font-size:14px; margin-right:8px; padding:2px;">✏️</button>
                     <button type="button" class="icon-btn btn-delete-reward-config" data-id="${item.id}" data-name="${escapeHtml(item.nome)}" title="Excluir Produto" style="background:none; border:none; color:#f87171; cursor:pointer; font-size:14px; padding:2px;">🗑️</button>
