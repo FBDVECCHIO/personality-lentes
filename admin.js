@@ -1737,6 +1737,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnPrintSelectedRewards = document.getElementById('btnPrintSelectedRewards');
     const btnDeleteBulkRewards = document.getElementById('btnDeleteBulkRewards');
     const btnClearAllRewards = document.getElementById('btnClearAllRewards');
+    const btnRefreshRewards = document.getElementById('btnRefreshRewards');
     
     // Inputs de Filtros
     const filterProdName = document.getElementById('filterProdName');
@@ -2282,6 +2283,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Vincular Refresh de Prêmios (v3.82)
+    if (btnRefreshRewards) {
+        btnRefreshRewards.addEventListener('click', async () => {
+            btnRefreshRewards.disabled = true;
+            btnRefreshRewards.innerHTML = '🔄 Atualizando...';
+            try {
+                await loadRewardsConfig();
+                alert('Catálogo de prêmios atualizado com sucesso a partir do banco de dados!');
+            } catch (err) {
+                console.error("Erro no refresh do catálogo:", err);
+            } finally {
+                btnRefreshRewards.disabled = false;
+                btnRefreshRewards.innerHTML = '🔄 Atualizar';
+            }
+        });
+    }
+
     function generateRewardsPDF(items) {
         const printWindow = window.open('', '_blank');
         if (!printWindow) {
@@ -2452,6 +2470,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('newProdTech').value = item.tecnologia || '';
         document.getElementById('newProdFamily').value = item.familia || '';
         document.getElementById('newProdIR').value = item.ir || '';
+        document.getElementById('newProdPoints').value = item.pontos || 0;
 
         const submitBtn = document.getElementById('btnSubmitRewardForm');
         if (submitBtn) {
@@ -2753,6 +2772,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const techVal = document.getElementById('newProdTech').value.trim() || 'Nenhum';
             const familyVal = document.getElementById('newProdFamily').value.trim() || 'N/A';
             const irVal = document.getElementById('newProdIR').value.trim() || 'N/A';
+            const pointsVal = Number(document.getElementById('newProdPoints').value) || 0;
 
             if (!nameVal) return;
 
@@ -2781,6 +2801,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     categoria: categoryVal,
                     nome: nameVal,
                     valor: valueVal,
+                    pontos: pointsVal,
                     tipo: tipoVal,
                     tecnologia: techVal,
                     familia: familyVal,
@@ -2793,7 +2814,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const payload = {
                             categoria: categoryVal,
                             nome: nameVal,
-                            pontos: updatedProduct.pontos,
+                            pontos: pointsVal,
                             valor: valueVal,
                             tipo: tipoVal,
                             tecnologia: techVal,
@@ -2831,7 +2852,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             const standardPayload = {
                                 categoria: categoryVal,
                                 nome: nameVal,
-                                pontos: updatedProduct.pontos,
+                                pontos: pointsVal,
                                 valor: valueVal
                             };
                             await fetch(endpoint, {
@@ -2878,7 +2899,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     id: Math.random().toString(36).substring(2, 15),
                     categoria: categoryVal,
                     nome: nameVal,
-                    pontos: valueVal, // inicia pontos com o mesmo valor do preço
+                    pontos: pointsVal,
                     valor: valueVal,
                     tipo: tipoVal,
                     tecnologia: techVal,
@@ -2892,7 +2913,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const payload = {
                             categoria: categoryVal,
                             nome: nameVal,
-                            pontos: newProduct.pontos,
+                            pontos: pointsVal,
                             valor: valueVal,
                             tipo: tipoVal,
                             tecnologia: techVal,
@@ -2913,7 +2934,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             const standardPayload = {
                                 categoria: categoryVal,
                                 nome: nameVal,
-                                pontos: newProduct.pontos,
+                                pontos: pointsVal,
                                 valor: valueVal
                             };
                             await fetch(`${cleanUrl}/rest/v1/${configTable}`, {
@@ -2939,6 +2960,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             addRewardProductForm.reset();
             loadRewardsConfig();
+        });
+    }
+
+    // Auto-preenche Pontos ao digitar Preço no modo Adição (v3.82)
+    const newProdValue = document.getElementById('newProdValue');
+    const newProdPoints = document.getElementById('newProdPoints');
+    if (newProdValue && newProdPoints) {
+        newProdValue.addEventListener('input', () => {
+            if (editingProductIndex === null) {
+                newProdPoints.value = Math.round(Number(newProdValue.value) || 0);
+            }
         });
     }
 
