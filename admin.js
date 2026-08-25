@@ -1735,6 +1735,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const bulkPointsInput = document.getElementById('bulkPointsInput');
     const btnApplyBulkPoints = document.getElementById('btnApplyBulkPoints');
     const btnPrintSelectedRewards = document.getElementById('btnPrintSelectedRewards');
+    const btnDeleteBulkRewards = document.getElementById('btnDeleteBulkRewards');
     
     // Inputs de Filtros
     const filterProdName = document.getElementById('filterProdName');
@@ -2008,6 +2009,56 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             generateRewardsPDF(itemsToPrint);
+        });
+    }
+
+    // Excluir Prêmios em Lote (v3.82)
+    if (btnDeleteBulkRewards) {
+        btnDeleteBulkRewards.addEventListener('click', async () => {
+            if (selectedRewardIds.size === 0) {
+                alert('Nenhum produto selecionado! Marque os checkboxes da tabela.');
+                return;
+            }
+
+            if (!confirm(`Deseja realmente remover os ${selectedRewardIds.size} produtos selecionados? Esta ação é irreversível!`)) {
+                return;
+            }
+
+            const url = getSupabaseUrl();
+            const key = getSupabaseKey();
+            const configTable = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
+
+            const idsToDelete = Array.from(selectedRewardIds);
+            const dbIdsToDelete = idsToDelete.filter(id => id && !id.startsWith('def-') && id.length > 8);
+
+            if (url && key && dbIdsToDelete.length > 0) {
+                try {
+                    const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                    const endpoint = `${cleanUrl}/rest/v1/${configTable}?id=in.(${dbIdsToDelete.map(id => `"${id}"`).join(',')})`;
+                    const res = await fetch(endpoint, {
+                        method: 'DELETE',
+                        headers: {
+                            'apikey': key,
+                            'Authorization': `Bearer ${key}`
+                        }
+                    });
+                    if (!res.ok) {
+                        throw new Error('Falha ao excluir itens selecionados no Supabase.');
+                    }
+                } catch (err) {
+                    console.error("Erro na exclusão em lote no Supabase:", err);
+                    alert("Ocorreu um erro ao excluir online. Alguns itens podem ter sido mantidos localmente.");
+                }
+            }
+
+            // Remove da memória local
+            adminPremiosConfig = adminPremiosConfig.filter(item => !selectedRewardIds.has(item.id));
+            localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
+
+            alert('Exclusão em lote concluída com sucesso!');
+            selectedRewardIds.clear();
+            if (selectAllProducts) selectAllProducts.checked = false;
+            renderUnifiedRewardsTable();
         });
     }
 
