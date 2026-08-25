@@ -1732,6 +1732,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Elementos de Configuração de Prêmios Unificados (v3.82)
     const unifiedRewardsTableBody = document.getElementById('unifiedRewardsTableBody');
     const selectAllProducts = document.getElementById('selectAllProducts');
+    const toggleAllActiveCheckbox = document.getElementById('toggleAllActiveCheckbox');
     const bulkPointsInput = document.getElementById('bulkPointsInput');
     const btnApplyBulkPoints = document.getElementById('btnApplyBulkPoints');
     const btnPrintSelectedRewards = document.getElementById('btnPrintSelectedRewards');
@@ -2032,6 +2033,47 @@ document.addEventListener('DOMContentLoaded', () => {
         initAuthFiltersAndProducts();
     }
 
+    async function toggleAllProductsPermitido(isChecked) {
+        if (!confirm(`Deseja realmente ${isChecked ? 'ativar' : 'desativar'} a liberação de pontuação para TODOS os produtos da base?`)) {
+            if (toggleAllActiveCheckbox) toggleAllActiveCheckbox.checked = !isChecked;
+            return;
+        }
+
+        // Atualiza todos na memória local
+        adminPremiosConfig.forEach(p => {
+            p.permitido = isChecked;
+        });
+        localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
+
+        // Atualiza no Supabase
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
+        const configTable = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
+
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const endpoint = `${cleanUrl}/rest/v1/${configTable}?id=not.is.null`;
+                await fetch(endpoint, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': key,
+                        'Authorization': `Bearer ${key}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({ permitido: isChecked })
+                });
+            } catch (err) {
+                console.error("Erro ao atualizar todos os produtos para permitido no Supabase:", err);
+            }
+        }
+
+        // Atualiza a tabela e os seletores
+        renderUnifiedRewardsTable();
+        initAuthFiltersAndProducts();
+    }
+
     // Vincular filtros
     [filterProdName, filterProdPrice, filterProdType, filterProdTech, filterProdFamily, filterProdIR, filterProdPoints].forEach(el => {
         if (el) {
@@ -2078,6 +2120,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     selectedRewardIds.delete(id);
                 }
             });
+        });
+    }
+
+    if (toggleAllActiveCheckbox) {
+        toggleAllActiveCheckbox.addEventListener('change', (e) => {
+            toggleAllProductsPermitido(e.target.checked);
         });
     }
 
