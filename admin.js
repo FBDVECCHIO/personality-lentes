@@ -2069,13 +2069,93 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!confirm(`Deseja aplicar a pontuação de ${pts} Pts a todos os ${selectedRewardIds.size} produtos selecionados?`)) return;
 
+            // Atualiza em memória local
             adminPremiosConfig.forEach(item => {
                 if (selectedRewardIds.has(item.id)) {
                     item.pontos = pts;
                 }
             });
 
-            await saveAllRewardsToSupabase();
+            const itemsToSave = adminPremiosConfig.filter(item => selectedRewardIds.has(item.id));
+
+            const url = getSupabaseUrl();
+            const key = getSupabaseKey();
+            const configTable = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
+
+            if (url && key && itemsToSave.length > 0) {
+                try {
+                    const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                    const endpoint = `${cleanUrl}/rest/v1/${configTable}`;
+
+                    // Formata o payload completo
+                    const payloadExtended = itemsToSave.map(item => {
+                        const obj = {
+                            categoria: item.categoria,
+                            nome: item.nome,
+                            valor: Number(item.valor) || 0,
+                            pontos: Number(item.pontos) || 0,
+                            tipo: item.tipo,
+                            tecnologia: item.tecnologia,
+                            familia: item.familia,
+                            ir: item.ir
+                        };
+                        if (item.id && !item.id.startsWith('def-') && item.id.length > 8) {
+                            obj.id = item.id;
+                        }
+                        return obj;
+                    });
+
+                    // 1. Tenta fazer UPSERT em lote com colunas estendidas
+                    let response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': key,
+                            'Authorization': `Bearer ${key}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'resolution=merge-duplicates'
+                        },
+                        body: JSON.stringify(payloadExtended)
+                    });
+
+                    // 2. Se falhar com 400 (novas colunas não existem), tenta com colunas padrão
+                    if (!response.ok && response.status === 400) {
+                        console.warn("Falha no upsert estendido. Tentando com colunas padrão...");
+                        const payloadStandard = itemsToSave.map(item => {
+                            const obj = {
+                                categoria: item.categoria,
+                                nome: item.nome,
+                                valor: Number(item.valor) || 0,
+                                pontos: Number(item.pontos) || 0
+                            };
+                            if (item.id && !item.id.startsWith('def-') && item.id.length > 8) {
+                                obj.id = item.id;
+                            }
+                            return obj;
+                        });
+
+                        response = await fetch(endpoint, {
+                            method: 'POST',
+                            headers: {
+                                'apikey': key,
+                                'Authorization': `Bearer ${key}`,
+                                'Content-Type': 'application/json',
+                                'Prefer': 'resolution=merge-duplicates'
+                            },
+                            body: JSON.stringify(payloadStandard)
+                        });
+                    }
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(errorText || 'Erro no batch upsert.');
+                    }
+                } catch (error) {
+                    console.error("Erro ao salvar pontos em lote no Supabase:", error);
+                    alert("Erro ao sincronizar com o Supabase. As alterações foram salvas localmente.");
+                }
+            }
+
+            localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
             alert('Pontuação em lote aplicada com sucesso!');
             bulkPointsInput.value = '';
             selectedRewardIds.clear();
