@@ -2313,7 +2313,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function processRewardCSV(text) {
-        const lines = text.split(/\r?\n/);
+        // Remove Byte Order Mark (BOM) se presente
+        const cleanText = text.replace(/^\ufeff/, "");
+        const lines = cleanText.split(/\r?\n/);
         if (lines.length < 2) {
             alert("A planilha está vazia ou inválida!");
             return;
@@ -2332,12 +2334,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const headers = firstLine.split(delimiter).map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
         
-        // Mapeamento das colunas
-        const idxProd = headers.indexOf("produto");
-        const idxPreco = headers.findIndex(h => h.includes("preço") || h.includes("preco") || h.includes("valor"));
-        const idxTipo = headers.indexOf("tipo");
-        const idxTecnologia = headers.indexOf("tecnologia");
-        const idxFamilia = headers.indexOf("família") !== -1 ? headers.indexOf("família") : headers.indexOf("familia");
+        // Mapeamento das colunas (robusto usando includes)
+        const idxProd = headers.findIndex(h => h.includes("produto") || h.includes("lente") || h === "nome");
+        const idxPreco = headers.findIndex(h => h.includes("preço") || h.includes("preco") || h.includes("valor") || h.includes("r$"));
+        const idxTipo = headers.findIndex(h => h.includes("tipo"));
+        const idxTecnologia = headers.findIndex(h => h.includes("tecnologia") || h.includes("tech"));
+        const idxFamilia = headers.findIndex(h => h.includes("família") || h.includes("familia"));
         const idxIR = headers.findIndex(h => h.includes("ir") || h.includes("refração") || h.includes("refracao") || h.includes("índice") || h.includes("indice"));
 
         if (idxProd === -1 || idxPreco === -1) {
