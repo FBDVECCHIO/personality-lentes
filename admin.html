@@ -1054,8 +1054,9 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                     </div>
 
                     <!-- Barra de Ações em Lote (v3.82) -->
-                    <div class="bulk-actions-bar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-top: 20px; padding: 12px 20px; background: rgba(197, 168, 92, 0.05); border: 1px solid rgba(197, 168, 92, 0.2); border-radius: 8px;">
-                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <div class="bulk-actions-bar" style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px; padding: 15px 20px; background: rgba(197, 168, 92, 0.05); border: 1px solid rgba(197, 168, 92, 0.2); border-radius: 8px;">
+                        <!-- Linha 1: Configurações de Pontuação e Valor por Ponto -->
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; width: 100%;">
                             <span style="font-size: 13px; font-weight: 700; color: var(--gold-light);">Regra de Pontuação em Lote:</span>
                             <input type="number" id="bulkPointsInput" placeholder="Pontos (ex: 50)" style="width: 140px; padding: 6px 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #fff; font-size: 12px; font-family: inherit;" />
                             <button type="button" class="btn btn-gold btn-xs" id="btnApplyBulkPoints" style="padding: 7px 15px; font-weight: 700;">Aplicar ⚡</button>
@@ -1067,14 +1068,15 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                             <input type="number" step="0.01" id="pointsCashValueInput" placeholder="1.00" style="width: 80px; padding: 6px 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #fff; font-size: 12px; font-family: inherit;" />
                             <button type="button" class="btn btn-gold btn-xs" id="btnSavePointsCashValue" style="padding: 7px 15px; font-weight: 700;">Salvar R$ 💾</button>
                         </div>
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnActivateBulkRewards" style="padding: 7px 15px; font-weight: 700; border-color: rgba(16, 185, 129, 0.4); color: #a7f3d0; background: rgba(16, 185, 129, 0.1);">✅ Ativar Selecionados</button>
-                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnActivateAllRewards" style="padding: 7px 15px; font-weight: 700; border-color: rgba(16, 185, 129, 0.6); color: #fff; background: rgba(16, 185, 129, 0.35);">✅ Ativar Todos</button>
-                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnDeactivateBulkRewards" style="padding: 7px 15px; font-weight: 700; border-color: rgba(245, 158, 11, 0.4); color: #fde68a; background: rgba(245, 158, 11, 0.1);">🚫 Desativar Selecionados</button>
-                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnDeactivateAllRewards" style="padding: 7px 15px; font-weight: 700; border-color: rgba(245, 158, 11, 0.6); color: #fff; background: rgba(245, 158, 11, 0.35);">🚫 Desativar Todos</button>
-                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnPrintSelectedRewards" style="padding: 7px 15px; font-weight: 700;">📄 Gerar PDF (Seleção)</button>
-                            <button type="button" class="btn btn-danger btn-xs" id="btnDeleteBulkRewards" style="padding: 7px 15px; font-weight: 700; border-color: rgba(239, 68, 68, 0.4); color: #fca5a5; background: rgba(239, 68, 68, 0.1);">🗑️ Deletar Selecionados</button>
-                            <button type="button" class="btn btn-danger btn-xs" id="btnClearAllRewards" style="padding: 7px 15px; font-weight: 700; border-color: rgba(239, 68, 68, 0.6); color: #fff; background: rgba(239, 68, 68, 0.4);">🗑️ Deletar Base</button>
+                        <!-- Linha 2: Todos os Botões de Ação na Mesma Linha -->
+                        <div style="display: flex; gap: 8px; flex-wrap: nowrap; overflow-x: auto; width: 100%; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); padding-bottom: 5px;">
+                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnActivateBulkRewards" style="padding: 7px 15px; font-weight: 700; border-color: rgba(16, 185, 129, 0.4); color: #a7f3d0; background: rgba(16, 185, 129, 0.1); white-space: nowrap;">✅ Ativar Selecionados</button>
+                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnActivateAllRewards" style="padding: 7px 15px; font-weight: 700; border-color: rgba(16, 185, 129, 0.6); color: #fff; background: rgba(16, 185, 129, 0.35); white-space: nowrap;">✅ Ativar Todos</button>
+                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnDeactivateBulkRewards" style="padding: 7px 15px; font-weight: 700; border-color: rgba(245, 158, 11, 0.4); color: #fde68a; background: rgba(245, 158, 11, 0.1); white-space: nowrap;">🚫 Desativar Selecionados</button>
+                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnDeactivateAllRewards" style="padding: 7px 15px; font-weight: 700; border-color: rgba(245, 158, 11, 0.6); color: #fff; background: rgba(245, 158, 11, 0.35); white-space: nowrap;">🚫 Desativar Todos</button>
+                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnPrintSelectedRewards" style="padding: 7px 15px; font-weight: 700; white-space: nowrap;">📄 Gerar PDF (Seleção)</button>
+                            <button type="button" class="btn btn-danger btn-xs" id="btnDeleteBulkRewards" style="padding: 7px 15px; font-weight: 700; border-color: rgba(239, 68, 68, 0.4); color: #fca5a5; background: rgba(239, 68, 68, 0.1); white-space: nowrap;">🗑️ Deletar Selecionados</button>
+                            <button type="button" class="btn btn-danger btn-xs" id="btnClearAllRewards" style="padding: 7px 15px; font-weight: 700; border-color: rgba(239, 68, 68, 0.6); color: #fff; background: rgba(239, 68, 68, 0.4); white-space: nowrap;">🗑️ Deletar Base</button>
                         </div>
                     </div>
 
