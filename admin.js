@@ -4523,6 +4523,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const selFilterFamily = document.getElementById('selFilterFamily');
     const selFilterIR = document.getElementById('selFilterIR');
 
+    let rewardsConfig = [];
+
     async function loadPremiosAutorizarSection() {
         if (!authOsTableBody) return;
         authOsTableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted);">Buscando O.S. liberadas...</td></tr>`;
@@ -4535,7 +4537,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const osAuthTable = localStorage.getItem('personality_sb_os_autorizadas_table') || 'os_autorizadas_personality';
 
         let approvedVendedores = [];
-        let rewardsConfig = [];
+        rewardsConfig = [];
         let authorizedList = [];
 
         // 1. Carrega Vendedores Aprovados para o Select
