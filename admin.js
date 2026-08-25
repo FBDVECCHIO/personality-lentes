@@ -1746,6 +1746,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterProdFamily = document.getElementById('filterProdFamily');
     const filterProdIR = document.getElementById('filterProdIR');
     const filterProdPoints = document.getElementById('filterProdPoints');
+    const btnClearFilters = document.getElementById('btnClearFilters');
     
     // Paginação
     const btnPrevPage = document.getElementById('btnPrevPage');
@@ -1810,7 +1811,80 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        populateFilterOptions();
         renderUnifiedRewardsTable();
+    }
+
+    function populateFilterOptions() {
+        if (!adminPremiosConfig) return;
+
+        const distinctTypes = new Set();
+        const distinctTechs = new Set();
+        const distinctFamilies = new Set();
+        const distinctIRs = new Set();
+
+        adminPremiosConfig.forEach(item => {
+            if (item.tipo) distinctTypes.add(item.tipo);
+            if (item.tecnologia) distinctTechs.add(item.tecnologia);
+            if (item.familia) distinctFamilies.add(item.familia);
+            if (item.ir) distinctIRs.add(item.ir);
+        });
+
+        // 1. Popula Tipo
+        const typeSelect = document.getElementById('filterProdType');
+        if (typeSelect) {
+            const currentVal = typeSelect.value;
+            typeSelect.innerHTML = '<option value="">Todos</option>';
+            Array.from(distinctTypes).sort().forEach(val => {
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = val;
+                typeSelect.appendChild(opt);
+            });
+            typeSelect.value = currentVal;
+        }
+
+        // 2. Popula Tecnologia
+        const techSelect = document.getElementById('filterProdTech');
+        if (techSelect) {
+            const currentVal = techSelect.value;
+            techSelect.innerHTML = '<option value="">Todos</option>';
+            Array.from(distinctTechs).sort().forEach(val => {
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = val;
+                techSelect.appendChild(opt);
+            });
+            techSelect.value = currentVal;
+        }
+
+        // 3. Popula Família
+        const familySelect = document.getElementById('filterProdFamily');
+        if (familySelect) {
+            const currentVal = familySelect.value;
+            familySelect.innerHTML = '<option value="">Todos</option>';
+            Array.from(distinctFamilies).sort().forEach(val => {
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = val;
+                familySelect.appendChild(opt);
+            });
+            familySelect.value = currentVal;
+        }
+
+        // 4. Popula IR
+        const irSelect = document.getElementById('filterProdIR');
+        if (irSelect) {
+            const currentVal = irSelect.value;
+            irSelect.innerHTML = '<option value="">Todos</option>';
+            Array.from(distinctIRs).sort().forEach(val => {
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = val;
+                irSelect.appendChild(opt);
+            });
+            irSelect.value = currentVal;
+        }
     }
 
     function renderUnifiedRewardsTable() {
@@ -1819,9 +1893,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const qName = (filterProdName ? filterProdName.value : '').toLowerCase().trim();
         const qPrice = (filterProdPrice ? filterProdPrice.value : '').toLowerCase().trim();
         const qType = (filterProdType ? filterProdType.value : '');
-        const qTech = (filterProdTech ? filterProdTech.value : '').toLowerCase().trim();
-        const qFamily = (filterProdFamily ? filterProdFamily.value : '').toLowerCase().trim();
-        const qIR = (filterProdIR ? filterProdIR.value : '').toLowerCase().trim();
+        const qTech = (filterProdTech ? filterProdTech.value : '');
+        const qFamily = (filterProdFamily ? filterProdFamily.value : '');
+        const qIR = (filterProdIR ? filterProdIR.value : '');
         const qPoints = (filterProdPoints ? filterProdPoints.value : '').toLowerCase().trim();
 
         // Filtra lista global
@@ -1829,9 +1903,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (qName && !(item.nome || '').toLowerCase().includes(qName)) return false;
             if (qPrice && !String(item.valor || '').toLowerCase().includes(qPrice)) return false;
             if (qType && item.tipo !== qType) return false;
-            if (qTech && !(item.tecnologia || '').toLowerCase().includes(qTech)) return false;
-            if (qFamily && !(item.familia || '').toLowerCase().includes(qFamily)) return false;
-            if (qIR && !String(item.ir || '').toLowerCase().includes(qIR)) return false;
+            if (qTech && item.tecnologia !== qTech) return false;
+            if (qFamily && item.familia !== qFamily) return false;
+            if (qIR && item.ir !== qIR) return false;
             if (qPoints && !String(item.pontos || '').toLowerCase().includes(qPoints)) return false;
             return true;
         });
@@ -1927,6 +2001,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
+    // Vincular limpar filtros
+    if (btnClearFilters) {
+        btnClearFilters.addEventListener('click', () => {
+            if (filterProdName) filterProdName.value = '';
+            if (filterProdPrice) filterProdPrice.value = '';
+            if (filterProdType) filterProdType.value = '';
+            if (filterProdTech) filterProdTech.value = '';
+            if (filterProdFamily) filterProdFamily.value = '';
+            if (filterProdIR) filterProdIR.value = '';
+            if (filterProdPoints) filterProdPoints.value = '';
+            
+            currentRewardsPage = 1;
+            renderUnifiedRewardsTable();
+        });
+    }
 
     // Vincular select all
     if (selectAllProducts) {
@@ -2059,6 +2149,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Exclusão em lote concluída com sucesso!');
             selectedRewardIds.clear();
             if (selectAllProducts) selectAllProducts.checked = false;
+            populateFilterOptions();
             renderUnifiedRewardsTable();
         });
     }
@@ -2106,6 +2197,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Base de prêmios deletada com sucesso!');
             selectedRewardIds.clear();
             if (selectAllProducts) selectAllProducts.checked = false;
+            populateFilterOptions();
             renderUnifiedRewardsTable();
         });
     }

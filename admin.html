@@ -1065,18 +1065,25 @@ create policy "Permitir delete em os_autorizadas_personality" on os_autorizadas_
                                     <th>
                                         <select id="filterProdType" style="width: 100%; padding: 4px 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px; border-radius: 4px; font-family: inherit;">
                                             <option value="">Todos</option>
-                                            <option value="Multifocal">Multifocal</option>
-                                            <option value="Office">Office</option>
-                                            <option value="Visão Simples">Visão Simples</option>
-                                            <option value="Antirreflexo">Antirreflexo</option>
-                                            <option value="Lente Pronta">Lente Pronta</option>
                                         </select>
                                     </th>
-                                    <th><input type="text" id="filterProdTech" placeholder="Filtrar..." style="width: 100%; padding: 4px 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px; border-radius: 4px; font-family: inherit;" /></th>
-                                    <th><input type="text" id="filterProdFamily" placeholder="Filtrar..." style="width: 100%; padding: 4px 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px; border-radius: 4px; font-family: inherit;" /></th>
-                                    <th><input type="text" id="filterProdIR" placeholder="Filtrar..." style="width: 100%; padding: 4px 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px; border-radius: 4px; font-family: inherit;" /></th>
+                                    <th>
+                                        <select id="filterProdTech" style="width: 100%; padding: 4px 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px; border-radius: 4px; font-family: inherit;">
+                                            <option value="">Todos</option>
+                                        </select>
+                                    </th>
+                                    <th>
+                                        <select id="filterProdFamily" style="width: 100%; padding: 4px 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px; border-radius: 4px; font-family: inherit;">
+                                            <option value="">Todos</option>
+                                        </select>
+                                    </th>
+                                    <th>
+                                        <select id="filterProdIR" style="width: 100%; padding: 4px 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px; border-radius: 4px; font-family: inherit;">
+                                            <option value="">Todos</option>
+                                        </select>
+                                    </th>
                                     <th><input type="text" id="filterProdPoints" placeholder="Filtrar..." style="width: 100%; padding: 4px 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px; border-radius: 4px; font-family: inherit;" /></th>
-                                    <th></th>
+                                    <th><button type="button" id="btnClearFilters" title="Limpar Filtros" style="background: none; border: 1px solid rgba(255,255,255,0.2); color: #fca5a5; border-radius: 4px; padding: 4px 2px; font-size: 10px; cursor: pointer; display: block; width: 100%; text-align: center;">🧹 Limpar</button></th>
                                 </tr>
                             </thead>
                             <tbody id="unifiedRewardsTableBody">
