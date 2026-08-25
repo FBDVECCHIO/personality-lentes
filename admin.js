@@ -4507,7 +4507,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const authOsClientName = document.getElementById('authOsClientName');
     const authOsLens = document.getElementById('authOsLens');
     const authOsAr = document.getElementById('authOsAr');
+    const authOsLensDisplay = document.getElementById('authOsLensDisplay');
+    const btnSelectLens = document.getElementById('btnSelectLens');
+    const authOsArDisplay = document.getElementById('authOsArDisplay');
+    const btnSelectAr = document.getElementById('btnSelectAr');
     const authOsTableBody = document.getElementById('authOsTableBody');
+
+    // Elementos do Modal de Seleção de Produtos (v3.82)
+    const productSelectorModal = document.getElementById('productSelectorModal');
+    const productSelectorModalTitle = document.getElementById('productSelectorModalTitle');
+    const btnCloseProductSelectorModal = document.getElementById('btnCloseProductSelectorModal');
+    const selFilterName = document.getElementById('selFilterName');
+    const selFilterType = document.getElementById('selFilterType');
+    const selFilterTech = document.getElementById('selFilterTech');
+    const selFilterFamily = document.getElementById('selFilterFamily');
+    const selFilterIR = document.getElementById('selFilterIR');
 
     async function loadPremiosAutorizarSection() {
         if (!authOsTableBody) return;
@@ -4575,21 +4589,7 @@ document.addEventListener('DOMContentLoaded', () => {
             rewardsConfig = adminPremiosConfig;
         }
 
-        if (authOsLens && authOsAr) {
-            authOsLens.innerHTML = '<option value="">Selecione a lente...</option>';
-            authOsAr.innerHTML = '<option value="">Selecione o antirreflexo...</option>';
 
-            rewardsConfig.forEach(item => {
-                const opt = document.createElement('option');
-                opt.value = item.nome;
-                opt.textContent = `${item.nome} (${item.pontos} Pts)`;
-                if (item.categoria === 'lente') {
-                    authOsLens.appendChild(opt);
-                } else {
-                    authOsAr.appendChild(opt);
-                }
-            });
-        }
 
         // 3. Carrega O.S. Autorizadas cadastradas
         if (url && key) {
@@ -4794,5 +4794,183 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         local.push(localData);
         localStorage.setItem('personality_local_os_autorizadas', JSON.stringify(local));
+    }
+
+    // Lógica do Modal de Seleção de Produtos para O.S. (v3.82)
+    let currentSearchCategory = 'lente';
+
+    function openProductSelector(category) {
+        currentSearchCategory = category;
+        if (productSelectorModalTitle) {
+            productSelectorModalTitle.textContent = category === 'lente' ? '🔍 Selecionar Lente (Categoria: Lente)' : '🔍 Selecionar Tratamento (Categoria: Antirreflexo)';
+        }
+
+        // Limpa os filtros
+        if (selFilterName) selFilterName.value = '';
+        
+        // Popula as opções dos filtros dinamicamente com base nos produtos atuais
+        populateSelectorFilters(category);
+
+        // Renderiza os itens
+        renderSelectorTable();
+
+        if (productSelectorModal) {
+            productSelectorModal.style.display = 'flex';
+        }
+    }
+
+    function populateSelectorFilters(category) {
+        const sourceList = rewardsConfig.length > 0 ? rewardsConfig : adminPremiosConfig;
+        const items = sourceList.filter(p => p.categoria === category);
+        
+        const types = [...new Set(items.map(p => p.tipo || ''))].filter(Boolean).sort();
+        const techs = [...new Set(items.map(p => p.tecnologia || ''))].filter(Boolean).sort();
+        const families = [...new Set(items.map(p => p.familia || ''))].filter(Boolean).sort();
+        const irs = [...new Set(items.map(p => p.ir || ''))].filter(Boolean).sort();
+        
+        if (selFilterType) {
+            selFilterType.innerHTML = '<option value="">Todos</option>';
+            types.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t; opt.textContent = t;
+                selFilterType.appendChild(opt);
+            });
+        }
+        if (selFilterTech) {
+            selFilterTech.innerHTML = '<option value="">Todos</option>';
+            techs.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t; opt.textContent = t;
+                selFilterTech.appendChild(opt);
+            });
+        }
+        if (selFilterFamily) {
+            selFilterFamily.innerHTML = '<option value="">Todos</option>';
+            families.forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f; opt.textContent = f;
+                selFilterFamily.appendChild(opt);
+            });
+        }
+        if (selFilterIR) {
+            selFilterIR.innerHTML = '<option value="">Todos</option>';
+            irs.forEach(ir => {
+                const opt = document.createElement('option');
+                opt.value = ir; opt.textContent = ir;
+                selFilterIR.appendChild(opt);
+            });
+        }
+    }
+
+    function renderSelectorTable() {
+        const productSelectorTableBody = document.getElementById('productSelectorTableBody');
+        if (!productSelectorTableBody) return;
+        
+        productSelectorTableBody.innerHTML = '';
+        
+        const nameQuery = (selFilterName ? selFilterName.value : '').trim().toLowerCase();
+        const typeQuery = selFilterType ? selFilterType.value : '';
+        const techQuery = selFilterTech ? selFilterTech.value : '';
+        const familyQuery = selFilterFamily ? selFilterFamily.value : '';
+        const irQuery = selFilterIR ? selFilterIR.value : '';
+        
+        const sourceList = rewardsConfig.length > 0 ? rewardsConfig : adminPremiosConfig;
+        
+        const filtered = sourceList.filter(p => {
+            if (p.categoria !== currentSearchCategory) return false;
+            
+            const matchName = !nameQuery || (p.nome || '').toLowerCase().includes(nameQuery);
+            const matchType = !typeQuery || p.tipo === typeQuery;
+            const matchTech = !techQuery || p.tecnologia === techQuery;
+            const matchFamily = !familyQuery || p.familia === familyQuery;
+            const matchIR = !irQuery || p.ir === irQuery;
+            
+            return matchName && matchType && matchTech && matchFamily && matchIR;
+        });
+        
+        if (filtered.length === 0) {
+            productSelectorTableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Nenhum produto correspondente encontrado.</td></tr>`;
+            return;
+        }
+        
+        filtered.forEach(p => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${escapeHtml(p.nome)}</strong></td>
+                <td>R$ ${(Number(p.valor) || 0).toFixed(2)}</td>
+                <td><span class="badge" style="background: rgba(197, 168, 92, 0.15); color: var(--gold-light); font-size:10px; padding: 2px 6px; border-radius: 4px;">${escapeHtml(p.tipo || 'N/A')}</span></td>
+                <td>${escapeHtml(p.tecnologia || 'N/A')}</td>
+                <td>${escapeHtml(p.familia || 'N/A')}</td>
+                <td><code>${escapeHtml(p.ir || 'N/A')}</code></td>
+                <td><strong>${p.pontos || 0} Pts</strong></td>
+                <td style="text-align: center;">
+                    <button type="button" class="btn btn-gold btn-xs btn-select-this-product" data-nome="${escapeHtml(p.nome)}" data-pts="${p.pontos}" style="padding: 4px 10px; font-weight:700;">Selecionar ✔</button>
+                </td>
+            `;
+            productSelectorTableBody.appendChild(tr);
+        });
+        
+        const selectBtns = productSelectorTableBody.querySelectorAll('.btn-select-this-product');
+        selectBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const pNome = btn.getAttribute('data-nome');
+                const pPts = btn.getAttribute('data-pts');
+                selectProduct(pNome, pPts);
+            });
+        });
+    }
+
+    function selectProduct(name, points) {
+        if (currentSearchCategory === 'lente') {
+            if (authOsLens) authOsLens.value = name;
+            if (authOsLensDisplay) authOsLensDisplay.value = `${name} (${points} Pts)`;
+        } else {
+            if (authOsAr) authOsAr.value = name;
+            if (authOsArDisplay) authOsArDisplay.value = `${name} (${points} Pts)`;
+        }
+        if (productSelectorModal) {
+            productSelectorModal.style.display = 'none';
+        }
+    }
+
+    // Vincula cliques dos botões de abrir busca
+    if (btnSelectLens) {
+        btnSelectLens.addEventListener('click', () => openProductSelector('lente'));
+    }
+    if (btnSelectAr) {
+        btnSelectAr.addEventListener('click', () => openProductSelector('antirreflexo'));
+    }
+
+    // Vincula fechamento do modal
+    if (btnCloseProductSelectorModal) {
+        btnCloseProductSelectorModal.addEventListener('click', () => {
+            if (productSelectorModal) productSelectorModal.style.display = 'none';
+        });
+    }
+
+    // Fecha o modal ao clicar fora do card
+    if (productSelectorModal) {
+        productSelectorModal.addEventListener('click', (e) => {
+            if (e.target === productSelectorModal) {
+                productSelectorModal.style.display = 'none';
+            }
+        });
+    }
+
+    // Vincula listeners de digitação/alteração nos filtros do modal
+    if (selFilterName) selFilterName.addEventListener('input', renderSelectorTable);
+    if (selFilterType) selFilterType.addEventListener('change', renderSelectorTable);
+    if (selFilterTech) selFilterTech.addEventListener('change', renderSelectorTable);
+    if (selFilterFamily) selFilterFamily.addEventListener('change', renderSelectorTable);
+    if (selFilterIR) selFilterIR.addEventListener('change', renderSelectorTable);
+
+    // Ajusta o reset do form para limpar também os displays de texto do modal
+    if (authOsForm) {
+        authOsForm.addEventListener('reset', () => {
+            if (authOsLens) authOsLens.value = '';
+            if (authOsLensDisplay) authOsLensDisplay.value = '';
+            if (authOsAr) authOsAr.value = '';
+            if (authOsArDisplay) authOsArDisplay.value = '';
+        });
     }
 });
