@@ -330,7 +330,7 @@ create table if not exists config_geral_personality (
   valor text not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
-insert into config_geral_personality (chave, valor) values ('valor_ponto', '0.10') on conflict (chave) do nothing;
+insert into config_geral_personality (chave, valor) values ('valor_ponto', '1.00') on conflict (chave) do nothing;
 
 -- Habilitar RLS (Row Level Security) e Criar Políticas de Acesso Nativas
 alter table leads_personality enable row level security;
@@ -1064,7 +1064,7 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                             
                             <span style="font-size: 13px; font-weight: 700; color: var(--gold-light);">Valor de Cada Ponto:</span>
                             <span style="font-size: 12px; color: #fff;">R$</span>
-                            <input type="number" step="0.01" id="pointsCashValueInput" placeholder="0.10" style="width: 80px; padding: 6px 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #fff; font-size: 12px; font-family: inherit;" />
+                            <input type="number" step="0.01" id="pointsCashValueInput" placeholder="1.00" style="width: 80px; padding: 6px 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #fff; font-size: 12px; font-family: inherit;" />
                             <button type="button" class="btn btn-gold btn-xs" id="btnSavePointsCashValue" style="padding: 7px 15px; font-weight: 700;">Salvar R$ 💾</button>
                         </div>
                         <div style="display: flex; gap: 10px;">
@@ -1170,7 +1170,12 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                             </div>
                             <input type="hidden" id="authOsAr">
                         </div>
-                        <div style="display: flex; justify-content: flex-end; align-items: end; height: 100%;">
+                        <div style="visibility: hidden;"></div>
+                        <div id="authOsSummaryBox" style="grid-column: span 2; display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; background: rgba(197, 168, 92, 0.05); border: 1px solid rgba(197, 168, 92, 0.2); border-radius: 6px; height: 38px; box-sizing: border-box; margin-top: 10px;">
+                            <span style="font-size: 12px; color: #ccc;">📊 Resumo de Comissão da O.S.:</span>
+                            <strong style="color: var(--gold-light); font-size: 13px;" id="authOsSummaryText">Nenhum produto selecionado</strong>
+                        </div>
+                        <div style="display: flex; justify-content: flex-end; align-items: end; height: 100%; margin-top: 10px;">
                             <button type="submit" class="btn btn-gold btn-sm" style="font-weight: 700; height: 38px; width: 100%;">Liberar O.S. 🚀</button>
                         </div>
                     </form>

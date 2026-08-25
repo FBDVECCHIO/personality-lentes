@@ -3064,12 +3064,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    let valorPontoConfig = 0.10;
+    let valorPontoConfig = 1.00;
 
     async function loadGeneralConfig() {
         const localVal = localStorage.getItem('personality_valor_ponto');
         if (localVal !== null) {
-            valorPontoConfig = parseFloat(localVal) || 0.10;
+            valorPontoConfig = parseFloat(localVal) || 1.00;
         }
 
         const url = getSupabaseUrl();
@@ -3084,7 +3084,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (res.ok) {
                     const data = await res.json();
                     if (data && data.length > 0) {
-                        valorPontoConfig = parseFloat(data[0].valor) || 0.10;
+                        valorPontoConfig = parseFloat(data[0].valor) || 1.00;
                         localStorage.setItem('personality_valor_ponto', valorPontoConfig.toString());
                     }
                 }
@@ -3099,7 +3099,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function saveGeneralConfig(value) {
-        valorPontoConfig = parseFloat(value) || 0.10;
+        valorPontoConfig = parseFloat(value) || 1.00;
         localStorage.setItem('personality_valor_ponto', valorPontoConfig.toString());
 
         const url = getSupabaseUrl();
@@ -4920,14 +4920,40 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    let selectedLensPoints = 0;
+    let selectedArPoints = 0;
+
+    function updateAuthOsSummary() {
+        const summaryText = document.getElementById('authOsSummaryText');
+        if (!summaryText) return;
+        
+        const totalPts = selectedLensPoints + selectedArPoints;
+        const totalCash = totalPts * valorPontoConfig;
+        
+        if (totalPts === 0) {
+            summaryText.innerHTML = `Nenhum produto selecionado`;
+            return;
+        }
+        
+        let details = [];
+        if (selectedLensPoints > 0) details.push(`Lente (${selectedLensPoints} Pts)`);
+        if (selectedArPoints > 0) details.push(`Antirreflexo (${selectedArPoints} Pts)`);
+        
+        summaryText.innerHTML = `${details.join(' + ')} = <span style="color:#10b981; font-weight:800;">${totalPts} Pts (R$ ${totalCash.toFixed(2)})</span>`;
+    }
+
     function selectProduct(name, points) {
+        const pts = parseInt(points) || 0;
         if (currentSearchCategory === 'lente') {
             if (authOsLens) authOsLens.value = name;
-            if (authOsLensDisplay) authOsLensDisplay.value = `${name} (${points} Pts)`;
+            if (authOsLensDisplay) authOsLensDisplay.value = `${name} (${pts} Pts)`;
+            selectedLensPoints = pts;
         } else {
             if (authOsAr) authOsAr.value = name;
-            if (authOsArDisplay) authOsArDisplay.value = `${name} (${points} Pts)`;
+            if (authOsArDisplay) authOsArDisplay.value = `${name} (${pts} Pts)`;
+            selectedArPoints = pts;
         }
+        updateAuthOsSummary();
         if (productSelectorModal) {
             productSelectorModal.style.display = 'none';
         }
@@ -4971,6 +4997,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (authOsLensDisplay) authOsLensDisplay.value = '';
             if (authOsAr) authOsAr.value = '';
             if (authOsArDisplay) authOsArDisplay.value = '';
+            selectedLensPoints = 0;
+            selectedArPoints = 0;
+            updateAuthOsSummary();
         });
     }
 });
