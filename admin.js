@@ -2402,167 +2402,103 @@ document.addEventListener('DOMContentLoaded', () => {
         const key = getSupabaseKey();
         const configTable = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
 
-        for (const [keyMap, item] of localPremiosMap.entries()) {
-            const existing = adminPremiosConfig.find(existing => 
-                existing.categoria === item.categoria && 
-                existing.nome.toLowerCase() === item.nome.toLowerCase()
-            );
-
-            if (existing) {
-                existing.valor = item.valor;
-                existing.tipo = item.tipo;
-                existing.tecnologia = item.tecnologia;
-                existing.familia = item.familia;
-                existing.ir = item.ir;
-                // Mantém pontos existentes ou inicializa se for 0
-                if (!existing.pontos) existing.pontos = item.pontos;
-                toUpdate.push(existing);
-            } else {
-                item.id = Math.random().toString(36).substring(2, 15);
-                toInsert.push(item);
-            }
-        }
-
-        let successCount = 0;
-        let updateCount = 0;
+        const allItemsToUpsert = Array.from(localPremiosMap.values());
 
         if (url && key) {
             try {
                 const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
-                
-                // Atualizações no Supabase
-                for (const item of toUpdate) {
-                    const payload = {
+                const endpoint = `${cleanUrl}/rest/v1/${configTable}`;
+
+                // Formata o payload completo para as colunas estendidas
+                const payloadExtended = allItemsToUpsert.map(item => ({
+                    categoria: item.categoria,
+                    nome: item.nome,
+                    valor: item.valor,
+                    pontos: item.pontos,
+                    tipo: item.tipo,
+                    tecnologia: item.tecnologia,
+                    familia: item.familia,
+                    ir: item.ir
+                }));
+
+                // 1. Tenta fazer UPSERT em lote com colunas estendidas
+                let response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': key,
+                        'Authorization': `Bearer ${key}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'resolution=merge-duplicates'
+                    },
+                    body: JSON.stringify(payloadExtended)
+                });
+
+                // 2. Se falhar com 400 (novas colunas não existem), tenta em lote com colunas padrão
+                if (!response.ok && response.status === 400) {
+                    console.warn("Falha no upsert estendido. Tentando com colunas padrão...");
+                    const payloadStandard = allItemsToUpsert.map(item => ({
                         categoria: item.categoria,
                         nome: item.nome,
-                        pontos: item.pontos,
                         valor: item.valor,
-                        tipo: item.tipo,
-                        tecnologia: item.tecnologia,
-                        familia: item.familia,
-                        ir: item.ir
-                    };
-                    
-                    let endpoint = `${cleanUrl}/rest/v1/${configTable}`;
-                    let method = 'POST';
+                        pontos: item.pontos
+                    }));
 
-                    if (item.id && !item.id.startsWith('def-') && item.id.length > 8) {
-                        endpoint = `${cleanUrl}/rest/v1/${configTable}?id=eq.${item.id}`;
-                        method = 'PATCH';
-                    } else {
-                        // Acha no Supabase pelo nome/categoria
-                        const checkRes = await fetch(`${cleanUrl}/rest/v1/${configTable}?nome=eq.${encodeURIComponent(item.nome)}&categoria=eq.${item.categoria}`, {
-                            method: 'GET',
-                            headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
-                        });
-                        if (checkRes.ok) {
-                            const existing = await checkRes.json();
-                            if (existing && existing.length > 0) {
-                                endpoint = `${cleanUrl}/rest/v1/${configTable}?id=eq.${existing[0].id}`;
-                                method = 'PATCH';
-                                item.id = existing[0].id;
-                            }
-                        }
-                    }
-
-                    const res = await fetch(endpoint, {
-                        method: method,
-                        headers: {
-                            'apikey': key,
-                            'Authorization': `Bearer ${key}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(payload)
-                    });
-                    
-                    // Fallback se colunas estendidas não existirem no banco
-                    if (!res.ok && res.status === 400) {
-                        const standardPayload = {
-                            categoria: item.categoria,
-                            nome: item.nome,
-                            pontos: item.pontos,
-                            valor: item.valor
-                        };
-                        await fetch(endpoint, {
-                            method: method,
-                            headers: {
-                                'apikey': key,
-                                'Authorization': `Bearer ${key}`,
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(standardPayload)
-                        });
-                    }
-                    updateCount++;
-                }
-
-                // Inserções no Supabase
-                for (const item of toInsert) {
-                    const payload = {
-                        categoria: item.categoria,
-                        nome: item.nome,
-                        pontos: item.pontos,
-                        valor: item.valor,
-                        tipo: item.tipo,
-                        tecnologia: item.tecnologia,
-                        familia: item.familia,
-                        ir: item.ir
-                    };
-                    
-                    const res = await fetch(`${cleanUrl}/rest/v1/${configTable}`, {
+                    response = await fetch(endpoint, {
                         method: 'POST',
                         headers: {
                             'apikey': key,
                             'Authorization': `Bearer ${key}`,
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'Prefer': 'resolution=merge-duplicates'
                         },
-                        body: JSON.stringify(payload)
+                        body: JSON.stringify(payloadStandard)
                     });
-                    
-                    // Fallback se colunas estendidas não existirem
-                    if (!res.ok && res.status === 400) {
-                        const standardPayload = {
-                            categoria: item.categoria,
-                            nome: item.nome,
-                            pontos: item.pontos,
-                            valor: item.valor
-                        };
-                        await fetch(`${cleanUrl}/rest/v1/${configTable}`, {
-                            method: 'POST',
-                            headers: {
-                                'apikey': key,
-                                'Authorization': `Bearer ${key}`,
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(standardPayload)
-                        });
+                }
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || 'Erro no batch upsert.');
+                }
+
+                // Recarrega a lista do Supabase para atualizar a memória com IDs reais
+                const getRes = await fetch(`${cleanUrl}/rest/v1/${configTable}?select=*`, {
+                    method: 'GET',
+                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                });
+                if (getRes.ok) {
+                    const data = await getRes.json();
+                    if (data && data.length > 0) {
+                        adminPremiosConfig = data;
                     }
-                    adminPremiosConfig.push(item);
-                    successCount++;
                 }
             } catch (error) {
-                console.error("Erro na importação Supabase:", error);
-                alert("Erro ao enviar dados para o banco. Salvando alterações localmente.");
-                toInsert.forEach(item => {
-                    adminPremiosConfig.push(item);
-                    successCount++;
-                });
-                toUpdate.forEach(item => {
-                    updateCount++;
-                });
+                console.error("Erro na importação em lote Supabase:", error);
+                alert("Erro ao sincronizar com o Supabase. Salvando alterações localmente.");
+                applyLocalUpsert(allItemsToUpsert);
             }
         } else {
-            toInsert.forEach(item => {
-                adminPremiosConfig.push(item);
-                successCount++;
-            });
-            toUpdate.forEach(item => {
-                updateCount++;
+            applyLocalUpsert(allItemsToUpsert);
+        }
+
+        function applyLocalUpsert(items) {
+            items.forEach(item => {
+                const existingIndex = adminPremiosConfig.findIndex(p => 
+                    p.categoria === item.categoria && 
+                    p.nome.toLowerCase() === item.nome.toLowerCase()
+                );
+                if (existingIndex !== -1) {
+                    adminPremiosConfig[existingIndex] = {
+                        ...adminPremiosConfig[existingIndex],
+                        ...item
+                    };
+                } else {
+                    adminPremiosConfig.push(item);
+                }
             });
         }
 
         localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
-        alert(`Importação concluída com sucesso!\n\n- ${successCount} novos produtos adicionados\n- ${updateCount} produtos existentes atualizados`);
+        alert(`Importação em lote concluída com sucesso!\n\nForam carregados ${allItemsToUpsert.length} produtos.`);
         loadRewardsConfig();
     }
 
