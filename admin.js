@@ -2321,18 +2321,26 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Identifica o delimitador
+        // Identifica o delimitador verificando qual caractere divide a linha em mais colunas
         const firstLine = lines[0];
+        const candidates = [";", ",", "\t", "|"];
         let delimiter = ";";
-        if (firstLine.includes(",")) {
-            const commas = (firstLine.match(/,/g) || []).length;
-            const semicolons = (firstLine.match(/;/g) || []).length;
-            if (commas > semicolons) {
-                delimiter = ",";
+        let maxCols = 0;
+        candidates.forEach(cand => {
+            const cols = firstLine.split(cand);
+            if (cols.length > maxCols) {
+                maxCols = cols.length;
+                delimiter = cand;
             }
-        }
+        });
 
-        const headers = firstLine.split(delimiter).map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
+        const headers = firstLine.split(delimiter).map(h => {
+            // Remove aspas, espaços extras e caracteres Unicode não-imprimíveis ocultos (como BOMs adicionais)
+            return h.replace(/[\u200B-\u200D\uFEFF\u00A0]/g, "")
+                    .trim()
+                    .replace(/^"|"$/g, '')
+                    .toLowerCase();
+        });
         
         // Mapeamento das colunas (robusto usando includes)
         const idxProd = headers.findIndex(h => h.includes("produto") || h.includes("lente") || h === "nome");
@@ -2343,7 +2351,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const idxIR = headers.findIndex(h => h.includes("ir") || h.includes("refração") || h.includes("refracao") || h.includes("índice") || h.includes("indice"));
 
         if (idxProd === -1 || idxPreco === -1) {
-            alert("As colunas 'Produto' e 'Preço' são obrigatórias na planilha!");
+            alert(`As colunas 'Produto' e 'Preço' são obrigatórias na planilha!\n\nCabeçalhos identificados na planilha: ${JSON.stringify(headers)}\nDelimitador detectado: "${delimiter}"\nPrimeira linha lida: "${firstLine}"`);
             return;
         }
 
