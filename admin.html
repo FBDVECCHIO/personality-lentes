@@ -1067,7 +1067,9 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                             <input type="number" step="0.01" id="pointsCashValueInput" placeholder="1.00" style="width: 80px; padding: 6px 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #fff; font-size: 12px; font-family: inherit;" />
                             <button type="button" class="btn btn-gold btn-xs" id="btnSavePointsCashValue" style="padding: 7px 15px; font-weight: 700;">Salvar R$ 💾</button>
                         </div>
-                        <div style="display: flex; gap: 10px;">
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnActivateBulkRewards" style="padding: 7px 15px; font-weight: 700; border-color: rgba(16, 185, 129, 0.4); color: #a7f3d0; background: rgba(16, 185, 129, 0.1);">✅ Ativar Selecionados</button>
+                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnDeactivateBulkRewards" style="padding: 7px 15px; font-weight: 700; border-color: rgba(245, 158, 11, 0.4); color: #fde68a; background: rgba(245, 158, 11, 0.1);">🚫 Desativar Selecionados</button>
                             <button type="button" class="btn btn-outline-gold btn-xs" id="btnPrintSelectedRewards" style="padding: 7px 15px; font-weight: 700;">📄 Gerar PDF (Seleção)</button>
                             <button type="button" class="btn btn-danger btn-xs" id="btnDeleteBulkRewards" style="padding: 7px 15px; font-weight: 700; border-color: rgba(239, 68, 68, 0.4); color: #fca5a5; background: rgba(239, 68, 68, 0.1);">🗑️ Deletar Selecionados</button>
                             <button type="button" class="btn btn-danger btn-xs" id="btnClearAllRewards" style="padding: 7px 15px; font-weight: 700; border-color: rgba(239, 68, 68, 0.6); color: #fff; background: rgba(239, 68, 68, 0.4);">🗑️ Deletar Base</button>
@@ -1114,7 +1116,7 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                                         </select>
                                     </th>
                                     <th><input type="text" id="filterProdPoints" placeholder="Filtrar..." style="width: 100%; padding: 4px 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px; border-radius: 4px; font-family: inherit;" /></th>
-                                    <th style="text-align: center; vertical-align: middle;"><input type="checkbox" id="toggleAllActiveCheckbox" style="transform: scale(1.1); cursor: pointer;" title="Ativar/Desativar Todos" /></th>
+                                    <th></th>
                                     <th><button type="button" id="btnClearFilters" title="Limpar Filtros" style="background: none; border: 1px solid rgba(255,255,255,0.2); color: #fca5a5; border-radius: 4px; padding: 4px 2px; font-size: 10px; cursor: pointer; display: block; width: 100%; text-align: center;">🧹 Limpar</button></th>
                                 </tr>
                             </thead>

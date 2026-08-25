@@ -1732,7 +1732,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Elementos de Configuração de Prêmios Unificados (v3.82)
     const unifiedRewardsTableBody = document.getElementById('unifiedRewardsTableBody');
     const selectAllProducts = document.getElementById('selectAllProducts');
-    const toggleAllActiveCheckbox = document.getElementById('toggleAllActiveCheckbox');
+    const btnActivateBulkRewards = document.getElementById('btnActivateBulkRewards');
+    const btnDeactivateBulkRewards = document.getElementById('btnDeactivateBulkRewards');
     const bulkPointsInput = document.getElementById('bulkPointsInput');
     const btnApplyBulkPoints = document.getElementById('btnApplyBulkPoints');
     const btnPrintSelectedRewards = document.getElementById('btnPrintSelectedRewards');
@@ -2033,15 +2034,21 @@ document.addEventListener('DOMContentLoaded', () => {
         initAuthFiltersAndProducts();
     }
 
-    async function toggleAllProductsPermitido(isChecked) {
-        if (!confirm(`Deseja realmente ${isChecked ? 'ativar' : 'desativar'} a liberação de pontuação para TODOS os produtos da base?`)) {
-            if (toggleAllActiveCheckbox) toggleAllActiveCheckbox.checked = !isChecked;
+    async function toggleSelectedProductsPermitido(isChecked) {
+        if (selectedRewardIds.size === 0) {
+            alert("Nenhum produto selecionado! Marque os checkboxes da coluna da esquerda para selecionar os produtos.");
             return;
         }
 
-        // Atualiza todos na memória local
+        if (!confirm(`Deseja realmente ${isChecked ? 'ativar' : 'desativar'} a liberação de pontuação para os ${selectedRewardIds.size} produtos selecionados?`)) {
+            return;
+        }
+
+        // Atualiza na memória local
         adminPremiosConfig.forEach(p => {
-            p.permitido = isChecked;
+            if (selectedRewardIds.has(p.id)) {
+                p.permitido = isChecked;
+            }
         });
         localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
 
@@ -2050,10 +2057,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const key = getSupabaseKey();
         const configTable = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
 
-        if (url && key) {
+        const idsToUpdate = Array.from(selectedRewardIds);
+        const dbIdsToUpdate = idsToUpdate.filter(id => id && !id.startsWith('def-') && id.length > 8);
+
+        if (url && key && dbIdsToUpdate.length > 0) {
             try {
                 const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
-                const endpoint = `${cleanUrl}/rest/v1/${configTable}?id=not.is.null`;
+                const endpoint = `${cleanUrl}/rest/v1/${configTable}?id=in.(${dbIdsToUpdate.map(id => `"${id}"`).join(',')})`;
                 await fetch(endpoint, {
                     method: 'PATCH',
                     headers: {
@@ -2065,13 +2075,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({ permitido: isChecked })
                 });
             } catch (err) {
-                console.error("Erro ao atualizar todos os produtos para permitido no Supabase:", err);
+                console.error("Erro ao atualizar produtos em lote no Supabase:", err);
             }
         }
 
-        // Atualiza a tabela e os seletores
+        // Limpa seleção e atualiza
+        selectedRewardIds.clear();
+        if (selectAllProducts) selectAllProducts.checked = false;
         renderUnifiedRewardsTable();
         initAuthFiltersAndProducts();
+        alert(`Produtos selecionados foram ${isChecked ? 'ativados' : 'desativados'} com sucesso!`);
     }
 
     // Vincular filtros
@@ -2123,9 +2136,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (toggleAllActiveCheckbox) {
-        toggleAllActiveCheckbox.addEventListener('change', (e) => {
-            toggleAllProductsPermitido(e.target.checked);
+    if (btnActivateBulkRewards) {
+        btnActivateBulkRewards.addEventListener('click', () => {
+            toggleSelectedProductsPermitido(true);
+        });
+    }
+
+    if (btnDeactivateBulkRewards) {
+        btnDeactivateBulkRewards.addEventListener('click', () => {
+            toggleSelectedProductsPermitido(false);
         });
     }
 
