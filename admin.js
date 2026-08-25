@@ -1738,6 +1738,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnDeleteBulkRewards = document.getElementById('btnDeleteBulkRewards');
     const btnClearAllRewards = document.getElementById('btnClearAllRewards');
     const btnRefreshRewards = document.getElementById('btnRefreshRewards');
+    const pointsCashValueInput = document.getElementById('pointsCashValueInput');
+    const btnSavePointsCashValue = document.getElementById('btnSavePointsCashValue');
     
     // Inputs de Filtros
     const filterProdName = document.getElementById('filterProdName');
@@ -2296,6 +2298,28 @@ document.addEventListener('DOMContentLoaded', () => {
             } finally {
                 btnRefreshRewards.disabled = false;
                 btnRefreshRewards.innerHTML = '🔄 Atualizar';
+            }
+        });
+    }
+
+    // Vincular salvamento do valor do ponto (v3.82)
+    if (btnSavePointsCashValue && pointsCashValueInput) {
+        btnSavePointsCashValue.addEventListener('click', async () => {
+            const val = parseFloat(pointsCashValueInput.value);
+            if (isNaN(val) || val < 0) {
+                alert("Por favor, insira um valor válido para o ponto (ex: 0.10).");
+                return;
+            }
+            btnSavePointsCashValue.disabled = true;
+            btnSavePointsCashValue.innerHTML = 'Salvando...';
+            try {
+                await saveGeneralConfig(val);
+                alert(`Sucesso! O valor do ponto foi configurado para R$ ${val.toFixed(2)} e todos os relatórios foram atualizados.`);
+            } catch (err) {
+                console.error(err);
+            } finally {
+                btnSavePointsCashValue.disabled = false;
+                btnSavePointsCashValue.innerHTML = 'Salvar R$ 💾';
             }
         });
     }
@@ -3040,8 +3064,72 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    let valorPontoConfig = 0.10;
+
+    async function loadGeneralConfig() {
+        const localVal = localStorage.getItem('personality_valor_ponto');
+        if (localVal !== null) {
+            valorPontoConfig = parseFloat(localVal) || 0.10;
+        }
+
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const res = await fetch(`${cleanUrl}/rest/v1/config_geral_personality?chave=eq.valor_ponto`, {
+                    method: 'GET',
+                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.length > 0) {
+                        valorPontoConfig = parseFloat(data[0].valor) || 0.10;
+                        localStorage.setItem('personality_valor_ponto', valorPontoConfig.toString());
+                    }
+                }
+            } catch (err) {
+                console.error("Erro ao buscar config_geral_personality:", err);
+            }
+        }
+
+        if (pointsCashValueInput) {
+            pointsCashValueInput.value = valorPontoConfig.toFixed(2);
+        }
+    }
+
+    async function saveGeneralConfig(value) {
+        valorPontoConfig = parseFloat(value) || 0.10;
+        localStorage.setItem('personality_valor_ponto', valorPontoConfig.toString());
+
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const payload = { chave: 'valor_ponto', valor: valorPontoConfig.toString() };
+                await fetch(`${cleanUrl}/rest/v1/config_geral_personality`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': key,
+                        'Authorization': `Bearer ${key}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'resolution=merge-duplicates'
+                    },
+                    body: JSON.stringify(payload)
+                });
+            } catch (err) {
+                console.error("Erro ao salvar no Supabase:", err);
+            }
+        }
+        renderPremiosManager();
+        renderDashboardPremios();
+    }
+
     async function loadPremiosManager() {
         if (!adminPremiosTableBody) return;
+
+        await loadGeneralConfig();
 
         const url = getSupabaseUrl();
         const key = getSupabaseKey();
@@ -3205,40 +3293,45 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // 1. Calcula Resumos Gerais baseando-se em TODOS os lançamentos (não filtrados)
-        let valPendente = 0, countPendente = 0;
-        let valSaldoAPagar = 0, countSaldoAPagar = 0;
-        let valTotalPago = 0, countTotalPago = 0;
+        let ptsPendente = 0, countPendente = 0;
+        let ptsSaldoAPagar = 0, countSaldoAPagar = 0;
+        let ptsTotalPago = 0, countTotalPago = 0;
 
         allSubmittedSales.forEach(sale => {
-            const totalVal = Number(sale.valor_lente) + Number(sale.valor_ar);
+            const salePts = Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0);
             if (sale.status === 'Pendente') {
-                valPendente += totalVal;
+                ptsPendente += salePts;
                 countPendente++;
             } else if (sale.status === 'Validado') {
-                valSaldoAPagar += totalVal;
+                ptsSaldoAPagar += salePts;
                 countSaldoAPagar++;
             } else if (sale.status === 'Pago') {
-                valTotalPago += totalVal;
+                ptsTotalPago += salePts;
                 countTotalPago++;
             }
         });
 
-        document.getElementById('adminPendenteVal').textContent = `R$ ${valPendente.toFixed(2)}`;
-        document.getElementById('adminPendenteValOS').textContent = `${countPendente} O.S. Pendentes`;
+        const cashPendente = ptsPendente * valorPontoConfig;
+        const cashSaldoAPagar = ptsSaldoAPagar * valorPontoConfig;
+        const cashTotalPago = ptsTotalPago * valorPontoConfig;
 
-        document.getElementById('adminSaldoPagar').textContent = `R$ ${valSaldoAPagar.toFixed(2)}`;
-        document.getElementById('adminSaldoPagarOS').textContent = `${countSaldoAPagar} O.S. Validadas`;
+        document.getElementById('adminPendenteVal').textContent = `R$ ${cashPendente.toFixed(2)}`;
+        document.getElementById('adminPendenteValOS').textContent = `${countPendente} O.S. Pendentes (${ptsPendente} Pts)`;
 
-        document.getElementById('adminTotalPago').textContent = `R$ ${valTotalPago.toFixed(2)}`;
-        document.getElementById('adminTotalPagoOS').textContent = `${countTotalPago} O.S. Pagas`;
+        document.getElementById('adminSaldoPagar').textContent = `R$ ${cashSaldoAPagar.toFixed(2)}`;
+        document.getElementById('adminSaldoPagarOS').textContent = `${countSaldoAPagar} O.S. Validadas (${ptsSaldoAPagar} Pts)`;
+
+        document.getElementById('adminTotalPago').textContent = `R$ ${cashTotalPago.toFixed(2)}`;
+        document.getElementById('adminTotalPagoOS').textContent = `${countTotalPago} O.S. Pagas (${ptsTotalPago} Pts)`;
 
         // 2. Renderiza Tabela Detalhada
         if (filteredSales.length === 0) {
             adminPremiosTableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Nenhum lançamento corresponde aos filtros ativos.</td></tr>`;
         } else {
             filteredSales.forEach(sale => {
-                const totalVal = Number(sale.valor_lente) + Number(sale.valor_ar);
-                const totalPts = Number(sale.pontos_lente) + Number(sale.pontos_ar);
+                const totalVal = Number(sale.valor_lente || 0) + Number(sale.valor_ar || 0);
+                const totalPts = Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0);
+                const cashReward = totalPts * valorPontoConfig;
 
                 let statusText = '';
                 let actionBtn = '';
@@ -3264,7 +3357,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${escapeHtml(sale.cliente_nome)}</td>
                     <td>${escapeHtml(sale.lente_familia)}</td>
                     <td>${escapeHtml(sale.ar_familia)}</td>
-                    <td><strong>R$ ${totalVal.toFixed(2)}</strong> <br><small style="color:var(--text-muted);">${totalPts} Pts</small></td>
+                    <td>
+                        <strong>${totalPts} Pts</strong>
+                        <br><small style="color:#10b981; font-weight:700;">R$ ${cashReward.toFixed(2)}</small>
+                        <br><span style="font-size:9px; color:var(--text-muted);">Produtos: R$ ${totalVal.toFixed(2)}</span>
+                    </td>
                     <td>${statusText}</td>
                     <td>${actionBtn}</td>
                 `;
@@ -3283,11 +3380,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     validadosPorVendedor[vId] = {
                         vendedor_nome: sale.vendedor_nome,
                         loja: sale.loja,
-                        total_apagar: 0,
+                        total_pontos: 0,
                         vendedor_id: vId
                     };
                 }
-                validadosPorVendedor[vId].total_apagar += (Number(sale.valor_lente) + Number(sale.valor_ar));
+                validadosPorVendedor[vId].total_pontos += (Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0));
             }
         });
 
@@ -3301,11 +3398,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     pagosPorVendedor[vId] = {
                         vendedor_nome: sale.vendedor_nome,
                         loja: sale.loja,
-                        total_pago: 0,
+                        total_pontos: 0,
                         vendedor_id: vId
                     };
                 }
-                pagosPorVendedor[vId].total_pago += (Number(sale.valor_lente) + Number(sale.valor_ar));
+                pagosPorVendedor[vId].total_pontos += (Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0));
             }
         });
 
@@ -3319,6 +3416,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             consolidadoRows.forEach(row => {
                 const sellerInfo = sellersList.find(s => s.id === row.vendedor_id) || {};
+                const totalCash = row.total_pontos * valorPontoConfig;
                 
                 const rawPhone = (sellerInfo.whatsapp || '').replace(/\D/g, '');
                 const waLink = rawPhone ? `<a href="https://wa.me/55${rawPhone}" target="_blank" class="wa-link">💬 ${escapeHtml(sellerInfo.whatsapp)}</a>` : 'Não informado';
@@ -3329,7 +3427,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td><code>${escapeHtml(sellerInfo.cpf_cnpj || 'n/d')}</code></td>
                     <td>${escapeHtml(row.loja)}</td>
                     <td>${waLink}</td>
-                    <td><strong style="color: #10b981; font-size:16px;">R$ ${row.total_apagar.toFixed(2)}</strong></td>
+                    <td>
+                        <strong style="color: #10b981; font-size:16px;">R$ ${totalCash.toFixed(2)}</strong>
+                        <br><small style="color:var(--text-muted);">${row.total_pontos} Pts acumulados</small>
+                    </td>
                     <td>
                         <button class="btn btn-success btn-sm btn-bulk-payout" data-vendedor-id="${row.vendedor_id}" data-name="${escapeHtml(row.vendedor_nome)}" style="font-weight:700;">Pagar Todos desse Vendedor 💰</button>
                     </td>
@@ -3346,6 +3447,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 consolidadoPagosRows.forEach(row => {
                     const sellerInfo = sellersList.find(s => s.id === row.vendedor_id) || {};
+                    const totalCashPaid = row.total_pontos * valorPontoConfig;
                     
                     const rawPhone = (sellerInfo.whatsapp || '').replace(/\D/g, '');
                     const waLink = rawPhone ? `<a href="https://wa.me/55${rawPhone}" target="_blank" class="wa-link">💬 ${escapeHtml(sellerInfo.whatsapp)}</a>` : 'Não informado';
@@ -3356,7 +3458,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td><code>${escapeHtml(sellerInfo.cpf_cnpj || 'n/d')}</code></td>
                         <td>${escapeHtml(row.loja)}</td>
                         <td>${waLink}</td>
-                        <td><strong style="color: #60a5fa; font-size:16px;">R$ ${row.total_pago.toFixed(2)}</strong></td>
+                        <td>
+                            <strong style="color: #60a5fa; font-size:16px;">R$ ${totalCashPaid.toFixed(2)}</strong>
+                            <br><small style="color:var(--text-muted);">${row.total_pontos} Pts pagos</small>
+                        </td>
                         <td><span class="status-vendedor-pago">Pago e Conciliado ✅</span></td>
                     `;
                     adminConsolidadoPagosTableBody.appendChild(tr);
@@ -3537,7 +3642,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('personality_local_premios', JSON.stringify(local));
     }
 
-    // Exportar CSV de Lançamentos de Prêmios
+    // Exportar CSV de Lançamentos de Prêmios (v3.82)
     if (btnExportPremios) {
         btnExportPremios.addEventListener('click', () => {
             if (allSubmittedSales.length === 0) {
@@ -3546,11 +3651,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             let csvContent = "\uFEFF"; 
-            csvContent += "Vendedor;Loja;OS;Cliente;Lente;Antirreflexo;Pontos_Total;Premio_Total_R$;Status;Data_Cadastro\n";
+            csvContent += "Vendedor;Loja;OS;Cliente;Lente;Antirreflexo;Pontos_Total;Premio_Total_R$;Valor_Produtos_R$;Status;Data_Cadastro\n";
             
             allSubmittedSales.forEach(s => {
-                const totPts = Number(s.pontos_lente) + Number(s.pontos_ar);
-                const totVal = Number(s.valor_lente) + Number(s.valor_ar);
+                const totPts = Number(s.pontos_lente || 0) + Number(s.pontos_ar || 0);
+                const totVal = Number(s.valor_lente || 0) + Number(s.valor_ar || 0);
+                const cashReward = totPts * valorPontoConfig;
                 
                 let formattedDate = '';
                 if (s.created_at) {
@@ -3567,6 +3673,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     `"${s.lente_familia}"`,
                     `"${s.ar_familia}"`,
                     `"${totPts}"`,
+                    `"${cashReward.toFixed(2)}"`,
                     `"${totVal.toFixed(2)}"`,
                     `"${s.status}"`,
                     `"${formattedDate}"`
