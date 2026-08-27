@@ -2913,7 +2913,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (url && key) {
             try {
                 const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
-                const endpoint = `${cleanUrl}/rest/v1/${configTable}`;
+                const endpoint = `${cleanUrl}/rest/v1/${configTable}?on_conflict=nome`;
 
                 // Formata o payload completo para as colunas estendidas
                 const payloadExtended = allItemsToUpsert.map(item => ({
@@ -3006,6 +3006,125 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
         alert(`✅ SUCESSO DE IMPORTAÇÃO!\n\nPlanilha carregada e sincronizada com êxito no banco de dados Supabase!\n\nTotal de produtos salvos: ${allItemsToUpsert.length}`);
         loadRewardsConfig();
+    }
+
+    // Carga em Massa de Catálogo Completo Personality (v3.60 / v3.86)
+    const btnBulkImportCatalog = document.getElementById('btnBulkImportCatalog');
+    if (btnBulkImportCatalog) {
+        btnBulkImportCatalog.addEventListener('click', async () => {
+            const confirmMsg = "Tem certeza que deseja importar em massa o catálogo completo de lentes e tratamentos da Personality?\n\nOs produtos serão cadastrados com 0 pontos e 0 prêmio em R$, e você poderá configurar o que pagará por produto clicando no botão Editar (✏️) na listagem abaixo.";
+            if (!confirm(confirmMsg)) return;
+
+            const catalog = [
+                // Linha IA (Lentes de Inteligência Artificial)
+                { categoria: 'lente', nome: 'Gold Design IA', pontos: 0, valor: 0, tipo: 'Multifocal', tecnologia: 'Inteligência Artificial', familia: 'Linha IA', ir: '1.56' },
+                { categoria: 'lente', nome: 'Premium HD IA', pontos: 0, valor: 0, tipo: 'Multifocal', tecnologia: 'Inteligência Artificial', familia: 'Linha IA', ir: '1.61' },
+                { categoria: 'lente', nome: 'Tecno Line IA', pontos: 0, valor: 0, tipo: 'Multifocal', tecnologia: 'Inteligência Artificial', familia: 'Linha IA', ir: '1.67' },
+                { categoria: 'lente', nome: 'Gold Design Office IA', pontos: 0, valor: 0, tipo: 'Office', tecnologia: 'Inteligência Artificial', familia: 'Linha IA', ir: '1.56' },
+                { categoria: 'lente', nome: 'Gold Comfort IA', pontos: 0, valor: 0, tipo: 'Multifocal', tecnologia: 'Inteligência Artificial', familia: 'Linha IA', ir: '1.50' },
+                { categoria: 'lente', nome: 'Gold Premium IA', pontos: 0, valor: 0, tipo: 'Multifocal', tecnologia: 'Inteligência Artificial', familia: 'Linha IA', ir: '1.67' },
+
+                // Linha Tradicional (Lentes Digitais/Tradicionais)
+                { categoria: 'lente', nome: 'Gold Design Digital', pontos: 0, valor: 0, tipo: 'Multifocal', tecnologia: 'Digital', familia: 'Linha Tradicional', ir: '1.56' },
+                { categoria: 'lente', nome: 'Premium HD Digital', pontos: 0, valor: 0, tipo: 'Multifocal', tecnologia: 'Digital', familia: 'Linha Tradicional', ir: '1.61' },
+                { categoria: 'lente', nome: 'Tecno Line Digital', pontos: 0, valor: 0, tipo: 'Multifocal', tecnologia: 'Digital', familia: 'Linha Tradicional', ir: '1.67' },
+                { categoria: 'lente', nome: 'Maxvision Digital', pontos: 0, valor: 0, tipo: 'Multifocal', tecnologia: 'Digital', familia: 'Linha Tradicional', ir: '1.50' },
+                { categoria: 'lente', nome: 'Multi Premium', pontos: 0, valor: 0, tipo: 'Multifocal', tecnologia: 'Digital', familia: 'Linha Tradicional', ir: '1.50' },
+                { categoria: 'lente', nome: 'Gold Line', pontos: 0, valor: 0, tipo: 'Multifocal', tecnologia: 'Digital', familia: 'Linha Tradicional', ir: '1.50' },
+                { categoria: 'lente', nome: 'Gold Design Office', pontos: 0, valor: 0, tipo: 'Office', tecnologia: 'Digital', familia: 'Linha Tradicional', ir: '1.56' },
+                { categoria: 'lente', nome: 'Gold Comfort', pontos: 0, valor: 0, tipo: 'Multifocal', tecnologia: 'Digital', familia: 'Linha Tradicional', ir: '1.50' },
+                { categoria: 'lente', nome: 'Gold Premium', pontos: 0, valor: 0, tipo: 'Multifocal', tecnologia: 'Digital', familia: 'Linha Tradicional', ir: '1.67' },
+
+                // Tratamentos (Antirreflexos)
+                { categoria: 'antirreflexo', nome: 'Antirreflexo Classic', pontos: 0, valor: 0, tipo: 'Antirreflexo', tecnologia: 'Nenhum', familia: 'N/A', ir: 'N/A' },
+                { categoria: 'antirreflexo', nome: 'Antirreflexo Premium (Super Clean)', pontos: 0, valor: 0, tipo: 'Antirreflexo', tecnologia: 'Nenhum', familia: 'N/A', ir: 'N/A' },
+                { categoria: 'antirreflexo', nome: 'Filtro Azul (Blue Control)', pontos: 0, valor: 0, tipo: 'Antirreflexo', tecnologia: 'Filtro Azul', familia: 'N/A', ir: 'N/A' },
+                { categoria: 'antirreflexo', nome: 'Fotossensível (Active Transitions)', pontos: 0, valor: 0, tipo: 'Antirreflexo', tecnologia: 'Fotossensível', familia: 'N/A', ir: 'N/A' },
+                { categoria: 'antirreflexo', nome: 'Sem Antirreflexo (Básico)', pontos: 0, valor: 0, tipo: 'Antirreflexo', tecnologia: 'Nenhum', familia: 'N/A', ir: 'N/A' }
+            ];
+
+            // Filtra os itens que já existem
+            const newItems = [];
+            catalog.forEach(item => {
+                const exists = adminPremiosConfig.some(existing => existing.nome.toLowerCase() === item.nome.toLowerCase());
+                if (!exists) {
+                    newItems.push(item);
+                }
+            });
+
+            if (newItems.length === 0) {
+                alert("Todos os produtos do catálogo já estão cadastrados na lista!");
+                return;
+            }
+
+            const url = getSupabaseUrl();
+            const key = getSupabaseKey();
+            const configTable = localStorage.getItem('personality_sb_premios_config_table') || 'premios_config_personality';
+
+            btnBulkImportCatalog.disabled = true;
+            btnBulkImportCatalog.textContent = 'Importando... ⏳';
+
+            if (url && key) {
+                try {
+                    const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                    const endpoint = `${cleanUrl}/rest/v1/${configTable}?on_conflict=nome`;
+                    
+                    // 1. Tenta fazer UPSERT em lote com colunas estendidas
+                    let response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': key,
+                            'Authorization': `Bearer ${key}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'resolution=merge-duplicates'
+                        },
+                        body: JSON.stringify(newItems)
+                    });
+
+                    // 2. Se falhar com 400 (novas colunas não existem), tenta em lote com colunas padrão
+                    if (!response.ok && response.status === 400) {
+                        console.warn("Falha no upsert estendido do catálogo padrão. Tentando com colunas padrão...");
+                        const payloadStandard = newItems.map(item => ({
+                            categoria: item.categoria,
+                            nome: item.nome,
+                            valor: item.valor,
+                            pontos: item.pontos
+                        }));
+
+                        response = await fetch(endpoint, {
+                            method: 'POST',
+                            headers: {
+                                'apikey': key,
+                                'Authorization': `Bearer ${key}`,
+                                'Content-Type': 'application/json',
+                                'Prefer': 'resolution=merge-duplicates'
+                            },
+                            body: JSON.stringify(payloadStandard)
+                        });
+                    }
+
+                    if (response.ok) {
+                        alert(`${newItems.length} novos itens do catálogo importados com sucesso no Supabase!`);
+                    } else {
+                        throw new Error('Falha no upload do catálogo para o Supabase.');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    alert("Aviso: Falha ao sincronizar catálogo online. Salvando importação localmente.");
+                }
+            } else {
+                alert(`${newItems.length} novos itens do catálogo importados localmente!`);
+            }
+
+            // Atualiza memória local e renderiza
+            adminPremiosConfig.push(...newItems);
+            localStorage.setItem('personality_premios_config', JSON.stringify(adminPremiosConfig));
+            
+            btnBulkImportCatalog.disabled = false;
+            btnBulkImportCatalog.textContent = '📦 Catálogo Padrão';
+
+            loadRewardsConfig();
+        });
     }
 
     // Listener para o formulário de adicionar/editar produto de prêmio
@@ -3168,12 +3287,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             familia: familyVal,
                             ir: irVal
                         };
-                        const res = await fetch(`${cleanUrl}/rest/v1/${configTable}`, {
+                        const res = await fetch(`${cleanUrl}/rest/v1/${configTable}?on_conflict=nome`, {
                             method: 'POST',
                             headers: {
                                 'apikey': key,
                                 'Authorization': `Bearer ${key}`,
-                                'Content-Type': 'application/json'
+                                'Content-Type': 'application/json',
+                                'Prefer': 'resolution=merge-duplicates'
                             },
                             body: JSON.stringify(payload)
                         });
@@ -3185,12 +3305,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                 pontos: pointsVal,
                                 valor: valueVal
                             };
-                            await fetch(`${cleanUrl}/rest/v1/${configTable}`, {
+                            await fetch(`${cleanUrl}/rest/v1/${configTable}?on_conflict=nome`, {
                                 method: 'POST',
                                 headers: {
                                     'apikey': key,
                                     'Authorization': `Bearer ${key}`,
-                                    'Content-Type': 'application/json'
+                                    'Content-Type': 'application/json',
+                                    'Prefer': 'resolution=merge-duplicates'
                                 },
                                 body: JSON.stringify(standardPayload)
                             });
