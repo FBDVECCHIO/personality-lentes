@@ -955,8 +955,9 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                         </div>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             <div class="stats-badge">Cadastrados: <span id="profCount">0</span></div>
-                            <button class="btn btn-success btn-sm" id="btnExportProfs">📊 Exportar Lista (CSV)</button>
-                            <button class="btn btn-danger btn-sm" id="btnClearProfs">🗑️ Limpar Banco</button>
+                            <button class="btn btn-outline-gold btn-sm" id="btnRefreshProfs" title="Atualizar Cadastros" style="display: flex; align-items: center; gap: 6px; padding: 8px 15px; font-weight: 700; height: 36px;"><span style="font-size:12px;">🔄</span> Atualizar</button>
+                            <button class="btn btn-success btn-sm" id="btnExportProfs" style="height: 36px;">📊 Exportar Lista (CSV)</button>
+                            <button class="btn btn-danger btn-sm" id="btnClearProfs" style="height: 36px;">🗑️ Limpar Banco</button>
                         </div>
                     </div>
 
@@ -971,14 +972,11 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                         <table class="leads-table">
                             <thead>
                                 <tr>
-                                    <th>Tipo</th>
-                                    <th>Nome</th>
-                                    <th>CPF / CNPJ</th>
-                                    <th>E-mail</th>
-                                    <th>WhatsApp</th>
-                                    <th>Loja / Clínica</th>
-                                    <th>Info Adicional</th>
                                     <th>Data Cadastro</th>
+                                    <th>Nome</th>
+                                    <th>Tipo</th>
+                                    <th>CPF / CNPJ</th>
+                                    <th>Loja / Clínica</th>
                                     <th>Ações</th>
                                 </tr>
                             </thead>

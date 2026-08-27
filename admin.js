@@ -1133,10 +1133,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const profCountSpan = document.getElementById('profCount');
     const btnExportProfs = document.getElementById('btnExportProfs');
     const btnClearProfs = document.getElementById('btnClearProfs');
+    const btnRefreshProfs = document.getElementById('btnRefreshProfs');
     const filterTabs = document.querySelectorAll('.filter-tab');
     
     let currentFilterType = 'all'; // 'all', 'prof', 'vend'
     let loadedMembersList = [];
+
+    // Vincular botão de Refresh
+    if (btnRefreshProfs) {
+        btnRefreshProfs.addEventListener('click', async () => {
+            btnRefreshProfs.disabled = true;
+            btnRefreshProfs.innerHTML = '<span style="font-size:12px; display:inline-block; animation: spin 0.8s linear infinite;">🔄</span> Atualizando...';
+            await loadProfessionals();
+            btnRefreshProfs.disabled = false;
+            btnRefreshProfs.innerHTML = '<span style="font-size:12px;">🔄</span> Atualizar';
+        });
+    }
 
     // Switcher de Abas de Filtros de Tipos
     filterTabs.forEach(tab => {
@@ -1253,7 +1265,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (profCountSpan) profCountSpan.textContent = filtered.length;
 
         if (filtered.length === 0) {
-            profTableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 30px 0;">Nenhum cadastro encontrado para este filtro.</td></tr>`;
+            profTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px 0;">Nenhum cadastro encontrado para este filtro.</td></tr>`;
             return;
         }
 
@@ -1262,7 +1274,11 @@ document.addEventListener('DOMContentLoaded', () => {
             let formattedDate = 'Data indisponível';
             if (dateStr) {
                 try {
-                    formattedDate = new Date(dateStr).toLocaleString('pt-BR');
+                    const d = new Date(dateStr);
+                    const day = String(d.getDate()).padStart(2, '0');
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const year = String(d.getFullYear()).slice(-2);
+                    formattedDate = `${day}.${month}.${year}`;
                 } catch(e) {}
             }
 
@@ -1285,16 +1301,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
+            // Linha principal do Membro
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${badgeTipo}</td>
-                <td><strong>${escapeHtml(m.nome)}</strong></td>
-                <td><code>${escapeHtml(m.cpf_cnpj)}</code></td>
-                <td>${escapeHtml(m.email)}</td>
-                <td>${waLink}</td>
-                <td>${escapeHtml(m.loja_clinica)}</td>
-                <td>${statusPill}</td>
                 <td>${escapeHtml(formattedDate)}</td>
+                <td><strong>${escapeHtml(m.nome)}</strong></td>
+                <td>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        ${badgeTipo} 
+                        <button type="button" class="btn-toggle-prof-details" data-id="${m.id}" data-type="${m.tipo}" style="background: rgba(197, 168, 92, 0.1); border: 1px solid rgba(197, 168, 92, 0.3); color: var(--gold-light); cursor: pointer; border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: 700; font-family: inherit;">[+]</button>
+                    </div>
+                </td>
+                <td><code>${escapeHtml(m.cpf_cnpj)}</code></td>
+                <td>${escapeHtml(m.loja_clinica)}</td>
                 <td style="white-space: nowrap; text-align: center;">
                     ${approvalBtn}
                     <button class="icon-btn btn-edit-member" data-id="${m.id}" data-type="${m.tipo}" title="Alterar Cadastro" style="background:none; border:none; color:var(--gold-light); cursor:pointer; font-size:14px; margin-right:8px; padding:2px;">✏️</button>
@@ -1303,6 +1322,44 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
             `;
             profTableBody.appendChild(tr);
+
+            // Linha secundária de Detalhes [+] (v3.86)
+            const trDetails = document.createElement('tr');
+            trDetails.id = `details-${m.tipo}-${m.id}`;
+            trDetails.style.display = 'none';
+            trDetails.style.background = 'rgba(0,0,0,0.2)';
+            trDetails.innerHTML = `
+                <td colspan="6" style="padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; font-size: 10px; color: #a1a1aa;">
+                        <div><strong>📧 E-mail:</strong> ${escapeHtml(m.email)}</div>
+                        <div><strong>💬 WhatsApp:</strong> ${waLink}</div>
+                        <div><strong>ℹ️ Status / Info:</strong> ${statusPill}</div>
+                    </div>
+                </td>
+            `;
+            profTableBody.appendChild(trDetails);
+        });
+
+        // Adiciona listeners para abrir/fechar detalhes
+        profTableBody.querySelectorAll('.btn-toggle-prof-details').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                const tipo = btn.getAttribute('data-type');
+                const detRow = document.getElementById(`details-${tipo}-${id}`);
+                if (detRow) {
+                    if (detRow.style.display === 'none') {
+                        detRow.style.display = 'table-row';
+                        btn.textContent = '[-]';
+                        btn.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+                        btn.style.color = '#fca5a5';
+                    } else {
+                        detRow.style.display = 'none';
+                        btn.textContent = '[+]';
+                        btn.style.borderColor = 'rgba(197, 168, 92, 0.3)';
+                        btn.style.color = 'var(--gold-light)';
+                    }
+                }
+            });
         });
 
         // Adiciona listeners para exclusão individual
