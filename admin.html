@@ -1235,11 +1235,33 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                 </div>
 
                 <div class="glass-card section-card">
-                    <div class="card-header">
+                    <div class="card-header" style="margin-bottom: 15px;">
                         <h2>📋 Vendas e O.S. Liberadas pelo Laboratório</h2>
                         <p>Veja a listagem de O.S. autorizadas no sistema para cada balconista/vendedor.</p>
                     </div>
-                    <div class="table-container" style="margin-top: 20px;">
+                    
+                    <!-- Filtros de O.S. Liberadas (v3.86) -->
+                    <div style="display: flex; gap: 15px; margin-bottom: 20px; align-items: flex-end; flex-wrap: wrap; background: rgba(255,255,255,0.02); padding: 12px 18px; border: 1px solid rgba(255,255,255,0.05); border-radius: 8px;">
+                        <div class="input-group" style="margin-bottom: 0; flex: 1; min-width: 140px;">
+                            <label style="font-size: 11px; margin-bottom: 4px; color: var(--gold-light); display: block;">Filtrar por O.S.</label>
+                            <input type="text" id="filterAuthOsNumber" placeholder="Buscar O.S..." style="width: 100%; padding: 6px 10px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #fff; font-size: 11px; font-family: inherit;" />
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0; flex: 1; min-width: 160px;">
+                            <label style="font-size: 11px; margin-bottom: 4px; color: var(--gold-light); display: block;">Filtrar por Loja</label>
+                            <input type="text" id="filterAuthOsStore" placeholder="Buscar Loja/Ótica..." style="width: 100%; padding: 6px 10px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #fff; font-size: 11px; font-family: inherit;" />
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0; flex: 1; min-width: 160px;">
+                            <label style="font-size: 11px; margin-bottom: 4px; color: var(--gold-light); display: block;">Filtrar por Vendedor</label>
+                            <input type="text" id="filterAuthOsSeller" placeholder="Buscar Vendedor..." style="width: 100%; padding: 6px 10px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #fff; font-size: 11px; font-family: inherit;" />
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnPrintSelectedOs" style="padding: 8px 12px; font-weight: 700; height: 32px;">📄 PDF Seleção</button>
+                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnPrintAllOs" style="padding: 8px 12px; font-weight: 700; height: 32px;">📄 PDF Todos</button>
+                            <button type="button" class="btn btn-danger btn-xs" id="btnClearAuthOsFilters" title="Limpar Filtros" style="padding: 8px 12px; font-weight: 700; height: 32px;">🧹 Limpar</button>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
                         <table class="leads-table">
                             <thead>
                                 <tr>
@@ -1256,6 +1278,15 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                                 <!-- Preenchido via JS -->
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- Paginação de O.S. Liberadas (v3.86) -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; flex-wrap: wrap; gap: 10px;">
+                        <span id="authOsPaginationInfo" style="font-size: 12px; color: var(--text-muted);">Página 1 de 1 (Mostrando 0 de 0 O.S.)</span>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnPrevPageAuthOs" style="padding: 6px 12px; font-weight: 700;">⬅️ Anterior</button>
+                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnNextPageAuthOs" style="padding: 6px 12px; font-weight: 700;">Próxima ➡️</button>
+                        </div>
                     </div>
                 </div>
             </div>

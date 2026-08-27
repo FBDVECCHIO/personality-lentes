@@ -4742,6 +4742,111 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const authOsTableBody = document.getElementById('authOsTableBody');
 
+    // Filtros e paginação da listagem de O.S. (v3.86)
+    const filterAuthOsNumber = document.getElementById('filterAuthOsNumber');
+    const filterAuthOsStore = document.getElementById('filterAuthOsStore');
+    const filterAuthOsSeller = document.getElementById('filterAuthOsSeller');
+    const btnPrintSelectedOs = document.getElementById('btnPrintSelectedOs');
+    const btnPrintAllOs = document.getElementById('btnPrintAllOs');
+    const btnClearAuthOsFilters = document.getElementById('btnClearAuthOsFilters');
+    
+    const authOsPaginationInfo = document.getElementById('authOsPaginationInfo');
+    const btnPrevPageAuthOs = document.getElementById('btnPrevPageAuthOs');
+    const btnNextPageAuthOs = document.getElementById('btnNextPageAuthOs');
+    
+    let currentAuthOsPage = 1;
+    const limitAuthOsPerPage = 25;
+    let globalAuthorizedList = [];
+    let globalApprovedVendedores = [];
+
+    // Inicializar Eventos de Filtros e Paginação de O.S.
+    if (filterAuthOsNumber) {
+        filterAuthOsNumber.addEventListener('input', () => {
+            currentAuthOsPage = 1;
+            renderAuthOsTableWithFiltersAndPagination();
+        });
+    }
+    if (filterAuthOsStore) {
+        filterAuthOsStore.addEventListener('input', () => {
+            currentAuthOsPage = 1;
+            renderAuthOsTableWithFiltersAndPagination();
+        });
+    }
+    if (filterAuthOsSeller) {
+        filterAuthOsSeller.addEventListener('input', () => {
+            currentAuthOsPage = 1;
+            renderAuthOsTableWithFiltersAndPagination();
+        });
+    }
+    if (btnClearAuthOsFilters) {
+        btnClearAuthOsFilters.addEventListener('click', () => {
+            if (filterAuthOsNumber) filterAuthOsNumber.value = '';
+            if (filterAuthOsStore) filterAuthOsStore.value = '';
+            if (filterAuthOsSeller) filterAuthOsSeller.value = '';
+            currentAuthOsPage = 1;
+            renderAuthOsTableWithFiltersAndPagination();
+        });
+    }
+    if (btnPrevPageAuthOs) {
+        btnPrevPageAuthOs.addEventListener('click', () => {
+            if (currentAuthOsPage > 1) {
+                currentAuthOsPage--;
+                renderAuthOsTableWithFiltersAndPagination();
+            }
+        });
+    }
+    if (btnNextPageAuthOs) {
+        btnNextPageAuthOs.addEventListener('click', () => {
+            const osQuery = filterAuthOsNumber ? filterAuthOsNumber.value.trim().toLowerCase() : '';
+            const storeQuery = filterAuthOsStore ? filterAuthOsStore.value.trim().toLowerCase() : '';
+            const sellerQuery = filterAuthOsSeller ? filterAuthOsSeller.value.trim().toLowerCase() : '';
+            
+            const filteredCount = globalAuthorizedList.filter(item => {
+                const vend = globalApprovedVendedores.find(v => v.cpf === item.cpf_vendedor) || { nome: 'Desconhecido', loja: item.loja || 'N/A' };
+                const sellerName = vend.nome.toLowerCase();
+                const storeName = (item.loja || vend.loja || '').toLowerCase();
+                const osNumber = item.os.toLowerCase();
+                return osNumber.includes(osQuery) && storeName.includes(storeQuery) && sellerName.includes(sellerQuery);
+            }).length;
+            
+            const totalPages = Math.max(1, Math.ceil(filteredCount / limitAuthOsPerPage));
+            if (currentAuthOsPage < totalPages) {
+                currentAuthOsPage++;
+                renderAuthOsTableWithFiltersAndPagination();
+            }
+        });
+    }
+    if (btnPrintSelectedOs) {
+        btnPrintSelectedOs.addEventListener('click', () => {
+            const osQuery = filterAuthOsNumber ? filterAuthOsNumber.value.trim().toLowerCase() : '';
+            const storeQuery = filterAuthOsStore ? filterAuthOsStore.value.trim().toLowerCase() : '';
+            const sellerQuery = filterAuthOsSeller ? filterAuthOsSeller.value.trim().toLowerCase() : '';
+            
+            const filtered = globalAuthorizedList.filter(item => {
+                const vend = globalApprovedVendedores.find(v => v.cpf === item.cpf_vendedor) || { nome: 'Desconhecido', loja: item.loja || 'N/A' };
+                const sellerName = vend.nome.toLowerCase();
+                const storeName = (item.loja || vend.loja || '').toLowerCase();
+                const osNumber = item.os.toLowerCase();
+                return osNumber.includes(osQuery) && storeName.includes(storeQuery) && sellerName.includes(sellerQuery);
+            });
+            
+            if (filtered.length === 0) {
+                alert('Nenhuma O.S. encontrada para os filtros atuais!');
+                return;
+            }
+            generateAuthOsPDF(filtered, 'Relatório de O.S. Filtradas (Seleção)');
+        });
+    }
+    if (btnPrintAllOs) {
+        btnPrintAllOs.addEventListener('click', () => {
+            if (globalAuthorizedList.length === 0) {
+                alert('Nenhuma O.S. cadastrada para gerar PDF!');
+                return;
+            }
+            generateAuthOsPDF(globalAuthorizedList, 'Relatório Completo de O.S. Liberadas');
+        });
+    }
+
     let rewardsConfig = [];
 
     async function loadPremiosAutorizarSection() {
@@ -4838,8 +4943,12 @@ document.addEventListener('DOMContentLoaded', () => {
             authorizedList = JSON.parse(localStorage.getItem('personality_local_os_autorizadas')) || [];
         }
 
+        globalAuthorizedList = authorizedList;
+        globalApprovedVendedores = approvedVendedores;
+
         // Renderiza Tabela de O.S. Autorizadas
-        renderAuthOsTable(authorizedList, approvedVendedores);
+        currentAuthOsPage = 1;
+        renderAuthOsTableWithFiltersAndPagination();
     }
 
     let editingAuthOsNumber = null;
@@ -4928,6 +5037,142 @@ document.addEventListener('DOMContentLoaded', () => {
             authOsTableBody.appendChild(tr);
             authOsTableBody.appendChild(trDetails);
         });
+    }
+
+    function renderAuthOsTableWithFiltersAndPagination() {
+        if (!authOsTableBody) return;
+        
+        // 1. Aplica filtros
+        const osQuery = filterAuthOsNumber ? filterAuthOsNumber.value.trim().toLowerCase() : '';
+        const storeQuery = filterAuthOsStore ? filterAuthOsStore.value.trim().toLowerCase() : '';
+        const sellerQuery = filterAuthOsSeller ? filterAuthOsSeller.value.trim().toLowerCase() : '';
+        
+        const filtered = globalAuthorizedList.filter(item => {
+            const vend = globalApprovedVendedores.find(v => v.cpf === item.cpf_vendedor) || { nome: 'Desconhecido', loja: item.loja || 'N/A' };
+            const sellerName = vend.nome.toLowerCase();
+            const storeName = (item.loja || vend.loja || '').toLowerCase();
+            const osNumber = item.os.toLowerCase();
+            
+            const matchOs = osNumber.includes(osQuery);
+            const matchStore = storeName.includes(storeQuery);
+            const matchSeller = sellerName.includes(sellerQuery);
+            
+            return matchOs && matchStore && matchSeller;
+        });
+        
+        // 2. Calcula paginação (máximo 25 linhas)
+        const totalItems = filtered.length;
+        const totalPages = Math.max(1, Math.ceil(totalItems / limitAuthOsPerPage));
+        
+        if (currentAuthOsPage > totalPages) {
+            currentAuthOsPage = totalPages;
+        }
+        
+        const startIndex = (currentAuthOsPage - 1) * limitAuthOsPerPage;
+        const endIndex = startIndex + limitAuthOsPerPage;
+        const paginatedItems = filtered.slice(startIndex, endIndex);
+        
+        // 3. Atualiza info de paginação no HTML
+        if (authOsPaginationInfo) {
+            authOsPaginationInfo.textContent = `Página ${currentAuthOsPage} de ${totalPages} (Mostrando ${totalItems === 0 ? 0 : startIndex + 1} a ${Math.min(endIndex, totalItems)} de ${totalItems} O.S.)`;
+        }
+        
+        if (btnPrevPageAuthOs) btnPrevPageAuthOs.disabled = currentAuthOsPage === 1;
+        if (btnNextPageAuthOs) btnNextPageAuthOs.disabled = currentAuthOsPage === totalPages;
+        
+        // 4. Renderiza os itens paginados
+        renderAuthOsTable(paginatedItems, globalApprovedVendedores);
+    }
+
+    function generateAuthOsPDF(items, title = 'Relatório de O.S. Liberadas') {
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alert('Por favor, permita pop-ups para abrir a versão de impressão!');
+            return;
+        }
+
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <title>${title} - Personality Lenses</title>
+                <style>
+                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 30px; color: #1a1a1a; }
+                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #c5a85c; padding-bottom: 15px; margin-bottom: 30px; }
+                    .header h1 { font-size: 24px; color: #c5a85c; margin: 0; text-transform: uppercase; font-weight: 800; }
+                    .header span { font-size: 11px; color: #666; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    th, td { border: 1px solid #ddd; padding: 10px 12px; text-align: left; font-size: 11px; }
+                    th { background-color: #f5f5f7; color: #333; font-weight: bold; text-transform: uppercase; }
+                    tr:nth-child(even) { background-color: #fafafa; }
+                    .pts-column { font-weight: bold; color: #c5a85c; }
+                    .footer { margin-top: 40px; font-size: 10px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 15px; }
+                    @media print {
+                        body { padding: 0; }
+                        .no-print { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div>
+                        <h1>${title}</h1>
+                        <span>Personality Lenses - Controle de Comissões e Liberações</span>
+                    </div>
+                    <div>
+                        <span>Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</span>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>O.S. / Pedido</th>
+                            <th>Vendedor</th>
+                            <th>Loja / Clínica</th>
+                            <th>Paciente / Cliente</th>
+                            <th>Composição (Lente + AR)</th>
+                            <th>Pontos</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${items.map(item => {
+                            const vend = globalApprovedVendedores.find(v => v.cpf === item.cpf_vendedor) || { nome: 'Desconhecido', loja: item.loja || 'N/A' };
+                            const lProd = adminPremiosConfig.find(p => p.nome === item.lente_familia) || { pontos: 0 };
+                            const arProd = adminPremiosConfig.find(p => p.nome === item.ar_familia) || { pontos: 0 };
+                            const totalPts = (Number(lProd.pontos) || 0) + (Number(arProd.pontos) || 0);
+                            const formattedDate = item.created_at ? new Date(item.created_at).toLocaleDateString('pt-BR') : 'N/A';
+                            return `
+                                <tr>
+                                    <td>${escapeHtml(formattedDate)}</td>
+                                    <td><strong>${escapeHtml(item.os)}</strong></td>
+                                    <td>${escapeHtml(vend.nome)} (CPF: ${escapeHtml(item.cpf_vendedor)})</td>
+                                    <td>${escapeHtml(item.loja || vend.loja)}</td>
+                                    <td>${escapeHtml(item.cliente_nome)}</td>
+                                    <td>Lente: ${escapeHtml(item.lente_familia)}<br>AR: ${escapeHtml(item.ar_familia)}</td>
+                                    <td class="pts-column">${totalPts} Pts</td>
+                                    <td>${item.utilizada ? 'Resgatada ✅' : 'Pendente ⏳'}</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+                <div class="footer">
+                    Documento de prestação de contas de comissão da campanha de prêmios. Gerado eletronicamente por Personality Lenses.
+                </div>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(() => { window.close(); }, 500);
+                    }
+                </script>
+            </body>
+            </html>
+        `;
+        printWindow.document.write(html);
+        printWindow.document.close();
     }
 
     function startEditingAuthOs(item) {
