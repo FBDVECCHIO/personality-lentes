@@ -2346,8 +2346,56 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
         printWindow.document.close();
     }
 
+    // -------------------------------------------------------------
+    // Visualização de Topografia 3D do Mapa da Lente (Portfólio)
+    // -------------------------------------------------------------
+    function initLensMapModal() {
+        const modal = document.getElementById('lensMapModal');
+        const closeBtn = document.getElementById('btnCloseLensMapModal');
+        const modalTitle = document.getElementById('lensMapModalTitle');
+        const modalImg = document.getElementById('lensMapModalImg');
+
+        if (!modal) return;
+
+        document.addEventListener('click', (e) => {
+            const mapBtn = e.target.closest('.btn-product-map');
+            if (!mapBtn) return;
+            e.preventDefault();
+            e.stopPropagation();
+
+            const lensName = mapBtn.dataset.lensName || 'Gold Design IA';
+            const mapImgSrc = mapBtn.dataset.mapImage || 'images/NOWAYVE 3D POSICAO 2.png';
+
+            if (modalTitle) modalTitle.textContent = `Topografia 3D - ${lensName}`;
+            if (modalImg) modalImg.src = mapImgSrc;
+
+            modal.classList.add('active');
+            modal.setAttribute('aria-hidden', 'false');
+        });
+
+        const closeModal = () => {
+            modal.classList.remove('active');
+            modal.setAttribute('aria-hidden', 'true');
+        };
+
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('active')) {
+                closeModal();
+            }
+        });
+    }
+
     // Inicializa botões de PDF dos cards de produtos
     initProductPdfButtons();
+
+    // Inicializa modal de topografia 3D
+    initLensMapModal();
 
     // Inicia verificação do Portal do Parceiro
     checkPartnerSession();
