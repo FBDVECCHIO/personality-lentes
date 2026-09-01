@@ -830,6 +830,49 @@ body.no-scroll {
     margin-bottom: 20px;
 }
 
+.product-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-product-pdf {
+    background: rgba(197, 168, 92, 0.08);
+    border: 1px solid rgba(197, 168, 92, 0.3);
+    color: var(--gold-light, #e5c060);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+    padding: 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.btn-product-pdf:hover {
+    background: linear-gradient(135deg, #c5a85c, #e5c060);
+    color: #0b0b0e;
+    border-color: #e5c060;
+    transform: translateY(-2px) scale(1.06);
+    box-shadow: 0 4px 12px rgba(197, 168, 92, 0.4);
+}
+
+.btn-product-pdf svg {
+    width: 17px;
+    height: 17px;
+    stroke-width: 2.2;
+    transition: transform 0.2s ease;
+}
+
+.btn-product-pdf:hover svg {
+    transform: scale(1.08);
+}
+
 .product-category {
     font-size: 11px;
     font-weight: 700;
@@ -844,6 +887,7 @@ body.no-scroll {
     font-family: var(--font-heading);
     font-size: 22px;
     font-weight: 700;
+    margin: 0;
 }
 
 .product-desc {

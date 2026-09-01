@@ -2062,6 +2062,302 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
         });
     }
 
+    // -------------------------------------------------------------
+    // Geração de PDF das Características do Produto (Portfólio)
+    // -------------------------------------------------------------
+    function initProductPdfButtons() {
+        document.addEventListener('click', (e) => {
+            const pdfBtn = e.target.closest('.btn-product-pdf');
+            if (!pdfBtn) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const card = pdfBtn.closest('.product-card');
+            if (card) {
+                generateProductDetailPDF(card);
+            }
+        });
+    }
+
+    function generateProductDetailPDF(card) {
+        if (!card) return;
+
+        const badge = card.querySelector('.product-badge')?.textContent?.trim() || 'Lente Oftálmica';
+        const title = card.querySelector('h3')?.textContent?.trim() || 'Produto Personality';
+        const effectTitle = card.querySelector('.effect-title')?.textContent?.trim() || '';
+        const effectQuote = card.querySelector('.effect-quote')?.textContent?.trim() || '';
+        const effectContext = card.querySelector('.effect-context')?.textContent?.trim() || '';
+        const techTags = Array.from(card.querySelectorAll('.tech-tag')).map(el => el.textContent.trim());
+        const benefits = Array.from(card.querySelectorAll('.benefit-row')).map(row => {
+            const name = row.querySelector('.benefit-name')?.textContent?.trim() || '';
+            const totalBlocks = row.querySelectorAll('.meter-block').length || 5;
+            const activeBlocks = row.querySelectorAll('.meter-block.active').length;
+            return { name, activeBlocks, totalBlocks };
+        });
+        const priceRange = card.querySelector('.price-range')?.textContent?.trim() || '';
+
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alert('Por favor, permita pop-ups para abrir a ficha técnica em PDF!');
+            return;
+        }
+
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <title>Ficha Técnica - ${escapeHtml(title)} - Personality Lenses</title>
+                <style>
+                    body {
+                        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                        padding: 35px 40px;
+                        color: #1e293b;
+                        background: #fff;
+                        margin: 0;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    .header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        border-bottom: 3px solid #c5a85c;
+                        padding-bottom: 14px;
+                        margin-bottom: 25px;
+                    }
+                    .header-left h1 {
+                        font-size: 24px;
+                        color: #c5a85c;
+                        margin: 0;
+                        text-transform: uppercase;
+                        font-weight: 800;
+                        letter-spacing: 0.5px;
+                    }
+                    .header-left span {
+                        font-size: 11px;
+                        color: #64748b;
+                        font-weight: 500;
+                    }
+                    .badge {
+                        display: inline-block;
+                        background: #c5a85c;
+                        color: #0b0b0e;
+                        font-size: 11px;
+                        font-weight: 800;
+                        text-transform: uppercase;
+                        padding: 5px 12px;
+                        border-radius: 4px;
+                        letter-spacing: 0.5px;
+                    }
+                    .product-hero {
+                        background: #f8fafc;
+                        border: 1px solid #e2e8f0;
+                        border-left: 5px solid #c5a85c;
+                        border-radius: 8px;
+                        padding: 20px 24px;
+                        margin-bottom: 25px;
+                    }
+                    .product-hero h2 {
+                        font-size: 24px;
+                        color: #0f172a;
+                        margin: 0 0 10px 0;
+                        font-weight: 800;
+                    }
+                    .effect-title {
+                        font-size: 11px;
+                        font-weight: 700;
+                        color: #b48c36;
+                        text-transform: uppercase;
+                        margin-bottom: 4px;
+                    }
+                    .effect-quote {
+                        font-style: italic;
+                        color: #334155;
+                        font-size: 13px;
+                        margin: 0 0 8px 0;
+                        line-height: 1.5;
+                        border-left: 2px solid #cbd5e1;
+                        padding-left: 10px;
+                    }
+                    .effect-context {
+                        font-size: 11px;
+                        color: #64748b;
+                        margin: 0;
+                        line-height: 1.5;
+                    }
+                    .section-title {
+                        font-size: 11px;
+                        text-transform: uppercase;
+                        font-weight: 800;
+                        color: #b48c36;
+                        border-bottom: 1px solid #e2e8f0;
+                        padding-bottom: 6px;
+                        margin: 22px 0 12px 0;
+                        letter-spacing: 0.5px;
+                    }
+                    .tech-tags-grid {
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 8px;
+                        margin-bottom: 22px;
+                    }
+                    .tech-tag-badge {
+                        background: #f1f5f9;
+                        border: 1px solid #cbd5e1;
+                        color: #1e293b;
+                        font-size: 11px;
+                        font-weight: 600;
+                        padding: 4px 10px;
+                        border-radius: 20px;
+                    }
+                    .benefits-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-bottom: 22px;
+                    }
+                    .benefits-table tr {
+                        border-bottom: 1px solid #f1f5f9;
+                    }
+                    .benefits-table td {
+                        padding: 8px 6px;
+                        font-size: 12px;
+                    }
+                    .meter-container {
+                        display: flex;
+                        gap: 4px;
+                        align-items: center;
+                    }
+                    .meter-block-pdf {
+                        width: 22px;
+                        height: 8px;
+                        border-radius: 2px;
+                        background: #e2e8f0;
+                    }
+                    .meter-block-pdf.active {
+                        background: #c5a85c;
+                    }
+                    .price-box {
+                        background: #fdfdfd;
+                        border: 1px solid #cbd5e1;
+                        border-radius: 8px;
+                        padding: 12px 18px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-bottom: 22px;
+                    }
+                    .price-label {
+                        font-size: 11px;
+                        font-weight: 700;
+                        text-transform: uppercase;
+                        color: #64748b;
+                    }
+                    .price-val {
+                        font-size: 15px;
+                        font-weight: 800;
+                        color: #0f172a;
+                    }
+                    .instruction-card {
+                        background: #fafaf9;
+                        border: 1px dashed #d6d3d1;
+                        border-radius: 8px;
+                        padding: 12px 16px;
+                        font-size: 11px;
+                        color: #44403c;
+                        line-height: 1.5;
+                    }
+                    .footer {
+                        margin-top: 25px;
+                        font-size: 10px;
+                        color: #94a3b8;
+                        text-align: center;
+                        border-top: 1px solid #e2e8f0;
+                        padding-top: 12px;
+                    }
+                    @media print {
+                        body { padding: 15px; }
+                        .no-print { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div class="header-left">
+                        <h1>PERSONALITY<span style="color:#0f172a;">.</span></h1>
+                        <span>Tecnologia Alemã de Precisão & Inteligência Artificial</span>
+                    </div>
+                    <div>
+                        <span class="badge">${escapeHtml(badge)}</span>
+                    </div>
+                </div>
+
+                <div class="product-hero">
+                    <h2>${escapeHtml(title)}</h2>
+                    ${effectTitle ? `<div class="effect-title">${escapeHtml(effectTitle)}</div>` : ''}
+                    ${effectQuote ? `<blockquote class="effect-quote">${escapeHtml(effectQuote)}</blockquote>` : ''}
+                    ${effectContext ? `<p class="effect-context">${escapeHtml(effectContext)}</p>` : ''}
+                </div>
+
+                ${techTags.length > 0 ? `
+                    <div class="section-title">Tecnologias Integradas</div>
+                    <div class="tech-tags-grid">
+                        ${techTags.map(tag => `<span class="tech-tag-badge">${escapeHtml(tag)}</span>`).join('')}
+                    </div>
+                ` : ''}
+
+                ${benefits.length > 0 ? `
+                    <div class="section-title">Nível de Desempenho Visual</div>
+                    <table class="benefits-table">
+                        <tbody>
+                            ${benefits.map(b => `
+                                <tr>
+                                    <td style="width: 50%; font-weight: 600; color: #334155;">${escapeHtml(b.name)}</td>
+                                    <td style="width: 50%;">
+                                        <div class="meter-container">
+                                            ${Array.from({ length: b.totalBlocks }).map((_, i) => `
+                                                <div class="meter-block-pdf ${i < b.activeBlocks ? 'active' : ''}"></div>
+                                            `).join('')}
+                                            <span style="font-size: 10px; color: #64748b; margin-left: 8px; font-weight: bold;">${b.activeBlocks}/${b.totalBlocks}</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                ` : ''}
+
+                ${priceRange ? `
+                    <div class="price-box">
+                        <span class="price-label">Investimento Estimado:</span>
+                        <span class="price-val">${escapeHtml(priceRange)}</span>
+                    </div>
+                ` : ''}
+
+                <div class="instruction-card">
+                    <strong>💡 Como Utilizar:</strong> Apresente esta ficha técnica em uma ótica credenciada Personality Lenses ou compartilhe com seu consultor óptico para solicitar a confecção personalizada de suas lentes com as suas dioptrias exatas.
+                </div>
+
+                <div class="footer">
+                    Personality Lenses - www.lentespersonality.com.br - Documento de Especificação Técnica do Produto
+                </div>
+
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(() => { window.close(); }, 500);
+                    }
+                </script>
+            </body>
+            </html>
+        `;
+
+        printWindow.document.write(html);
+        printWindow.document.close();
+    }
+
+    // Inicializa botões de PDF dos cards de produtos
+    initProductPdfButtons();
+
     // Inicia verificação do Portal do Parceiro
     checkPartnerSession();
 });
