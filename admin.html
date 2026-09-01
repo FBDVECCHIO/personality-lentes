@@ -1399,8 +1399,8 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                         </div>
                     </div>
 
-                    <!-- Filtros de Lançamentos de Vendas -->
-                    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; background: rgba(255,255,255,0.01); padding: 15px; border-radius: 8px; border: 1px solid var(--border-gray);">
+                    <!-- Filtros de Lançamentos de Vendas (v3.86) -->
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; align-items: flex-end; background: rgba(255,255,255,0.01); padding: 15px; border-radius: 8px; border: 1px solid var(--border-gray);">
                         <div style="flex: 1; min-width: 180px;">
                             <label style="font-size: 11px; text-transform: uppercase; color: var(--gold-light); font-weight: 700; display: block; margin-bottom: 5px;">Filtrar Vendedor</label>
                             <input type="text" id="filterPremVendedor" placeholder="Nome do vendedor..." style="width: 100%; padding: 8px 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 13px;">
@@ -1417,6 +1417,11 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                                 <option value="Validado">Validados (A Pagar)</option>
                                 <option value="Pago">Pagos</option>
                             </select>
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnPrintSelectedPremios" style="padding: 8px 12px; font-weight: 700; height: 36px;">📄 PDF Seleção</button>
+                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnPrintAllPremios" style="padding: 8px 12px; font-weight: 700; height: 36px;">📄 PDF Todos</button>
+                            <button type="button" class="btn btn-danger btn-xs" id="btnClearPremiosFilters" title="Limpar Filtros" style="padding: 8px 12px; font-weight: 700; height: 36px;">🧹 Limpar</button>
                         </div>
                     </div>
 
@@ -1445,11 +1450,36 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
 
                 <!-- Painel de Payouts Consolidados por Balconista -->
                 <div class="glass-card section-card">
-                    <div class="card-header">
+                    <div class="card-header" style="margin-bottom: 15px;">
                         <h2>💰 Apuração de Pagamento de Prêmios <span class="gold-text">(Consolidado por Vendedor)</span></h2>
                         <p>Resumo financeiro acumulado por vendedor com status "A Pagar". Clique no botão de pagar para conciliar todas as O.S. dele em lote.</p>
                     </div>
-                    <div class="table-container" style="margin-top: 20px;">
+
+                    <!-- Filtros de Apuração Consolidada (v3.86) -->
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; align-items: flex-end; background: rgba(255,255,255,0.01); padding: 15px; border-radius: 8px; border: 1px solid var(--border-gray);">
+                        <div style="flex: 1; min-width: 180px;">
+                            <label style="font-size: 11px; text-transform: uppercase; color: var(--gold-light); font-weight: 700; display: block; margin-bottom: 5px;">Filtrar Vendedor</label>
+                            <input type="text" id="filterApuracaoVendedor" placeholder="Nome do vendedor..." style="width: 100%; padding: 8px 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 13px;">
+                        </div>
+                        <div style="flex: 1; min-width: 180px;">
+                            <label style="font-size: 11px; text-transform: uppercase; color: var(--gold-light); font-weight: 700; display: block; margin-bottom: 5px;">Filtrar Loja</label>
+                            <input type="text" id="filterApuracaoLoja" placeholder="Nome da ótica..." style="width: 100%; padding: 8px 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 13px;">
+                        </div>
+                        <div style="width: 170px;">
+                            <label style="font-size: 11px; text-transform: uppercase; color: var(--gold-light); font-weight: 700; display: block; margin-bottom: 5px;">Status</label>
+                            <select id="filterApuracaoStatus" style="width: 100%; padding: 8px 12px; background: #121216; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 13px; font-family: inherit;">
+                                <option value="">Validados (A Pagar)</option>
+                                <option value="Todos">Todos</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnPrintSelectedApuracao" style="padding: 8px 12px; font-weight: 700; height: 36px;">📄 PDF Seleção</button>
+                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnPrintAllApuracao" style="padding: 8px 12px; font-weight: 700; height: 36px;">📄 PDF Todos</button>
+                            <button type="button" class="btn btn-danger btn-xs" id="btnClearApuracaoFilters" title="Limpar Filtros" style="padding: 8px 12px; font-weight: 700; height: 36px;">🧹 Limpar</button>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
                         <table class="leads-table">
                             <thead>
                                 <tr>
@@ -1470,11 +1500,36 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
 
                 <!-- Painel de Payouts Consolidados Já Pagos -->
                 <div class="glass-card section-card" style="margin-top: 30px;">
-                    <div class="card-header">
+                    <div class="card-header" style="margin-bottom: 15px;">
                         <h2>💳 Histórico de Pagamentos Realizados <span class="gold-text">(Consolidado por Vendedor)</span></h2>
                         <p>Resumo de prêmios que já foram pagos e conciliados por vendedor.</p>
                     </div>
-                    <div class="table-container" style="margin-top: 20px;">
+
+                    <!-- Filtros de Histórico de Pagos Consolidado (v3.86) -->
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; align-items: flex-end; background: rgba(255,255,255,0.01); padding: 15px; border-radius: 8px; border: 1px solid var(--border-gray);">
+                        <div style="flex: 1; min-width: 180px;">
+                            <label style="font-size: 11px; text-transform: uppercase; color: var(--gold-light); font-weight: 700; display: block; margin-bottom: 5px;">Filtrar Vendedor</label>
+                            <input type="text" id="filterHistPagosVendedor" placeholder="Nome do vendedor..." style="width: 100%; padding: 8px 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 13px;">
+                        </div>
+                        <div style="flex: 1; min-width: 180px;">
+                            <label style="font-size: 11px; text-transform: uppercase; color: var(--gold-light); font-weight: 700; display: block; margin-bottom: 5px;">Filtrar Loja</label>
+                            <input type="text" id="filterHistPagosLoja" placeholder="Nome da ótica..." style="width: 100%; padding: 8px 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 13px;">
+                        </div>
+                        <div style="width: 170px;">
+                            <label style="font-size: 11px; text-transform: uppercase; color: var(--gold-light); font-weight: 700; display: block; margin-bottom: 5px;">Status</label>
+                            <select id="filterHistPagosStatus" style="width: 100%; padding: 8px 12px; background: #121216; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 13px; font-family: inherit;">
+                                <option value="">Pagos e Conciliados</option>
+                                <option value="Todos">Todos</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnPrintSelectedHistPagos" style="padding: 8px 12px; font-weight: 700; height: 36px;">📄 PDF Seleção</button>
+                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnPrintAllHistPagos" style="padding: 8px 12px; font-weight: 700; height: 36px;">📄 PDF Todos</button>
+                            <button type="button" class="btn btn-danger btn-xs" id="btnClearHistPagosFilters" title="Limpar Filtros" style="padding: 8px 12px; font-weight: 700; height: 36px;">🧹 Limpar</button>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
                         <table class="leads-table">
                             <thead>
                                 <tr>

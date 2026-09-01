@@ -841,7 +841,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (url && key) {
                 try {
                     const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
-                    const endpoint = `${cleanUrl}/rest/v1/acessos_lojas?id=eq.${editingAccessId}`;
+                    const endpoint = `${cleanUrl}/rest/v1/acessos_lojas?id=eq.${encodeURIComponent(editingAccessId)}`;
 
                     const response = await fetch(endpoint, {
                         method: 'PATCH',
@@ -3380,18 +3380,141 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminConsolidadoTableBody = document.getElementById('adminConsolidadoTableBody');
     const btnExportPremios = document.getElementById('btnExportPremios');
     
-    // Filtros
+    // Filtros e Botões do Card 1: Relatório de Lançamentos de Prêmios (v3.86)
     const filterPremVendedor = document.getElementById('filterPremVendedor');
     const filterPremLoja = document.getElementById('filterPremLoja');
     const filterPremStatus = document.getElementById('filterPremStatus');
+    const btnPrintSelectedPremios = document.getElementById('btnPrintSelectedPremios');
+    const btnPrintAllPremios = document.getElementById('btnPrintAllPremios');
+    const btnClearPremiosFilters = document.getElementById('btnClearPremiosFilters');
+
+    // Filtros e Botões do Card 2: Apuração Consolidada (v3.86)
+    const filterApuracaoVendedor = document.getElementById('filterApuracaoVendedor');
+    const filterApuracaoLoja = document.getElementById('filterApuracaoLoja');
+    const filterApuracaoStatus = document.getElementById('filterApuracaoStatus');
+    const btnPrintSelectedApuracao = document.getElementById('btnPrintSelectedApuracao');
+    const btnPrintAllApuracao = document.getElementById('btnPrintAllApuracao');
+    const btnClearApuracaoFilters = document.getElementById('btnClearApuracaoFilters');
+
+    // Filtros e Botões do Card 3: Histórico de Pagos Consolidado (v3.86)
+    const filterHistPagosVendedor = document.getElementById('filterHistPagosVendedor');
+    const filterHistPagosLoja = document.getElementById('filterHistPagosLoja');
+    const filterHistPagosStatus = document.getElementById('filterHistPagosStatus');
+    const btnPrintSelectedHistPagos = document.getElementById('btnPrintSelectedHistPagos');
+    const btnPrintAllHistPagos = document.getElementById('btnPrintAllHistPagos');
+    const btnClearHistPagosFilters = document.getElementById('btnClearHistPagosFilters');
 
     let allSubmittedSales = [];
+    let lastFilteredPremiosSales = [];
+    let lastFilteredApuracaoRows = [];
+    let lastAllApuracaoRows = [];
+    let lastFilteredHistPagosRows = [];
+    let lastAllHistPagosRows = [];
 
-    // Listeners de Filtros
+    // Listeners de Filtros - Card 1 (Relatório de Prêmios)
     [filterPremVendedor, filterPremLoja, filterPremStatus].forEach(el => {
         if (el) el.addEventListener('input', () => renderPremiosManager());
         if (el && el.tagName === 'SELECT') el.addEventListener('change', () => renderPremiosManager());
     });
+
+    if (btnPrintSelectedPremios) {
+        btnPrintSelectedPremios.addEventListener('click', () => {
+            if (!lastFilteredPremiosSales || lastFilteredPremiosSales.length === 0) {
+                alert('Nenhum lançamento de venda encontrado para os filtros atuais!');
+                return;
+            }
+            generatePremiosLancadosPDF(lastFilteredPremiosSales, 'Relatório de Lançamentos de Prêmios (Seleção)');
+        });
+    }
+
+    if (btnPrintAllPremios) {
+        btnPrintAllPremios.addEventListener('click', () => {
+            if (!allSubmittedSales || allSubmittedSales.length === 0) {
+                alert('Nenhum lançamento de venda registrado no sistema!');
+                return;
+            }
+            generatePremiosLancadosPDF(allSubmittedSales, 'Relatório Completo de Lançamentos de Prêmios');
+        });
+    }
+
+    if (btnClearPremiosFilters) {
+        btnClearPremiosFilters.addEventListener('click', () => {
+            if (filterPremVendedor) filterPremVendedor.value = '';
+            if (filterPremLoja) filterPremLoja.value = '';
+            if (filterPremStatus) filterPremStatus.value = '';
+            renderPremiosManager();
+        });
+    }
+
+    // Listeners de Filtros - Card 2 (Apuração Consolidada)
+    [filterApuracaoVendedor, filterApuracaoLoja, filterApuracaoStatus].forEach(el => {
+        if (el) el.addEventListener('input', () => renderPremiosManager());
+        if (el && el.tagName === 'SELECT') el.addEventListener('change', () => renderPremiosManager());
+    });
+
+    if (btnPrintSelectedApuracao) {
+        btnPrintSelectedApuracao.addEventListener('click', () => {
+            if (!lastFilteredApuracaoRows || lastFilteredApuracaoRows.length === 0) {
+                alert('Nenhum vendedor encontrado com saldo a pagar para os filtros atuais!');
+                return;
+            }
+            generateApuracaoConsolidadaPDF(lastFilteredApuracaoRows, 'Apuração de Pagamento de Prêmios (Seleção)');
+        });
+    }
+
+    if (btnPrintAllApuracao) {
+        btnPrintAllApuracao.addEventListener('click', () => {
+            if (!lastAllApuracaoRows || lastAllApuracaoRows.length === 0) {
+                alert('Nenhum vendedor possui saldo pendente de pagamento no momento!');
+                return;
+            }
+            generateApuracaoConsolidadaPDF(lastAllApuracaoRows, 'Apuração de Pagamento de Prêmios - Relatório Completo');
+        });
+    }
+
+    if (btnClearApuracaoFilters) {
+        btnClearApuracaoFilters.addEventListener('click', () => {
+            if (filterApuracaoVendedor) filterApuracaoVendedor.value = '';
+            if (filterApuracaoLoja) filterApuracaoLoja.value = '';
+            if (filterApuracaoStatus) filterApuracaoStatus.value = '';
+            renderPremiosManager();
+        });
+    }
+
+    // Listeners de Filtros - Card 3 (Histórico de Pagos Consolidado)
+    [filterHistPagosVendedor, filterHistPagosLoja, filterHistPagosStatus].forEach(el => {
+        if (el) el.addEventListener('input', () => renderPremiosManager());
+        if (el && el.tagName === 'SELECT') el.addEventListener('change', () => renderPremiosManager());
+    });
+
+    if (btnPrintSelectedHistPagos) {
+        btnPrintSelectedHistPagos.addEventListener('click', () => {
+            if (!lastFilteredHistPagosRows || lastFilteredHistPagosRows.length === 0) {
+                alert('Nenhum pagamento realizado encontrado para os filtros atuais!');
+                return;
+            }
+            generateHistPagosConsolidadoPDF(lastFilteredHistPagosRows, 'Histórico de Pagamentos Realizados (Seleção)');
+        });
+    }
+
+    if (btnPrintAllHistPagos) {
+        btnPrintAllHistPagos.addEventListener('click', () => {
+            if (!lastAllHistPagosRows || lastAllHistPagosRows.length === 0) {
+                alert('Nenhum pagamento realizado registrado no sistema!');
+                return;
+            }
+            generateHistPagosConsolidadoPDF(lastAllHistPagosRows, 'Histórico de Pagamentos Realizados - Relatório Completo');
+        });
+    }
+
+    if (btnClearHistPagosFilters) {
+        btnClearHistPagosFilters.addEventListener('click', () => {
+            if (filterHistPagosVendedor) filterHistPagosVendedor.value = '';
+            if (filterHistPagosLoja) filterHistPagosLoja.value = '';
+            if (filterHistPagosStatus) filterHistPagosStatus.value = '';
+            renderPremiosManager();
+        });
+    }
 
     // Listeners do Dashboard (v3.60)
     const btnApplyDashFilter = document.getElementById('btnApplyDashFilter');
@@ -3625,7 +3748,7 @@ document.addEventListener('DOMContentLoaded', () => {
         adminPremiosTableBody.innerHTML = '';
         adminConsolidadoTableBody.innerHTML = '';
 
-        // Filtra dados com base nos inputs
+        // Filtra dados da Tabela 1: Lançamentos de Vendas
         const vendedorVal = filterPremVendedor ? filterPremVendedor.value.trim().toLowerCase() : '';
         const lojaVal = filterPremLoja ? filterPremLoja.value.trim().toLowerCase() : '';
         const statusVal = filterPremStatus ? filterPremStatus.value : '';
@@ -3636,6 +3759,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const statusMatch = !statusVal || sale.status === statusVal;
             return vendMatch && lojaMatch && statusMatch;
         });
+
+        lastFilteredPremiosSales = filteredSales;
 
         // 1. Calcula Resumos Gerais baseando-se em TODOS os lançamentos (não filtrados)
         let ptsPendente = 0, countPendente = 0;
@@ -3669,7 +3794,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('adminTotalPago').textContent = `R$ ${cashTotalPago.toFixed(2)}`;
         document.getElementById('adminTotalPagoOS').textContent = `${countTotalPago} O.S. Pagas (${ptsTotalPago} Pts)`;
 
-        // 2. Renderiza Tabela Detalhada
+        // 2. Renderiza Tabela Detalhada (Lançamentos de Vendas)
         if (filteredSales.length === 0) {
             adminPremiosTableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Nenhum lançamento corresponde aos filtros ativos.</td></tr>`;
         } else {
@@ -3726,7 +3851,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         vendedor_nome: sale.vendedor_nome,
                         loja: sale.loja,
                         total_pontos: 0,
-                        vendedor_id: vId
+                        vendedor_id: vId,
+                        status: 'Validado'
                     };
                 }
                 validadosPorVendedor[vId].total_pontos += (Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0));
@@ -3744,22 +3870,36 @@ document.addEventListener('DOMContentLoaded', () => {
                         vendedor_nome: sale.vendedor_nome,
                         loja: sale.loja,
                         total_pontos: 0,
-                        vendedor_id: vId
+                        vendedor_id: vId,
+                        status: 'Pago'
                     };
                 }
                 pagosPorVendedor[vId].total_pontos += (Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0));
             }
         });
 
-        // Para pegar o WhatsApp e o CPF do vendedor, vamos mapear com a lista de vendedores locais/remotos
+        // Para pegar o WhatsApp e o CPF do vendedor, mapear com a lista de membros
         const sellersList = loadedMembersList.filter(m => m.tipo === 'vend');
-        const consolidadoRows = Object.values(validadosPorVendedor);
-        const consolidadoPagosRows = Object.values(pagosPorVendedor);
+        const allConsolidadoRows = Object.values(validadosPorVendedor);
+        const allConsolidadoPagosRows = Object.values(pagosPorVendedor);
 
-        if (consolidadoRows.length === 0) {
-            adminConsolidadoTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Nenhum vendedor possui saldo pendente de pagamento no momento.</td></tr>`;
+        // Filtros do Card 2 (Apuração Consolidada)
+        const apuracaoVendVal = filterApuracaoVendedor ? filterApuracaoVendedor.value.trim().toLowerCase() : '';
+        const apuracaoLojaVal = filterApuracaoLoja ? filterApuracaoLoja.value.trim().toLowerCase() : '';
+        
+        const filteredConsolidadoRows = allConsolidadoRows.filter(row => {
+            const vendMatch = !apuracaoVendVal || (row.vendedor_nome || '').toLowerCase().includes(apuracaoVendVal);
+            const lojaMatch = !apuracaoLojaVal || (row.loja || '').toLowerCase().includes(apuracaoLojaVal);
+            return vendMatch && lojaMatch;
+        });
+
+        lastFilteredApuracaoRows = filteredConsolidadoRows;
+        lastAllApuracaoRows = allConsolidadoRows;
+
+        if (filteredConsolidadoRows.length === 0) {
+            adminConsolidadoTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Nenhum vendedor possui saldo pendente de pagamento correspondente aos filtros.</td></tr>`;
         } else {
-            consolidadoRows.forEach(row => {
+            filteredConsolidadoRows.forEach(row => {
                 const sellerInfo = sellersList.find(s => s.id === row.vendedor_id) || {};
                 const totalCash = row.total_pontos * valorPontoConfig;
                 
@@ -3784,13 +3924,26 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // Filtros do Card 3 (Histórico de Pagos Consolidado)
+        const histVendVal = filterHistPagosVendedor ? filterHistPagosVendedor.value.trim().toLowerCase() : '';
+        const histLojaVal = filterHistPagosLoja ? filterHistPagosLoja.value.trim().toLowerCase() : '';
+
+        const filteredConsolidadoPagosRows = allConsolidadoPagosRows.filter(row => {
+            const vendMatch = !histVendVal || (row.vendedor_nome || '').toLowerCase().includes(histVendVal);
+            const lojaMatch = !histLojaVal || (row.loja || '').toLowerCase().includes(histLojaVal);
+            return vendMatch && lojaMatch;
+        });
+
+        lastFilteredHistPagosRows = filteredConsolidadoPagosRows;
+        lastAllHistPagosRows = allConsolidadoPagosRows;
+
         const adminConsolidadoPagosTableBody = document.getElementById('adminConsolidadoPagosTableBody');
         if (adminConsolidadoPagosTableBody) {
             adminConsolidadoPagosTableBody.innerHTML = '';
-            if (consolidadoPagosRows.length === 0) {
-                adminConsolidadoPagosTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Nenhum pagamento realizado ainda.</td></tr>`;
+            if (filteredConsolidadoPagosRows.length === 0) {
+                adminConsolidadoPagosTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Nenhum pagamento correspondente aos filtros ativos.</td></tr>`;
             } else {
-                consolidadoPagosRows.forEach(row => {
+                filteredConsolidadoPagosRows.forEach(row => {
                     const sellerInfo = sellersList.find(s => s.id === row.vendedor_id) || {};
                     const totalCashPaid = row.total_pontos * valorPontoConfig;
                     
@@ -3816,6 +3969,325 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Configura os Listeners dos botões de ação do relatório
         configureRelatorioActions();
+    }
+
+    // -------------------------------------------------------------
+    // Funções de Geração de PDF - Módulo de Prêmios (v3.86)
+    // -------------------------------------------------------------
+    function generatePremiosLancadosPDF(items, title = 'Relatório de Lançamentos de Prêmios') {
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alert('Por favor, permita pop-ups para abrir a versão de impressão!');
+            return;
+        }
+
+        let totalGeralPts = 0;
+        let totalGeralCash = 0;
+
+        items.forEach(sale => {
+            const pts = Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0);
+            totalGeralPts += pts;
+            totalGeralCash += (pts * valorPontoConfig);
+        });
+
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <title>${title} - Personality Lenses</title>
+                <style>
+                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 30px; color: #1a1a1a; }
+                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #c5a85c; padding-bottom: 15px; margin-bottom: 25px; }
+                    .header h1 { font-size: 22px; color: #c5a85c; margin: 0; text-transform: uppercase; font-weight: 800; }
+                    .header span { font-size: 11px; color: #666; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    th, td { border: 1px solid #ddd; padding: 8px 10px; text-align: left; font-size: 11px; }
+                    th { background-color: #f5f5f7; color: #333; font-weight: bold; text-transform: uppercase; }
+                    tr:nth-child(even) { background-color: #fafafa; }
+                    .pts-column { font-weight: bold; color: #c5a85c; }
+                    .cash-column { font-weight: bold; color: #10b981; }
+                    .summary-box { display: flex; justify-content: flex-end; gap: 20px; margin-top: 20px; padding: 12px 15px; background: #f9f9f9; border: 1px solid #eee; border-radius: 6px; font-size: 12px; font-weight: bold; }
+                    .footer { margin-top: 30px; font-size: 10px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 15px; }
+                    @media print {
+                        body { padding: 0; }
+                        .no-print { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div>
+                        <h1>${title}</h1>
+                        <span>Personality Lenses - Conciliação e Controle de Prêmios</span>
+                    </div>
+                    <div>
+                        <span>Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</span>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Vendedor</th>
+                            <th>Loja</th>
+                            <th>O.S.</th>
+                            <th>Cliente</th>
+                            <th>Lente + AR</th>
+                            <th>Pontos</th>
+                            <th>Prêmio (R$)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${items.map(sale => {
+                            const pts = Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0);
+                            const cash = pts * valorPontoConfig;
+                            const formattedDate = (sale.created_at || sale.data_venda) ? new Date(sale.created_at || sale.data_venda).toLocaleDateString('pt-BR') : 'N/A';
+                            let statusLabel = sale.status;
+                            if (sale.status === 'Validado') statusLabel = 'A Pagar (Validado)';
+                            else if (sale.status === 'Pago') statusLabel = 'Pago ✅';
+                            else if (sale.status === 'Pendente') statusLabel = 'Pendente ⏳';
+
+                            return `
+                                <tr>
+                                    <td>${escapeHtml(formattedDate)}</td>
+                                    <td><strong>${escapeHtml(sale.vendedor_nome)}</strong></td>
+                                    <td>${escapeHtml(sale.loja)}</td>
+                                    <td><code>${escapeHtml(sale.os)}</code></td>
+                                    <td>${escapeHtml(sale.cliente_nome)}</td>
+                                    <td>Lente: ${escapeHtml(sale.lente_familia || 'N/A')}<br>AR: ${escapeHtml(sale.ar_familia || 'N/A')}</td>
+                                    <td class="pts-column">${pts} Pts</td>
+                                    <td class="cash-column">R$ ${cash.toFixed(2)}</td>
+                                    <td>${escapeHtml(statusLabel)}</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+                <div class="summary-box">
+                    <span>Total de Lançamentos: ${items.length} O.S.</span>
+                    <span style="color: #c5a85c;">Total de Pontos: ${totalGeralPts} Pts</span>
+                    <span style="color: #10b981;">Total em Prêmios: R$ ${totalGeralCash.toFixed(2)}</span>
+                </div>
+                <div class="footer">
+                    Documento de prestação de contas de comissões e prêmios. Gerado eletronicamente por Personality Lenses.
+                </div>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(() => { window.close(); }, 500);
+                    }
+                </script>
+            </body>
+            </html>
+        `;
+        printWindow.document.write(html);
+        printWindow.document.close();
+    }
+
+    function generateApuracaoConsolidadaPDF(items, title = 'Apuração de Pagamento de Prêmios (Consolidado)') {
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alert('Por favor, permita pop-ups para abrir a versão de impressão!');
+            return;
+        }
+
+        const sellersList = loadedMembersList.filter(m => m.tipo === 'vend');
+        let totalGeralPts = 0;
+        let totalGeralCash = 0;
+
+        items.forEach(row => {
+            totalGeralPts += row.total_pontos;
+            totalGeralCash += (row.total_pontos * valorPontoConfig);
+        });
+
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <title>${title} - Personality Lenses</title>
+                <style>
+                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 30px; color: #1a1a1a; }
+                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #c5a85c; padding-bottom: 15px; margin-bottom: 25px; }
+                    .header h1 { font-size: 22px; color: #c5a85c; margin: 0; text-transform: uppercase; font-weight: 800; }
+                    .header span { font-size: 11px; color: #666; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    th, td { border: 1px solid #ddd; padding: 9px 12px; text-align: left; font-size: 11px; }
+                    th { background-color: #f5f5f7; color: #333; font-weight: bold; text-transform: uppercase; }
+                    tr:nth-child(even) { background-color: #fafafa; }
+                    .pts-column { font-weight: bold; color: #c5a85c; }
+                    .cash-column { font-weight: bold; color: #10b981; }
+                    .summary-box { display: flex; justify-content: flex-end; gap: 20px; margin-top: 20px; padding: 12px 15px; background: #f9f9f9; border: 1px solid #eee; border-radius: 6px; font-size: 12px; font-weight: bold; }
+                    .footer { margin-top: 30px; font-size: 10px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 15px; }
+                    @media print {
+                        body { padding: 0; }
+                        .no-print { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div>
+                        <h1>${title}</h1>
+                        <span>Personality Lenses - Payouts Consolidados a Pagar</span>
+                    </div>
+                    <div>
+                        <span>Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</span>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nome do Vendedor</th>
+                            <th>CPF</th>
+                            <th>Ótica / Clínica</th>
+                            <th>WhatsApp</th>
+                            <th>Pontos Acumulados</th>
+                            <th>Total a Pagar (R$)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${items.map(row => {
+                            const sellerInfo = sellersList.find(s => s.id === row.vendedor_id) || {};
+                            const cash = row.total_pontos * valorPontoConfig;
+                            return `
+                                <tr>
+                                    <td><strong>${escapeHtml(row.vendedor_nome)}</strong></td>
+                                    <td><code>${escapeHtml(sellerInfo.cpf_cnpj || 'n/d')}</code></td>
+                                    <td>${escapeHtml(row.loja)}</td>
+                                    <td>${escapeHtml(sellerInfo.whatsapp || 'Não informado')}</td>
+                                    <td class="pts-column">${row.total_pontos} Pts</td>
+                                    <td class="cash-column">R$ ${cash.toFixed(2)}</td>
+                                    <td>A Pagar (Validado) ⏳</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+                <div class="summary-box">
+                    <span>Vendedores Listados: ${items.length}</span>
+                    <span style="color: #c5a85c;">Total de Pontos: ${totalGeralPts} Pts</span>
+                    <span style="color: #10b981;">Total a Pagar: R$ ${totalGeralCash.toFixed(2)}</span>
+                </div>
+                <div class="footer">
+                    Documento interno de apuração financeira de prêmios por vendedor. Gerado eletronicamente por Personality Lenses.
+                </div>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(() => { window.close(); }, 500);
+                    }
+                </script>
+            </body>
+            </html>
+        `;
+        printWindow.document.write(html);
+        printWindow.document.close();
+    }
+
+    function generateHistPagosConsolidadoPDF(items, title = 'Histórico de Pagamentos Realizados (Consolidado)') {
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alert('Por favor, permita pop-ups para abrir a versão de impressão!');
+            return;
+        }
+
+        const sellersList = loadedMembersList.filter(m => m.tipo === 'vend');
+        let totalGeralPts = 0;
+        let totalGeralCash = 0;
+
+        items.forEach(row => {
+            totalGeralPts += row.total_pontos;
+            totalGeralCash += (row.total_pontos * valorPontoConfig);
+        });
+
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <title>${title} - Personality Lenses</title>
+                <style>
+                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 30px; color: #1a1a1a; }
+                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #c5a85c; padding-bottom: 15px; margin-bottom: 25px; }
+                    .header h1 { font-size: 22px; color: #c5a85c; margin: 0; text-transform: uppercase; font-weight: 800; }
+                    .header span { font-size: 11px; color: #666; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    th, td { border: 1px solid #ddd; padding: 9px 12px; text-align: left; font-size: 11px; }
+                    th { background-color: #f5f5f7; color: #333; font-weight: bold; text-transform: uppercase; }
+                    tr:nth-child(even) { background-color: #fafafa; }
+                    .pts-column { font-weight: bold; color: #c5a85c; }
+                    .cash-column { font-weight: bold; color: #3b82f6; }
+                    .summary-box { display: flex; justify-content: flex-end; gap: 20px; margin-top: 20px; padding: 12px 15px; background: #f9f9f9; border: 1px solid #eee; border-radius: 6px; font-size: 12px; font-weight: bold; }
+                    .footer { margin-top: 30px; font-size: 10px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 15px; }
+                    @media print {
+                        body { padding: 0; }
+                        .no-print { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div>
+                        <h1>${title}</h1>
+                        <span>Personality Lenses - Histórico de Pagamentos e Conciliações</span>
+                    </div>
+                    <div>
+                        <span>Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</span>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nome do Vendedor</th>
+                            <th>CPF</th>
+                            <th>Ótica / Clínica</th>
+                            <th>WhatsApp</th>
+                            <th>Pontos Pagos</th>
+                            <th>Total Pago (R$)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${items.map(row => {
+                            const sellerInfo = sellersList.find(s => s.id === row.vendedor_id) || {};
+                            const cash = row.total_pontos * valorPontoConfig;
+                            return `
+                                <tr>
+                                    <td><strong>${escapeHtml(row.vendedor_nome)}</strong></td>
+                                    <td><code>${escapeHtml(sellerInfo.cpf_cnpj || 'n/d')}</code></td>
+                                    <td>${escapeHtml(row.loja)}</td>
+                                    <td>${escapeHtml(sellerInfo.whatsapp || 'Não informado')}</td>
+                                    <td class="pts-column">${row.total_pontos} Pts</td>
+                                    <td class="cash-column">R$ ${cash.toFixed(2)}</td>
+                                    <td>Pago e Conciliado ✅</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+                <div class="summary-box">
+                    <span>Vendedores Listados: ${items.length}</span>
+                    <span style="color: #c5a85c;">Total de Pontos Pagos: ${totalGeralPts} Pts</span>
+                    <span style="color: #3b82f6;">Total Pago: R$ ${totalGeralCash.toFixed(2)}</span>
+                </div>
+                <div class="footer">
+                    Documento interno de histórico de pagamentos de prêmios. Gerado eletronicamente por Personality Lenses.
+                </div>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(() => { window.close(); }, 500);
+                    }
+                </script>
+            </body>
+            </html>
+        `;
+        printWindow.document.write(html);
+        printWindow.document.close();
     }
 
     function configureRelatorioActions() {
@@ -4223,7 +4695,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (url && key) {
                     try {
                         const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
-                        const endpoint = `${cleanUrl}/rest/v1/tecnicos_personality?id=eq.${editingTechId}`;
+                        const endpoint = `${cleanUrl}/rest/v1/tecnicos_personality?id=eq.${encodeURIComponent(editingTechId)}`;
 
                         const response = await fetch(endpoint, {
                             method: 'PATCH',
