@@ -2093,7 +2093,6 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
             const activeBlocks = row.querySelectorAll('.meter-block.active').length;
             return { name, activeBlocks, totalBlocks };
         });
-        const priceRange = card.querySelector('.price-range')?.textContent?.trim() || '';
 
         const printWindow = window.open('', '_blank');
         if (!printWindow) {
@@ -2108,25 +2107,40 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
                 <meta charset="utf-8">
                 <title>Ficha Técnica - ${escapeHtml(title)} - Personality Lenses</title>
                 <style>
-                    body {
-                        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-                        padding: 35px 40px;
-                        color: #1e293b;
-                        background: #fff;
+                    @page {
+                        size: A4 portrait;
+                        margin: 10mm 15mm;
+                    }
+                    * {
+                        box-sizing: border-box;
+                    }
+                    html, body {
+                        height: 100%;
                         margin: 0;
+                        padding: 0;
+                        background: #fff;
+                        color: #1e293b;
+                        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
                         -webkit-print-color-adjust: exact;
                         print-color-adjust: exact;
+                    }
+                    .page-wrapper {
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: space-between;
+                        min-height: 100%;
+                        padding: 10px 15px;
                     }
                     .header {
                         display: flex;
                         justify-content: space-between;
                         align-items: center;
-                        border-bottom: 3px solid #c5a85c;
-                        padding-bottom: 14px;
-                        margin-bottom: 25px;
+                        border-bottom: 2px solid #c5a85c;
+                        padding-bottom: 10px;
+                        margin-bottom: 14px;
                     }
                     .header-left h1 {
-                        font-size: 24px;
+                        font-size: 20px;
                         color: #c5a85c;
                         margin: 0;
                         text-transform: uppercase;
@@ -2134,7 +2148,7 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
                         letter-spacing: 0.5px;
                     }
                     .header-left span {
-                        font-size: 11px;
+                        font-size: 10.5px;
                         color: #64748b;
                         font-weight: 500;
                     }
@@ -2142,203 +2156,180 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
                         display: inline-block;
                         background: #c5a85c;
                         color: #0b0b0e;
-                        font-size: 11px;
+                        font-size: 10px;
                         font-weight: 800;
                         text-transform: uppercase;
-                        padding: 5px 12px;
+                        padding: 4px 10px;
                         border-radius: 4px;
                         letter-spacing: 0.5px;
                     }
                     .product-hero {
                         background: #f8fafc;
                         border: 1px solid #e2e8f0;
-                        border-left: 5px solid #c5a85c;
-                        border-radius: 8px;
-                        padding: 20px 24px;
-                        margin-bottom: 25px;
+                        border-left: 4px solid #c5a85c;
+                        border-radius: 6px;
+                        padding: 14px 18px;
+                        margin-bottom: 14px;
                     }
                     .product-hero h2 {
-                        font-size: 24px;
+                        font-size: 20px;
                         color: #0f172a;
-                        margin: 0 0 10px 0;
+                        margin: 0 0 6px 0;
                         font-weight: 800;
                     }
                     .effect-title {
-                        font-size: 11px;
+                        font-size: 10.5px;
                         font-weight: 700;
                         color: #b48c36;
                         text-transform: uppercase;
-                        margin-bottom: 4px;
+                        margin-bottom: 3px;
                     }
                     .effect-quote {
                         font-style: italic;
                         color: #334155;
-                        font-size: 13px;
-                        margin: 0 0 8px 0;
-                        line-height: 1.5;
+                        font-size: 11.5px;
+                        margin: 0 0 6px 0;
+                        line-height: 1.4;
                         border-left: 2px solid #cbd5e1;
-                        padding-left: 10px;
+                        padding-left: 8px;
                     }
                     .effect-context {
-                        font-size: 11px;
+                        font-size: 10.5px;
                         color: #64748b;
                         margin: 0;
-                        line-height: 1.5;
+                        line-height: 1.4;
                     }
                     .section-title {
-                        font-size: 11px;
+                        font-size: 10.5px;
                         text-transform: uppercase;
                         font-weight: 800;
                         color: #b48c36;
                         border-bottom: 1px solid #e2e8f0;
-                        padding-bottom: 6px;
-                        margin: 22px 0 12px 0;
+                        padding-bottom: 4px;
+                        margin: 12px 0 8px 0;
                         letter-spacing: 0.5px;
                     }
                     .tech-tags-grid {
                         display: flex;
                         flex-wrap: wrap;
-                        gap: 8px;
-                        margin-bottom: 22px;
+                        gap: 6px;
+                        margin-bottom: 12px;
                     }
                     .tech-tag-badge {
                         background: #f1f5f9;
                         border: 1px solid #cbd5e1;
                         color: #1e293b;
-                        font-size: 11px;
+                        font-size: 10px;
                         font-weight: 600;
-                        padding: 4px 10px;
-                        border-radius: 20px;
+                        padding: 3px 8px;
+                        border-radius: 14px;
                     }
                     .benefits-table {
                         width: 100%;
                         border-collapse: collapse;
-                        margin-bottom: 22px;
+                        margin-bottom: 14px;
                     }
                     .benefits-table tr {
                         border-bottom: 1px solid #f1f5f9;
                     }
                     .benefits-table td {
-                        padding: 8px 6px;
-                        font-size: 12px;
+                        padding: 5px 4px;
+                        font-size: 11px;
                     }
                     .meter-container {
                         display: flex;
-                        gap: 4px;
+                        gap: 3px;
                         align-items: center;
                     }
                     .meter-block-pdf {
-                        width: 22px;
-                        height: 8px;
+                        width: 20px;
+                        height: 7px;
                         border-radius: 2px;
                         background: #e2e8f0;
                     }
                     .meter-block-pdf.active {
                         background: #c5a85c;
                     }
-                    .price-box {
-                        background: #fdfdfd;
-                        border: 1px solid #cbd5e1;
-                        border-radius: 8px;
-                        padding: 12px 18px;
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        margin-bottom: 22px;
-                    }
-                    .price-label {
-                        font-size: 11px;
-                        font-weight: 700;
-                        text-transform: uppercase;
-                        color: #64748b;
-                    }
-                    .price-val {
-                        font-size: 15px;
-                        font-weight: 800;
-                        color: #0f172a;
-                    }
                     .instruction-card {
                         background: #fafaf9;
                         border: 1px dashed #d6d3d1;
-                        border-radius: 8px;
-                        padding: 12px 16px;
-                        font-size: 11px;
+                        border-radius: 6px;
+                        padding: 10px 14px;
+                        font-size: 10.5px;
                         color: #44403c;
-                        line-height: 1.5;
+                        line-height: 1.4;
+                        margin-top: 8px;
                     }
                     .footer {
-                        margin-top: 25px;
-                        font-size: 10px;
+                        margin-top: 14px;
+                        font-size: 9.5px;
                         color: #94a3b8;
                         text-align: center;
                         border-top: 1px solid #e2e8f0;
-                        padding-top: 12px;
+                        padding-top: 8px;
                     }
                     @media print {
-                        body { padding: 15px; }
+                        body { padding: 0; }
                         .no-print { display: none; }
                     }
                 </style>
             </head>
             <body>
-                <div class="header">
-                    <div class="header-left">
-                        <h1>PERSONALITY<span style="color:#0f172a;">.</span></h1>
-                        <span>Tecnologia Alemã de Precisão & Inteligência Artificial</span>
-                    </div>
+                <div class="page-wrapper">
                     <div>
-                        <span class="badge">${escapeHtml(badge)}</span>
+                        <div class="header">
+                            <div class="header-left">
+                                <h1>PERSONALITY<span style="color:#0f172a;">.</span></h1>
+                                <span>Tecnologia Alemã de Precisão & Inteligência Artificial</span>
+                            </div>
+                            <div>
+                                <span class="badge">${escapeHtml(badge)}</span>
+                            </div>
+                        </div>
+
+                        <div class="product-hero">
+                            <h2>${escapeHtml(title)}</h2>
+                            ${effectTitle ? `<div class="effect-title">${escapeHtml(effectTitle)}</div>` : ''}
+                            ${effectQuote ? `<blockquote class="effect-quote">${escapeHtml(effectQuote)}</blockquote>` : ''}
+                            ${effectContext ? `<p class="effect-context">${escapeHtml(effectContext)}</p>` : ''}
+                        </div>
+
+                        ${techTags.length > 0 ? `
+                            <div class="section-title">Tecnologias Integradas</div>
+                            <div class="tech-tags-grid">
+                                ${techTags.map(tag => `<span class="tech-tag-badge">${escapeHtml(tag)}</span>`).join('')}
+                            </div>
+                        ` : ''}
+
+                        ${benefits.length > 0 ? `
+                            <div class="section-title">Nível de Desempenho Visual</div>
+                            <table class="benefits-table">
+                                <tbody>
+                                    ${benefits.map(b => `
+                                        <tr>
+                                            <td style="width: 50%; font-weight: 600; color: #334155;">${escapeHtml(b.name)}</td>
+                                            <td style="width: 50%;">
+                                                <div class="meter-container">
+                                                    ${Array.from({ length: b.totalBlocks }).map((_, i) => `
+                                                        <div class="meter-block-pdf ${i < b.activeBlocks ? 'active' : ''}"></div>
+                                                    `).join('')}
+                                                    <span style="font-size: 10px; color: #64748b; margin-left: 6px; font-weight: bold;">${b.activeBlocks}/${b.totalBlocks}</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        ` : ''}
+
+                        <div class="instruction-card">
+                            <strong>💡 Como Utilizar:</strong> Apresente esta ficha técnica em uma ótica credenciada Personality Lenses ou compartilhe com seu consultor óptico para solicitar a confecção personalizada de suas lentes com as suas dioptrias exatas.
+                        </div>
                     </div>
-                </div>
 
-                <div class="product-hero">
-                    <h2>${escapeHtml(title)}</h2>
-                    ${effectTitle ? `<div class="effect-title">${escapeHtml(effectTitle)}</div>` : ''}
-                    ${effectQuote ? `<blockquote class="effect-quote">${escapeHtml(effectQuote)}</blockquote>` : ''}
-                    ${effectContext ? `<p class="effect-context">${escapeHtml(effectContext)}</p>` : ''}
-                </div>
-
-                ${techTags.length > 0 ? `
-                    <div class="section-title">Tecnologias Integradas</div>
-                    <div class="tech-tags-grid">
-                        ${techTags.map(tag => `<span class="tech-tag-badge">${escapeHtml(tag)}</span>`).join('')}
+                    <div class="footer">
+                        Personality Lenses - www.lentespersonality.com.br - Ficha de Especificação Técnica Oficial do Produto
                     </div>
-                ` : ''}
-
-                ${benefits.length > 0 ? `
-                    <div class="section-title">Nível de Desempenho Visual</div>
-                    <table class="benefits-table">
-                        <tbody>
-                            ${benefits.map(b => `
-                                <tr>
-                                    <td style="width: 50%; font-weight: 600; color: #334155;">${escapeHtml(b.name)}</td>
-                                    <td style="width: 50%;">
-                                        <div class="meter-container">
-                                            ${Array.from({ length: b.totalBlocks }).map((_, i) => `
-                                                <div class="meter-block-pdf ${i < b.activeBlocks ? 'active' : ''}"></div>
-                                            `).join('')}
-                                            <span style="font-size: 10px; color: #64748b; margin-left: 8px; font-weight: bold;">${b.activeBlocks}/${b.totalBlocks}</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                ` : ''}
-
-                ${priceRange ? `
-                    <div class="price-box">
-                        <span class="price-label">Investimento Estimado:</span>
-                        <span class="price-val">${escapeHtml(priceRange)}</span>
-                    </div>
-                ` : ''}
-
-                <div class="instruction-card">
-                    <strong>💡 Como Utilizar:</strong> Apresente esta ficha técnica em uma ótica credenciada Personality Lenses ou compartilhe com seu consultor óptico para solicitar a confecção personalizada de suas lentes com as suas dioptrias exatas.
-                </div>
-
-                <div class="footer">
-                    Personality Lenses - www.lentespersonality.com.br - Documento de Especificação Técnica do Produto
                 </div>
 
                 <script>
