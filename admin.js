@@ -4031,10 +4031,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // 1. Calcula Métricas
+        // 1. Calcula Métricas Rápidas
         const totalSales = items.length;
         let totalPoints = 0;
-        let totalCash = 0;
         const storesSet = new Set();
         const sellersMap = {};
         const storesMap = {};
@@ -4044,7 +4043,6 @@ document.addEventListener('DOMContentLoaded', () => {
         items.forEach(sale => {
             const pts = (Number(sale.pontos_lente) || 0) + (Number(sale.pontos_ar) || 0);
             totalPoints += pts;
-            totalCash += (pts * valorPontoConfig);
             if (sale.loja) storesSet.add(sale.loja.trim());
 
             // Vendedores
@@ -4073,6 +4071,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const avgPoints = totalSales > 0 ? Math.round(totalPoints / totalSales) : 0;
+        const activeStoresCount = storesSet.size;
+
         const sellersList = Object.keys(sellersMap).map(k => ({ name: k, val: sellersMap[k] })).sort((a,b) => b.val - a.val);
         const storesList = Object.keys(storesMap).map(k => ({ name: k, val: storesMap[k] })).sort((a,b) => b.val - a.val);
         const lensesList = Object.keys(lensesMap).map(k => ({ name: k, val: lensesMap[k] })).sort((a,b) => b.val - a.val);
@@ -4086,6 +4086,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const endFilter = dashDateEnd && dashDateEnd.value ? new Date(dashDateEnd.value + 'T00:00:00').toLocaleDateString('pt-BR') : 'Atual';
         const periodoText = (dashDateStart && dashDateStart.value) || (dashDateEnd && dashDateEnd.value) ? `${startFilter} até ${endFilter}` : 'Geral (Todo o Período)';
 
+        function renderRankingHtml(list, type) {
+            if (!list || list.length === 0) {
+                return '<div style="color: #94a3b8; font-size: 11px; padding: 10px 0; text-align: center;">Nenhum registro para os filtros ativos.</div>';
+            }
+            const maxVal = list[0].val;
+            return list.slice(0, 5).map((item, idx) => {
+                const pct = maxVal > 0 ? (item.val / maxVal) * 100 : 0;
+                const textSuffix = type === 'points' ? 'Pts' : (item.val === 1 ? 'venda' : 'vendas');
+                return `
+                    <div style="margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
+                            <span style="font-weight: 600; color: #1e293b;">#${idx + 1} ${escapeHtml(item.name)}</span>
+                            <strong style="color: #b48c36;">${item.val} ${textSuffix}</strong>
+                        </div>
+                        <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
+                            <div style="width: ${pct}%; height: 100%; background: linear-gradient(90deg, #c5a85c, #e5c060); border-radius: 3px; -webkit-print-color-adjust: exact; print-color-adjust: exact;"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
         const html = `
             <!DOCTYPE html>
             <html>
@@ -4093,29 +4115,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 <meta charset="utf-8">
                 <title>${title} - Personality Lenses</title>
                 <style>
-                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 25px; color: #1a1a1a; margin: 0; }
-                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #c5a85c; padding-bottom: 12px; margin-bottom: 20px; }
-                    .header h1 { font-size: 20px; color: #c5a85c; margin: 0; text-transform: uppercase; font-weight: 800; }
-                    .header span { font-size: 11px; color: #666; }
-                    .filters-info { background: #fdfdfd; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 20px; font-size: 11px; display: flex; gap: 20px; flex-wrap: wrap; }
-                    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 25px; }
-                    .kpi-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; text-align: center; }
-                    .kpi-title { font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 4px; }
-                    .kpi-value { font-size: 18px; font-weight: 800; color: #0f172a; }
-                    .kpi-value.gold { color: #c5a85c; }
-                    .rankings-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px; }
-                    .ranking-box { border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; background: #fff; }
-                    .ranking-box h3 { margin: 0 0 10px 0; font-size: 11px; text-transform: uppercase; color: #c5a85c; font-weight: 800; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; }
-                    .ranking-item { display: flex; justify-content: space-between; font-size: 11px; padding: 4px 0; border-bottom: 1px dashed #f1f5f9; }
-                    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-                    th, td { border: 1px solid #e2e8f0; padding: 7px 9px; text-align: left; font-size: 10px; }
-                    th { background-color: #f1f5f9; color: #334155; font-weight: bold; text-transform: uppercase; }
-                    tr:nth-child(even) { background-color: #f8fafc; }
-                    .pts-col { font-weight: bold; color: #c5a85c; }
-                    .cash-col { font-weight: bold; color: #10b981; }
-                    .footer { margin-top: 25px; font-size: 10px; color: #64748b; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 12px; }
+                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 30px; color: #1e293b; margin: 0; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #c5a85c; padding-bottom: 14px; margin-bottom: 20px; }
+                    .header h1 { font-size: 22px; color: #c5a85c; margin: 0; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
+                    .header span { font-size: 11px; color: #64748b; font-weight: 500; }
+                    .filters-info { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 18px; margin-bottom: 25px; font-size: 11px; display: flex; gap: 25px; flex-wrap: wrap; }
+                    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+                    .kpi-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px 12px; text-align: center; }
+                    .kpi-title { font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.5px; }
+                    .kpi-value { font-size: 22px; font-weight: 800; color: #0f172a; }
+                    .kpi-value.gold { color: #b48c36; }
+                    .rankings-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px; }
+                    .ranking-box { border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+                    .ranking-box h3 { margin: 0 0 14px 0; font-size: 12px; text-transform: uppercase; color: #b48c36; font-weight: 800; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+                    .footer { margin-top: 35px; font-size: 10px; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 15px; }
                     @media print {
-                        body { padding: 0; }
+                        body { padding: 15px; }
                         .no-print { display: none; }
                     }
                 </style>
@@ -4123,10 +4138,10 @@ document.addEventListener('DOMContentLoaded', () => {
             <body>
                 <div class="header">
                     <div>
-                        <h1>${title}</h1>
-                        <span>Personality Lenses - Relatório Oficial de Performance & Rankings</span>
+                        <h1>📈 ${title}</h1>
+                        <span>Personality Lenses - Relatório Oficial de Desempenho e Metas</span>
                     </div>
-                    <div>
+                    <div style="text-align: right;">
                         <span>Emissão: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</span>
                     </div>
                 </div>
@@ -4138,6 +4153,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div><strong>Status:</strong> ${escapeHtml(statusFilter)}</div>
                 </div>
 
+                <!-- Os 4 Cards de Indicadores do Dashboard -->
                 <div class="kpi-grid">
                     <div class="kpi-card">
                         <div class="kpi-title">O.S. Resgatadas</div>
@@ -4148,103 +4164,40 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="kpi-value gold">${totalPoints} Pts</div>
                     </div>
                     <div class="kpi-card">
-                        <div class="kpi-title">Média Pts / O.S.</div>
+                        <div class="kpi-title">Média de Pontos/O.S.</div>
                         <div class="kpi-value">${avgPoints}</div>
                     </div>
                     <div class="kpi-card">
-                        <div class="kpi-title">Total em Prêmios</div>
-                        <div class="kpi-value" style="color: #10b981;">R$ ${totalCash.toFixed(2)}</div>
+                        <div class="kpi-title">Óticas Ativas</div>
+                        <div class="kpi-value">${activeStoresCount}</div>
                     </div>
                 </div>
 
+                <!-- Os 4 Rankings com Gráficos / Barras de Desempenho -->
                 <div class="rankings-grid">
                     <div class="ranking-box">
                         <h3>🏆 Ranking de Vendedores</h3>
-                        ${sellersList.slice(0, 5).map((item, idx) => `
-                            <div class="ranking-item">
-                                <span>#${idx + 1} <strong>${escapeHtml(item.name)}</strong></span>
-                                <span style="font-weight: 700; color: #c5a85c;">${item.val} Pts (R$ ${(item.val * valorPontoConfig).toFixed(2)})</span>
-                            </div>
-                        `).join('') || '<div style="color: #94a3b8; font-size: 11px;">Nenhum registro</div>'}
+                        ${renderRankingHtml(sellersList, 'points')}
                     </div>
 
                     <div class="ranking-box">
                         <h3>🏪 Ranking de Lojas (Óticas)</h3>
-                        ${storesList.slice(0, 5).map((item, idx) => `
-                            <div class="ranking-item">
-                                <span>#${idx + 1} <strong>${escapeHtml(item.name)}</strong></span>
-                                <span style="font-weight: 700; color: #c5a85c;">${item.val} Pts</span>
-                            </div>
-                        `).join('') || '<div style="color: #94a3b8; font-size: 11px;">Nenhum registro</div>'}
+                        ${renderRankingHtml(storesList, 'points')}
                     </div>
 
                     <div class="ranking-box">
                         <h3>👓 Lentes Mais Vendidas</h3>
-                        ${lensesList.slice(0, 5).map((item, idx) => `
-                            <div class="ranking-item">
-                                <span>#${idx + 1} ${escapeHtml(item.name)}</span>
-                                <span style="font-weight: 700;">${item.val} ${item.val === 1 ? 'venda' : 'vendas'}</span>
-                            </div>
-                        `).join('') || '<div style="color: #94a3b8; font-size: 11px;">Nenhum registro</div>'}
+                        ${renderRankingHtml(lensesList, 'sales')}
                     </div>
 
                     <div class="ranking-box">
                         <h3>✨ Tratamentos Antirreflexo</h3>
-                        ${arsList.slice(0, 5).map((item, idx) => `
-                            <div class="ranking-item">
-                                <span>#${idx + 1} ${escapeHtml(item.name)}</span>
-                                <span style="font-weight: 700;">${item.val} ${item.val === 1 ? 'venda' : 'vendas'}</span>
-                            </div>
-                        `).join('') || '<div style="color: #94a3b8; font-size: 11px;">Nenhum registro</div>'}
+                        ${renderRankingHtml(arsList, 'sales')}
                     </div>
                 </div>
 
-                <div style="margin-top: 15px;">
-                    <h3 style="font-size: 12px; text-transform: uppercase; color: #0f172a; margin-bottom: 8px; font-weight: 800;">Demonstrativo Detalhado de O.S. (${items.length} Lançamentos)</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Data</th>
-                                <th>Vendedor</th>
-                                <th>Ótica</th>
-                                <th>O.S.</th>
-                                <th>Cliente</th>
-                                <th>Lente + AR</th>
-                                <th>Pontos</th>
-                                <th>Prêmio (R$)</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${items.map(sale => {
-                                const pts = Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0);
-                                const cash = pts * valorPontoConfig;
-                                const formattedDate = (sale.created_at || sale.data_venda) ? new Date(sale.created_at || sale.data_venda).toLocaleDateString('pt-BR') : 'N/A';
-                                let statusLabel = sale.status;
-                                if (sale.status === 'Validado') statusLabel = 'A Pagar';
-                                else if (sale.status === 'Pago') statusLabel = 'Pago ✅';
-                                else if (sale.status === 'Pendente') statusLabel = 'Pendente ⏳';
-
-                                return `
-                                    <tr>
-                                        <td>${escapeHtml(formattedDate)}</td>
-                                        <td><strong>${escapeHtml(sale.vendedor_nome)}</strong></td>
-                                        <td>${escapeHtml(sale.loja)}</td>
-                                        <td><code>${escapeHtml(sale.os)}</code></td>
-                                        <td>${escapeHtml(sale.cliente_nome)}</td>
-                                        <td>${escapeHtml(sale.lente_familia || 'N/A')} + ${escapeHtml(sale.ar_familia || 'N/A')}</td>
-                                        <td class="pts-col">${pts} Pts</td>
-                                        <td class="cash-col">R$ ${cash.toFixed(2)}</td>
-                                        <td>${escapeHtml(statusLabel)}</td>
-                                    </tr>
-                                `;
-                            }).join('')}
-                        </tbody>
-                    </table>
-                </div>
-
                 <div class="footer">
-                    Documento gerado eletronicamente por Personality Lenses para acompanhamento de metas, pontuações e desempenho comercial de parceiros.
+                    Documento oficial de performance e rankings comerciais. Gerado eletronicamente por Personality Lenses para acompanhamento de lojas e parceiros.
                 </div>
 
                 <script>
