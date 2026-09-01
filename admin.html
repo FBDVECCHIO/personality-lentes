@@ -1296,23 +1296,42 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                 
                 <!-- Painel de Performance e Dashboard (v3.60) -->
                 <div class="glass-card section-card" style="margin-bottom: 30px;" id="dashboardPremiosCard">
-                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-                        <div>
-                            <h2>📈 Dashboard de Performance & Rankings</h2>
-                            <p>Análise de vendas, ranking de balconistas, óticas parceiras e produtos mais vendidos no período.</p>
+                    <div class="card-header" style="margin-bottom: 15px;">
+                        <h2>📈 Dashboard de Performance & Rankings</h2>
+                        <p>Análise de vendas, ranking de balconistas, óticas parceiras e produtos mais vendidos no período.</p>
+                    </div>
+
+                    <!-- Filtros do Dashboard (v3.87) -->
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; align-items: flex-end; background: rgba(255,255,255,0.01); padding: 15px; border-radius: 8px; border: 1px solid var(--border-gray);">
+                        <div style="flex: 1; min-width: 160px;">
+                            <label style="font-size: 11px; text-transform: uppercase; color: var(--gold-light); font-weight: 700; display: block; margin-bottom: 5px;">Filtrar Vendedor</label>
+                            <input type="text" id="dashFilterVendedor" placeholder="Nome do vendedor..." style="width: 100%; padding: 8px 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 13px;">
                         </div>
-                        <!-- Filtros de data -->
-                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                            <div style="display: flex; align-items: center; gap: 6px;">
-                                <label style="font-size: 10px; text-transform: uppercase; color: var(--text-muted);">Início</label>
-                                <input type="date" id="dashDateStart" style="padding: 6px 10px; background: #121216; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #fff; font-size: 11px;">
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 6px;">
-                                <label style="font-size: 10px; text-transform: uppercase; color: var(--text-muted);">Fim</label>
-                                <input type="date" id="dashDateEnd" style="padding: 6px 10px; background: #121216; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #fff; font-size: 11px;">
-                            </div>
-                            <button class="btn btn-gold btn-xs" id="btnApplyDashFilter" style="padding: 8px 12px;">Filtrar</button>
-                            <button class="btn btn-outline-gold btn-xs" id="btnClearDashFilter" style="padding: 8px 12px;">Limpar</button>
+                        <div style="flex: 1; min-width: 160px;">
+                            <label style="font-size: 11px; text-transform: uppercase; color: var(--gold-light); font-weight: 700; display: block; margin-bottom: 5px;">Filtrar Loja</label>
+                            <input type="text" id="dashFilterLoja" placeholder="Nome da ótica..." style="width: 100%; padding: 8px 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 13px;">
+                        </div>
+                        <div style="width: 140px;">
+                            <label style="font-size: 11px; text-transform: uppercase; color: var(--gold-light); font-weight: 700; display: block; margin-bottom: 5px;">Status</label>
+                            <select id="dashFilterStatus" style="width: 100%; padding: 8px 12px; background: #121216; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 13px; font-family: inherit;">
+                                <option value="">Todos</option>
+                                <option value="Pendente">Pendentes</option>
+                                <option value="Validado">Validados (A Pagar)</option>
+                                <option value="Pago">Pagos</option>
+                            </select>
+                        </div>
+                        <div style="width: 135px;">
+                            <label style="font-size: 11px; text-transform: uppercase; color: var(--gold-light); font-weight: 700; display: block; margin-bottom: 5px;">Data Início</label>
+                            <input type="date" id="dashDateStart" style="width: 100%; padding: 7px 10px; background: #121216; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 12px;">
+                        </div>
+                        <div style="width: 135px;">
+                            <label style="font-size: 11px; text-transform: uppercase; color: var(--gold-light); font-weight: 700; display: block; margin-bottom: 5px;">Data Fim</label>
+                            <input type="date" id="dashDateEnd" style="width: 100%; padding: 7px 10px; background: #121216; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 12px;">
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnPrintSelectedDash" style="padding: 8px 12px; font-weight: 700; height: 36px;">📄 PDF Seleção</button>
+                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnPrintAllDash" style="padding: 8px 12px; font-weight: 700; height: 36px;">📄 PDF Geral</button>
+                            <button type="button" class="btn btn-danger btn-xs" id="btnClearDashFilter" title="Limpar Filtros" style="padding: 8px 12px; font-weight: 700; height: 36px;">🧹 Limpar</button>
                         </div>
                     </div>
 

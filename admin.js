@@ -3516,18 +3516,51 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Listeners do Dashboard (v3.60)
-    const btnApplyDashFilter = document.getElementById('btnApplyDashFilter');
+    // Filtros e Botões do Dashboard de Performance (v3.87)
+    const dashFilterVendedor = document.getElementById('dashFilterVendedor');
+    const dashFilterLoja = document.getElementById('dashFilterLoja');
+    const dashFilterStatus = document.getElementById('dashFilterStatus');
+    const dashDateStart = document.getElementById('dashDateStart');
+    const dashDateEnd = document.getElementById('dashDateEnd');
+    const btnPrintSelectedDash = document.getElementById('btnPrintSelectedDash');
+    const btnPrintAllDash = document.getElementById('btnPrintAllDash');
     const btnClearDashFilter = document.getElementById('btnClearDashFilter');
-    if (btnApplyDashFilter) {
-        btnApplyDashFilter.addEventListener('click', () => renderDashboardPremios());
+
+    let lastFilteredDashSales = [];
+
+    // Listeners do Dashboard (v3.87)
+    [dashFilterVendedor, dashFilterLoja, dashFilterStatus, dashDateStart, dashDateEnd].forEach(el => {
+        if (el) el.addEventListener('input', () => renderDashboardPremios());
+        if (el && (el.tagName === 'SELECT' || el.type === 'date')) el.addEventListener('change', () => renderDashboardPremios());
+    });
+
+    if (btnPrintSelectedDash) {
+        btnPrintSelectedDash.addEventListener('click', () => {
+            if (!lastFilteredDashSales || lastFilteredDashSales.length === 0) {
+                alert('Nenhum lançamento encontrado para os filtros atuais do Dashboard!');
+                return;
+            }
+            generateDashboardPerformancePDF(lastFilteredDashSales, 'Relatório de Performance & Rankings (Seleção)');
+        });
     }
+
+    if (btnPrintAllDash) {
+        btnPrintAllDash.addEventListener('click', () => {
+            if (!allSubmittedSales || allSubmittedSales.length === 0) {
+                alert('Nenhum lançamento de venda registrado no sistema!');
+                return;
+            }
+            generateDashboardPerformancePDF(allSubmittedSales, 'Relatório Geral de Performance & Rankings');
+        });
+    }
+
     if (btnClearDashFilter) {
         btnClearDashFilter.addEventListener('click', () => {
-            const startInput = document.getElementById('dashDateStart');
-            const endInput = document.getElementById('dashDateEnd');
-            if (startInput) startInput.value = '';
-            if (endInput) endInput.value = '';
+            if (dashFilterVendedor) dashFilterVendedor.value = '';
+            if (dashFilterLoja) dashFilterLoja.value = '';
+            if (dashFilterStatus) dashFilterStatus.value = '';
+            if (dashDateStart) dashDateStart.value = '';
+            if (dashDateEnd) dashDateEnd.value = '';
             renderDashboardPremios();
         });
     }
@@ -3631,19 +3664,36 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderDashboardPremios() {
         if (!allSubmittedSales) return;
 
-        const startInput = document.getElementById('dashDateStart');
-        const endInput = document.getElementById('dashDateEnd');
-        const startVal = startInput ? startInput.value : '';
-        const endVal = endInput ? endInput.value : '';
+        const startVal = dashDateStart ? dashDateStart.value : '';
+        const endVal = dashDateEnd ? dashDateEnd.value : '';
+        const vendedorVal = dashFilterVendedor ? dashFilterVendedor.value.trim().toLowerCase() : '';
+        const lojaVal = dashFilterLoja ? dashFilterLoja.value.trim().toLowerCase() : '';
+        const statusVal = dashFilterStatus ? dashFilterStatus.value : '';
 
-        // Filtra vendas pela data (YYYY-MM-DD)
+        // Filtra vendas por data, vendedor, loja e status (v3.87)
         const filtered = allSubmittedSales.filter(sale => {
-            if (!sale.data_venda) return true;
-            const saleDate = sale.data_venda.substring(0, 10);
-            if (startVal && saleDate < startVal) return false;
-            if (endVal && saleDate > endVal) return false;
+            // Filtro de data (YYYY-MM-DD)
+            if (startVal || endVal) {
+                const dateSource = sale.data_venda || sale.created_at;
+                if (!dateSource) return false;
+                const saleDate = dateSource.substring(0, 10);
+                if (startVal && saleDate < startVal) return false;
+                if (endVal && saleDate > endVal) return false;
+            }
+
+            // Filtro vendedor
+            if (vendedorVal && !(sale.vendedor_nome || '').toLowerCase().includes(vendedorVal)) return false;
+
+            // Filtro loja
+            if (lojaVal && !(sale.loja || '').toLowerCase().includes(lojaVal)) return false;
+
+            // Filtro status
+            if (statusVal && sale.status !== statusVal) return false;
+
             return true;
         });
+
+        lastFilteredDashSales = filtered;
 
         // 1. Métricas Rápidas
         const totalSales = filtered.length;
@@ -3972,8 +4022,244 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // -------------------------------------------------------------
-    // Funções de Geração de PDF - Módulo de Prêmios (v3.86)
+    // Funções de Geração de PDF - Módulo de Prêmios e Dashboard (v3.87)
     // -------------------------------------------------------------
+    function generateDashboardPerformancePDF(items, title = 'Dashboard de Performance & Rankings') {
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alert('Por favor, permita pop-ups para abrir a versão de impressão!');
+            return;
+        }
+
+        // 1. Calcula Métricas
+        const totalSales = items.length;
+        let totalPoints = 0;
+        let totalCash = 0;
+        const storesSet = new Set();
+        const sellersMap = {};
+        const storesMap = {};
+        const lensesMap = {};
+        const arsMap = {};
+
+        items.forEach(sale => {
+            const pts = (Number(sale.pontos_lente) || 0) + (Number(sale.pontos_ar) || 0);
+            totalPoints += pts;
+            totalCash += (pts * valorPontoConfig);
+            if (sale.loja) storesSet.add(sale.loja.trim());
+
+            // Vendedores
+            const seller = sale.vendedor_nome || 'Desconhecido';
+            if (!sellersMap[seller]) sellersMap[seller] = 0;
+            sellersMap[seller] += pts;
+
+            // Lojas
+            const store = sale.loja || 'Sem Loja';
+            if (!storesMap[store]) storesMap[store] = 0;
+            storesMap[store] += pts;
+
+            // Lentes
+            if (sale.lente_familia) {
+                const lens = sale.lente_familia;
+                if (!lensesMap[lens]) lensesMap[lens] = 0;
+                lensesMap[lens]++;
+            }
+
+            // Antirreflexos
+            if (sale.ar_familia) {
+                const ar = sale.ar_familia;
+                if (!arsMap[ar]) arsMap[ar] = 0;
+                arsMap[ar]++;
+            }
+        });
+
+        const avgPoints = totalSales > 0 ? Math.round(totalPoints / totalSales) : 0;
+        const sellersList = Object.keys(sellersMap).map(k => ({ name: k, val: sellersMap[k] })).sort((a,b) => b.val - a.val);
+        const storesList = Object.keys(storesMap).map(k => ({ name: k, val: storesMap[k] })).sort((a,b) => b.val - a.val);
+        const lensesList = Object.keys(lensesMap).map(k => ({ name: k, val: lensesMap[k] })).sort((a,b) => b.val - a.val);
+        const arsList = Object.keys(arsMap).map(k => ({ name: k, val: arsMap[k] })).sort((a,b) => b.val - a.val);
+
+        // Filtros textuais
+        const vendFilter = dashFilterVendedor && dashFilterVendedor.value.trim() ? dashFilterVendedor.value.trim() : 'Todos';
+        const lojaFilter = dashFilterLoja && dashFilterLoja.value.trim() ? dashFilterLoja.value.trim() : 'Todas';
+        const statusFilter = dashFilterStatus && dashFilterStatus.value ? dashFilterStatus.value : 'Todos';
+        const startFilter = dashDateStart && dashDateStart.value ? new Date(dashDateStart.value + 'T00:00:00').toLocaleDateString('pt-BR') : 'Início';
+        const endFilter = dashDateEnd && dashDateEnd.value ? new Date(dashDateEnd.value + 'T00:00:00').toLocaleDateString('pt-BR') : 'Atual';
+        const periodoText = (dashDateStart && dashDateStart.value) || (dashDateEnd && dashDateEnd.value) ? `${startFilter} até ${endFilter}` : 'Geral (Todo o Período)';
+
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <title>${title} - Personality Lenses</title>
+                <style>
+                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 25px; color: #1a1a1a; margin: 0; }
+                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #c5a85c; padding-bottom: 12px; margin-bottom: 20px; }
+                    .header h1 { font-size: 20px; color: #c5a85c; margin: 0; text-transform: uppercase; font-weight: 800; }
+                    .header span { font-size: 11px; color: #666; }
+                    .filters-info { background: #fdfdfd; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 20px; font-size: 11px; display: flex; gap: 20px; flex-wrap: wrap; }
+                    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 25px; }
+                    .kpi-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; text-align: center; }
+                    .kpi-title { font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 4px; }
+                    .kpi-value { font-size: 18px; font-weight: 800; color: #0f172a; }
+                    .kpi-value.gold { color: #c5a85c; }
+                    .rankings-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px; }
+                    .ranking-box { border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; background: #fff; }
+                    .ranking-box h3 { margin: 0 0 10px 0; font-size: 11px; text-transform: uppercase; color: #c5a85c; font-weight: 800; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; }
+                    .ranking-item { display: flex; justify-content: space-between; font-size: 11px; padding: 4px 0; border-bottom: 1px dashed #f1f5f9; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    th, td { border: 1px solid #e2e8f0; padding: 7px 9px; text-align: left; font-size: 10px; }
+                    th { background-color: #f1f5f9; color: #334155; font-weight: bold; text-transform: uppercase; }
+                    tr:nth-child(even) { background-color: #f8fafc; }
+                    .pts-col { font-weight: bold; color: #c5a85c; }
+                    .cash-col { font-weight: bold; color: #10b981; }
+                    .footer { margin-top: 25px; font-size: 10px; color: #64748b; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 12px; }
+                    @media print {
+                        body { padding: 0; }
+                        .no-print { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div>
+                        <h1>${title}</h1>
+                        <span>Personality Lenses - Relatório Oficial de Performance & Rankings</span>
+                    </div>
+                    <div>
+                        <span>Emissão: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</span>
+                    </div>
+                </div>
+
+                <div class="filters-info">
+                    <div><strong>Período:</strong> ${escapeHtml(periodoText)}</div>
+                    <div><strong>Ótica / Loja:</strong> ${escapeHtml(lojaFilter)}</div>
+                    <div><strong>Vendedor:</strong> ${escapeHtml(vendFilter)}</div>
+                    <div><strong>Status:</strong> ${escapeHtml(statusFilter)}</div>
+                </div>
+
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-title">O.S. Resgatadas</div>
+                        <div class="kpi-value">${totalSales}</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Pontos Validados</div>
+                        <div class="kpi-value gold">${totalPoints} Pts</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Média Pts / O.S.</div>
+                        <div class="kpi-value">${avgPoints}</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Total em Prêmios</div>
+                        <div class="kpi-value" style="color: #10b981;">R$ ${totalCash.toFixed(2)}</div>
+                    </div>
+                </div>
+
+                <div class="rankings-grid">
+                    <div class="ranking-box">
+                        <h3>🏆 Ranking de Vendedores</h3>
+                        ${sellersList.slice(0, 5).map((item, idx) => `
+                            <div class="ranking-item">
+                                <span>#${idx + 1} <strong>${escapeHtml(item.name)}</strong></span>
+                                <span style="font-weight: 700; color: #c5a85c;">${item.val} Pts (R$ ${(item.val * valorPontoConfig).toFixed(2)})</span>
+                            </div>
+                        `).join('') || '<div style="color: #94a3b8; font-size: 11px;">Nenhum registro</div>'}
+                    </div>
+
+                    <div class="ranking-box">
+                        <h3>🏪 Ranking de Lojas (Óticas)</h3>
+                        ${storesList.slice(0, 5).map((item, idx) => `
+                            <div class="ranking-item">
+                                <span>#${idx + 1} <strong>${escapeHtml(item.name)}</strong></span>
+                                <span style="font-weight: 700; color: #c5a85c;">${item.val} Pts</span>
+                            </div>
+                        `).join('') || '<div style="color: #94a3b8; font-size: 11px;">Nenhum registro</div>'}
+                    </div>
+
+                    <div class="ranking-box">
+                        <h3>👓 Lentes Mais Vendidas</h3>
+                        ${lensesList.slice(0, 5).map((item, idx) => `
+                            <div class="ranking-item">
+                                <span>#${idx + 1} ${escapeHtml(item.name)}</span>
+                                <span style="font-weight: 700;">${item.val} ${item.val === 1 ? 'venda' : 'vendas'}</span>
+                            </div>
+                        `).join('') || '<div style="color: #94a3b8; font-size: 11px;">Nenhum registro</div>'}
+                    </div>
+
+                    <div class="ranking-box">
+                        <h3>✨ Tratamentos Antirreflexo</h3>
+                        ${arsList.slice(0, 5).map((item, idx) => `
+                            <div class="ranking-item">
+                                <span>#${idx + 1} ${escapeHtml(item.name)}</span>
+                                <span style="font-weight: 700;">${item.val} ${item.val === 1 ? 'venda' : 'vendas'}</span>
+                            </div>
+                        `).join('') || '<div style="color: #94a3b8; font-size: 11px;">Nenhum registro</div>'}
+                    </div>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <h3 style="font-size: 12px; text-transform: uppercase; color: #0f172a; margin-bottom: 8px; font-weight: 800;">Demonstrativo Detalhado de O.S. (${items.length} Lançamentos)</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Vendedor</th>
+                                <th>Ótica</th>
+                                <th>O.S.</th>
+                                <th>Cliente</th>
+                                <th>Lente + AR</th>
+                                <th>Pontos</th>
+                                <th>Prêmio (R$)</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${items.map(sale => {
+                                const pts = Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0);
+                                const cash = pts * valorPontoConfig;
+                                const formattedDate = (sale.created_at || sale.data_venda) ? new Date(sale.created_at || sale.data_venda).toLocaleDateString('pt-BR') : 'N/A';
+                                let statusLabel = sale.status;
+                                if (sale.status === 'Validado') statusLabel = 'A Pagar';
+                                else if (sale.status === 'Pago') statusLabel = 'Pago ✅';
+                                else if (sale.status === 'Pendente') statusLabel = 'Pendente ⏳';
+
+                                return `
+                                    <tr>
+                                        <td>${escapeHtml(formattedDate)}</td>
+                                        <td><strong>${escapeHtml(sale.vendedor_nome)}</strong></td>
+                                        <td>${escapeHtml(sale.loja)}</td>
+                                        <td><code>${escapeHtml(sale.os)}</code></td>
+                                        <td>${escapeHtml(sale.cliente_nome)}</td>
+                                        <td>${escapeHtml(sale.lente_familia || 'N/A')} + ${escapeHtml(sale.ar_familia || 'N/A')}</td>
+                                        <td class="pts-col">${pts} Pts</td>
+                                        <td class="cash-col">R$ ${cash.toFixed(2)}</td>
+                                        <td>${escapeHtml(statusLabel)}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="footer">
+                    Documento gerado eletronicamente por Personality Lenses para acompanhamento de metas, pontuações e desempenho comercial de parceiros.
+                </div>
+
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(() => { window.close(); }, 500);
+                    }
+                </script>
+            </body>
+            </html>
+        `;
+        printWindow.document.write(html);
+        printWindow.document.close();
+    }
+
     function generatePremiosLancadosPDF(items, title = 'Relatório de Lançamentos de Prêmios') {
         const printWindow = window.open('', '_blank');
         if (!printWindow) {
