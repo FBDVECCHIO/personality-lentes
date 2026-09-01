@@ -2354,6 +2354,7 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
         const closeBtn = document.getElementById('btnCloseLensMapModal');
         const modalTitle = document.getElementById('lensMapModalTitle');
         const modalImg = document.getElementById('lensMapModalImg');
+        const modalDesc = document.getElementById('lensMapModalDesc');
 
         if (!modal) return;
 
@@ -2364,10 +2365,22 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
             e.stopPropagation();
 
             const lensName = mapBtn.dataset.lensName || 'Gold Design IA';
-            const mapImgSrc = mapBtn.dataset.mapImage || 'images/NOWAYVE 3D POSICAO 2.png';
+            const mapImgSrc = mapBtn.dataset.mapImage || 'images/topografia/NOWAYVE_3D_POSICAO_2.png';
 
             if (modalTitle) modalTitle.textContent = `Topografia 3D - ${lensName}`;
             if (modalImg) modalImg.src = mapImgSrc;
+
+            if (modalDesc) {
+                const isOffice = lensName.toLowerCase().includes('office');
+                const isIA = lensName.toLowerCase().includes('ia');
+                if (isIA) {
+                    modalDesc.textContent = 'O mapa tridimensional ilustra a distribuição otimizada por Inteligência Artificial, proporcionando campos de visão amplos e transição binocular suave.';
+                } else if (isOffice) {
+                    modalDesc.textContent = 'O mapa tridimensional ilustra a expansão dos campos de visão intermediário e de perto, otimizando o conforto ergonômico para computadores e trabalho de escritório.';
+                } else {
+                    modalDesc.textContent = 'O mapa tridimensional ilustra a distribuição suave de dioptrias e a ampla zona livre de aberrações laterais com cálculo de tecnologia Freeform de alta precisão.';
+                }
+            }
 
             modal.classList.add('active');
             modal.setAttribute('aria-hidden', 'false');
