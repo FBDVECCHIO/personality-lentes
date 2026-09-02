@@ -917,7 +917,7 @@ body.no-scroll {
     transform: scale(1.08);
 }
 
-/* Modal de Topografia 3D e Stage Interativo */
+/* Modal de Topografia 3D */
 .lens-map-modal {
     display: none;
     position: fixed;
@@ -925,9 +925,9 @@ body.no-scroll {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.88);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     z-index: 10000;
     align-items: center;
     justify-content: center;
@@ -943,13 +943,13 @@ body.no-scroll {
 
 .lens-map-modal-card {
     background: #0f1015;
-    border: 1px solid rgba(197, 168, 92, 0.35);
-    border-radius: 14px;
-    max-width: 680px;
+    border: 1px solid rgba(197, 168, 92, 0.3);
+    border-radius: 12px;
+    max-width: 650px;
     width: 100%;
     padding: 24px;
     position: relative;
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(197, 168, 92, 0.2);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(197, 168, 92, 0.15);
     transform: scale(0.95);
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -965,141 +965,14 @@ body.no-scroll {
     background: transparent;
     border: none;
     color: #94a3b8;
-    font-size: 26px;
+    font-size: 24px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease;
     line-height: 1;
 }
 
 .lens-map-modal-close:hover {
     color: var(--gold-light, #e5c060);
-    transform: scale(1.15) rotate(90deg);
-}
-
-/* Stage 3D da Lente */
-.lens-3d-stage {
-    perspective: 1200px;
-    position: relative;
-    background: radial-gradient(circle at center, rgba(30, 41, 59, 0.6) 0%, rgba(5, 5, 8, 0.9) 100%);
-    border-radius: 10px;
-    padding: 16px;
-    text-align: center;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.8);
-    margin-bottom: 14px;
-    cursor: grab;
-    overflow: hidden;
-    user-select: none;
-}
-
-.lens-3d-stage:active {
-    cursor: grabbing;
-}
-
-.lens-3d-card {
-    transform-style: preserve-3d;
-    transition: transform 0.12s ease-out;
-    position: relative;
-    display: inline-block;
-    max-width: 100%;
-    border-radius: 8px;
-}
-
-.lens-3d-card.animate-intro {
-    animation: lens3DIntro 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-}
-
-.lens-3d-card.spinning-360 {
-    animation: lens3DSpin 1.4s cubic-bezier(0.34, 1.3, 0.64, 1) forwards;
-}
-
-@keyframes lens3DIntro {
-    0% {
-        transform: perspective(1000px) rotateY(-80deg) rotateX(20deg) scale(0.7);
-        opacity: 0;
-    }
-    60% {
-        transform: perspective(1000px) rotateY(20deg) rotateX(-5deg) scale(1.05);
-        opacity: 1;
-    }
-    100% {
-        transform: perspective(1000px) rotateY(0deg) rotateX(0deg) scale(1);
-        opacity: 1;
-    }
-}
-
-@keyframes lens3DSpin {
-    0% {
-        transform: perspective(1000px) rotateY(0deg) scale(1);
-    }
-    50% {
-        transform: perspective(1000px) rotateY(180deg) scale(1.08);
-    }
-    100% {
-        transform: perspective(1000px) rotateY(360deg) scale(1);
-    }
-}
-
-#lensMapModalImg {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
-    display: block;
-    margin: 0 auto;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-    pointer-events: none;
-    transition: opacity 0.25s ease;
-}
-
-.lens-3d-glare {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 8px;
-    background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 70%);
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-}
-
-/* Botões Seletores de Ângulos 3D */
-.btn-lens-angle {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #94a3b8;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.btn-lens-angle:hover {
-    background: rgba(197, 168, 92, 0.15);
-    color: var(--gold-light, #e5c060);
-    border-color: rgba(197, 168, 92, 0.4);
-}
-
-.btn-lens-angle.active {
-    background: linear-gradient(135deg, rgba(197, 168, 92, 0.25), rgba(197, 168, 92, 0.1));
-    color: #fff;
-    border-color: var(--gold-primary, #c5a85c);
-    font-weight: 700;
-    box-shadow: 0 0 12px rgba(197, 168, 92, 0.3);
-}
-
-/* Animação de Giro no Ícone do Botão */
-.btn-product-map.clicked-spin svg {
-    animation: iconSpin3D 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes iconSpin3D {
-    0% { transform: scale(1) rotateY(0deg); }
-    50% { transform: scale(1.3) rotateY(180deg); }
-    100% { transform: scale(1) rotateY(360deg); }
 }
 
 .product-category {
