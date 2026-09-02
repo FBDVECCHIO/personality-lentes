@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=3.65">
+    <link rel="stylesheet" href="style.css?v=3.66">
 </head>
 <body>
     <!-- Canvas de Fundo Global Unificado (Engine de Animação 60FPS) -->
@@ -2212,21 +2212,42 @@
         </div>
     </section>
 
-    <!-- Modal de Topografia 3D da Lente (v3.65) -->
+    <!-- Modal de Topografia 3D da Lente com Rotação e Efeitos (v3.66) -->
     <div id="lensMapModal" class="lens-map-modal" aria-hidden="true" role="dialog">
         <div class="lens-map-modal-card">
             <button type="button" class="lens-map-modal-close" id="btnCloseLensMapModal" aria-label="Fechar">&times;</button>
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
-                <span style="font-size: 24px;">🗺️</span>
-                <div>
-                    <h3 id="lensMapModalTitle" style="color: var(--gold-light, #e5c060); font-size: 18px; margin: 0; font-weight: 800;">Topografia 3D da Lente</h3>
-                    <span style="font-size: 11px; color: #94a3b8;">Mapeamento de Potência e Superfície Freeform / IA</span>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 24px;">🗺️</span>
+                    <div>
+                        <h3 id="lensMapModalTitle" style="color: var(--gold-light, #e5c060); font-size: 18px; margin: 0; font-weight: 800;">Topografia 3D da Lente</h3>
+                        <span style="font-size: 11px; color: #94a3b8;">Mapeamento de Potência e Superfície Freeform / IA</span>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-outline-gold btn-xs" id="btnSpinLens3D" style="padding: 6px 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                    <span style="font-size: 13px;">🔄</span> Girar 360° 3D
+                </button>
+            </div>
+
+            <!-- Stage 3D com Parallax e Rotação Interativa -->
+            <div class="lens-3d-stage" id="lens3DStage">
+                <div class="lens-3d-card animate-intro" id="lens3DCard">
+                    <img id="lensMapModalImg" src="images/topografia/NOWAYVE_3D_POSICAO_2.png" alt="Mapa 3D da Lente">
+                    <div class="lens-3d-glare" id="lens3DGlare"></div>
                 </div>
             </div>
-            <div style="background: rgba(0,0,0,0.5); border-radius: 8px; padding: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 14px;">
-                <img id="lensMapModalImg" src="images/NOWAYVE 3D POSICAO 2.png" alt="Mapa 3D da Lente" style="max-width: 100%; height: auto; border-radius: 6px; display: block; margin: 0 auto; box-shadow: 0 4px 20px rgba(0,0,0,0.6);">
+
+            <!-- Seletores de Ângulos 3D e Vista 2D -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;">
+                <div style="display: flex; gap: 6px;" class="lens-map-angle-tabs" id="lensAngleTabs">
+                    <button type="button" class="btn-lens-angle active" data-angle="3D_POSICAO_2">📐 Ângulo 3D (Posição 2)</button>
+                    <button type="button" class="btn-lens-angle" data-angle="3D_POSICAO_1">📐 Ângulo 3D (Posição 1)</button>
+                    <button type="button" class="btn-lens-angle" data-angle="2D">🗺️ Vista 2D</button>
+                </div>
+                <span style="font-size: 10.5px; color: #94a3b8;">💡 <em>Mova o mouse sobre a lente para efeito 3D</em></span>
             </div>
-            <p id="lensMapModalDesc" style="font-size: 12px; color: #cbd5e1; line-height: 1.5; margin: 0;">
+
+            <p id="lensMapModalDesc" style="font-size: 11.5px; color: #cbd5e1; line-height: 1.5; margin: 0;">
                 O mapa tridimensional ilustra a distribuição suave de dioptrias e a ampla zona livre de aberrações laterais garantida pela arquitetura neural de Inteligência Artificial.
             </p>
         </div>
@@ -2253,6 +2274,6 @@
     <!-- Botão Voltar ao Topo -->
     <button id="backToTop" class="back-to-top" aria-label="Voltar ao topo">▲</button>
 
-    <script src="script.js?v=3.65"></script>
+    <script src="script.js?v=3.66"></script>
 </body>
 </html>

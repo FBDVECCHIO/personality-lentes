@@ -2347,6 +2347,7 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
     }
 
     // -------------------------------------------------------------
+    // -------------------------------------------------------------
     // Visualização de Topografia 3D do Mapa da Lente (Portfólio)
     // -------------------------------------------------------------
     function initLensMapModal() {
@@ -2355,8 +2356,59 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
         const modalTitle = document.getElementById('lensMapModalTitle');
         const modalImg = document.getElementById('lensMapModalImg');
         const modalDesc = document.getElementById('lensMapModalDesc');
+        const stage3D = document.getElementById('lens3DStage');
+        const card3D = document.getElementById('lens3DCard');
+        const glare3D = document.getElementById('lens3DGlare');
+        const btnSpin3D = document.getElementById('btnSpinLens3D');
+        const angleTabs = document.getElementById('lensAngleTabs');
 
         if (!modal) return;
+
+        const lensBaseKeyMap = {
+            'Gold Design IA': 'NOWAYVE',
+            'Premium HD IA': 'DAFD',
+            'Tecno Line IA': 'DIGIT',
+            'Gold Design Office IA': 'OFFICE_2',
+            'Gold Design': 'ILLUSION',
+            'Premium HD': 'MAGIC',
+            'Tecno Line': 'MAXMIDDLE',
+            'Maxvision': 'BASIC_PLUS',
+            'Multi Premium': 'BASIC',
+            'Gold Line': 'BASIC_EXTENDED',
+            'Gold Design Office': 'OFFICE'
+        };
+
+        let currentLensName = 'Gold Design IA';
+        let currentBaseKey = 'NOWAYVE';
+        let currentAngle = '3D_POSICAO_2';
+
+        function updateLensMapImage(angle, animate = true) {
+            currentAngle = angle;
+            const targetSrc = `images/topografia/${currentBaseKey}_${angle}.png`;
+
+            if (angleTabs) {
+                angleTabs.querySelectorAll('.btn-lens-angle').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.angle === angle);
+                });
+            }
+
+            if (!card3D || !modalImg) return;
+
+            if (animate) {
+                card3D.style.transition = 'transform 0.22s ease-in, opacity 0.22s ease-in';
+                card3D.style.transform = 'perspective(1000px) rotateY(90deg) scale(0.92)';
+                card3D.style.opacity = '0.4';
+
+                setTimeout(() => {
+                    modalImg.src = targetSrc;
+                    card3D.style.transition = 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.35s ease-out';
+                    card3D.style.transform = 'perspective(1000px) rotateY(0deg) scale(1)';
+                    card3D.style.opacity = '1';
+                }, 200);
+            } else {
+                modalImg.src = targetSrc;
+            }
+        }
 
         document.addEventListener('click', (e) => {
             const mapBtn = e.target.closest('.btn-product-map');
@@ -2364,17 +2416,22 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
             e.preventDefault();
             e.stopPropagation();
 
+            // Efeito de giro 3D no próprio botão
+            mapBtn.classList.remove('clicked-spin');
+            void mapBtn.offsetWidth;
+            mapBtn.classList.add('clicked-spin');
+
             const lensName = mapBtn.dataset.lensName || 'Gold Design IA';
-            const mapImgSrc = mapBtn.dataset.mapImage || 'images/topografia/NOWAYVE_3D_POSICAO_2.png';
+            currentLensName = lensName;
+            currentBaseKey = lensBaseKeyMap[lensName] || 'NOWAYVE';
 
             if (modalTitle) modalTitle.textContent = `Topografia 3D - ${lensName}`;
-            if (modalImg) modalImg.src = mapImgSrc;
 
             if (modalDesc) {
                 const isOffice = lensName.toLowerCase().includes('office');
                 const isIA = lensName.toLowerCase().includes('ia');
                 if (isIA) {
-                    modalDesc.textContent = 'O mapa tridimensional ilustra a distribuição otimizada por Inteligência Artificial, proporcionando campos de visão amplos e transição binocular suave.';
+                    modalDesc.textContent = 'O mapa tridimensional ilustra a distribuição otimizada por Inteligência Artificial, proporcionando campos de visão amplos e transição binocular ultra suave.';
                 } else if (isOffice) {
                     modalDesc.textContent = 'O mapa tridimensional ilustra a expansão dos campos de visão intermediário e de perto, otimizando o conforto ergonômico para computadores e trabalho de escritório.';
                 } else {
@@ -2382,13 +2439,87 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
                 }
             }
 
+            // Atualiza para a posição 3D inicial e anima entrada
+            updateLensMapImage('3D_POSICAO_2', false);
+
+            if (card3D) {
+                card3D.classList.remove('animate-intro', 'spinning-360');
+                void card3D.offsetWidth;
+                card3D.classList.add('animate-intro');
+            }
+
             modal.classList.add('active');
             modal.setAttribute('aria-hidden', 'false');
         });
 
+        // Alternância de Ângulos (Posição 1, Posição 2 e Vista 2D)
+        if (angleTabs) {
+            angleTabs.addEventListener('click', (e) => {
+                const angleBtn = e.target.closest('.btn-lens-angle');
+                if (!angleBtn) return;
+                e.preventDefault();
+                const angle = angleBtn.dataset.angle;
+                if (angle && angle !== currentAngle) {
+                    updateLensMapImage(angle, true);
+                }
+            });
+        }
+
+        // Botão de Giro 360° 3D
+        if (btnSpin3D) {
+            btnSpin3D.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (!card3D) return;
+                card3D.classList.remove('animate-intro', 'spinning-360');
+                void card3D.offsetWidth;
+                card3D.classList.add('spinning-360');
+                setTimeout(() => {
+                    card3D.classList.remove('spinning-360');
+                }, 1450);
+            });
+        }
+
+        // Efeito Parallax / Relevo 3D com o Movimento do Mouse
+        if (stage3D && card3D) {
+            stage3D.addEventListener('mousemove', (e) => {
+                if (card3D.classList.contains('animate-intro') || card3D.classList.contains('spinning-360')) return;
+                const rect = stage3D.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+
+                const rotateX = ((y - centerY) / centerY) * -16;
+                const rotateY = ((x - centerX) / centerX) * 20;
+
+                card3D.style.transition = 'transform 0.08s ease-out';
+                card3D.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale(1.04)`;
+
+                if (glare3D) {
+                    const glareX = (x / rect.width) * 100;
+                    const glareY = (y / rect.height) * 100;
+                    glare3D.style.background = `radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 65%)`;
+                    glare3D.style.opacity = '0.85';
+                }
+            });
+
+            stage3D.addEventListener('mouseleave', () => {
+                if (card3D.classList.contains('animate-intro') || card3D.classList.contains('spinning-360')) return;
+                card3D.style.transition = 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)';
+                card3D.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)';
+                if (glare3D) {
+                    glare3D.style.opacity = '0';
+                }
+            });
+        }
+
         const closeModal = () => {
             modal.classList.remove('active');
             modal.setAttribute('aria-hidden', 'true');
+            if (card3D) {
+                card3D.style.transform = '';
+                card3D.classList.remove('animate-intro', 'spinning-360');
+            }
         };
 
         if (closeBtn) closeBtn.addEventListener('click', closeModal);
