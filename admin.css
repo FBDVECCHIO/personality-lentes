@@ -540,7 +540,8 @@
 
 #adminPremiosTable th:nth-child(2), #adminPremiosTable td:nth-child(2) { /* Vendedor */
     min-width: 180px;
-    text-align: center;
+    text-align: left;
+    padding-left: 15px !important;
     line-height: 1.35;
 }
 

@@ -3963,7 +3963,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td style="text-align: center;">
                         <button type="button" class="btn-toggle-premio-details" style="background: none; border: none; color: var(--gold-light); font-size: 15px; cursor: pointer; padding: 4px;" title="Ver detalhes">+</button>
                     </td>
-                    <td style="text-align: center;"><strong>${escapeHtml(sale.vendedor_nome)}</strong></td>
+                    <td style="text-align: left; padding-left: 15px;"><strong>${escapeHtml(sale.vendedor_nome)}</strong></td>
                     <td style="text-align: center;">
                         <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; margin: 0; font-size: 12px;">
                             <input type="checkbox" class="chk-premio-os" data-id="${sale.id}" ${isChecked ? 'checked' : ''} style="cursor: pointer;" />
