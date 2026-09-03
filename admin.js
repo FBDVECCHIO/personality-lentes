@@ -3872,18 +3872,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><strong>${escapeHtml(sale.vendedor_nome)}</strong></td>
-                    <td>${escapeHtml(sale.loja)}</td>
-                    <td><code>${escapeHtml(sale.os)}</code></td>
-                    <td>${escapeHtml(sale.cliente_nome)}</td>
-                    <td>${escapeHtml(sale.lente_familia)}</td>
-                    <td>${escapeHtml(sale.ar_familia)}</td>
-                    <td>
-                        <strong>${totalPts} Pts</strong>
-                        <br><small style="color:#10b981; font-weight:700;">R$ ${cashReward.toFixed(2)}</small>
-                        <br><span style="font-size:9px; color:var(--text-muted);">Produtos: R$ ${totalVal.toFixed(2)}</span>
+                    <td>${escapeHtml(sale.loja || '-')}</td>
+                    <td style="text-align: center;"><code style="font-weight:700; color:var(--gold-light); font-size:12px;">${escapeHtml(sale.os)}</code></td>
+                    <td>${escapeHtml(sale.cliente_nome || '-')}</td>
+                    <td>${escapeHtml(sale.lente_familia || '-')}</td>
+                    <td>${escapeHtml(sale.ar_familia || '-')}</td>
+                    <td style="text-align: center;">
+                        <strong style="color: var(--gold-light); font-size:12px;">${totalPts} Pts</strong>
+                        <br><small style="color:#10b981; font-weight:700; font-size:11px;">R$ ${cashReward.toFixed(2)}</small>
+                        <br><span style="font-size:10px; color:var(--text-muted); white-space: nowrap;">Produtos: R$ ${totalVal.toFixed(2)}</span>
                     </td>
-                    <td>${statusText}</td>
-                    <td>${actionBtn}</td>
+                    <td style="text-align: center;">${statusText}</td>
+                    <td style="text-align: center; white-space: nowrap;"><div style="display:inline-flex; gap:4px; align-items:center; justify-content:center;">${actionBtn}</div></td>
                 `;
                 adminPremiosTableBody.appendChild(tr);
             });

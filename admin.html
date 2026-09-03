@@ -8,8 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=3.82">
-    <link rel="stylesheet" href="admin.css?v=3.82">
+    <link rel="stylesheet" href="style.css?v=3.87">
+    <link rel="stylesheet" href="admin.css?v=3.87">
 </head>
 <body class="admin-body">
     <!-- Modal de Autenticação do Painel Master (Bloqueio por Senha) -->
@@ -1444,8 +1444,8 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                     </div>
 
                     <!-- Tabela de Lançamentos de Prêmios -->
-                    <div class="table-container" style="max-height: 450px; overflow-y: auto;">
-                        <table class="leads-table">
+                    <div class="table-container" style="max-height: 480px; overflow-y: auto; overflow-x: auto;">
+                        <table class="leads-table" id="adminPremiosTable">
                             <thead>
                                 <tr>
                                     <th>Vendedor</th>
@@ -1497,8 +1497,8 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                         </div>
                     </div>
 
-                    <div class="table-container">
-                        <table class="leads-table">
+                    <div class="table-container" style="max-height: 450px; overflow-y: auto; overflow-x: auto;">
+                        <table class="leads-table" id="adminConsolidadoTable">
                             <thead>
                                 <tr>
                                     <th>Nome do Vendedor</th>
@@ -1547,8 +1547,8 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                         </div>
                     </div>
 
-                    <div class="table-container">
-                        <table class="leads-table">
+                    <div class="table-container" style="max-height: 450px; overflow-y: auto; overflow-x: auto;">
+                        <table class="leads-table" id="adminConsolidadoPagosTable">
                             <thead>
                                 <tr>
                                     <th>Nome do Vendedor</th>
@@ -1561,7 +1561,6 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                             </thead>
                             <tbody id="adminConsolidadoPagosTableBody">
                                 <!-- Preenchido via JS -->
-                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -1616,6 +1615,6 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
             </form>
         </div>
     </div>
-    <script src="admin.js?v=3.82"></script>
+    <script src="admin.js?v=3.87"></script>
 </body>
 </html>
