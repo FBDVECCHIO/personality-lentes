@@ -3380,13 +3380,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminConsolidadoTableBody = document.getElementById('adminConsolidadoTableBody');
     const btnExportPremios = document.getElementById('btnExportPremios');
     
-    // Filtros e Botões do Card 1: Relatório de Lançamentos de Prêmios (v3.86)
+    // Filtros e Botões do Card 1: Relatório de Lançamentos de Prêmios (v3.88)
     const filterPremVendedor = document.getElementById('filterPremVendedor');
     const filterPremLoja = document.getElementById('filterPremLoja');
     const filterPremStatus = document.getElementById('filterPremStatus');
     const btnPrintSelectedPremios = document.getElementById('btnPrintSelectedPremios');
     const btnPrintAllPremios = document.getElementById('btnPrintAllPremios');
     const btnClearPremiosFilters = document.getElementById('btnClearPremiosFilters');
+    const selectAllPremiosOS = document.getElementById('selectAllPremiosOS');
+    const btnPrevPagePremios = document.getElementById('btnPrevPagePremios');
+    const btnNextPagePremios = document.getElementById('btnNextPagePremios');
+    const adminPremiosPaginationInfo = document.getElementById('adminPremiosPaginationInfo');
+
+    let currentPremiosPage = 1;
+    const limitPremiosPerPage = 25;
+    const selectedPremioIds = new Set();
 
     // Filtros e Botões do Card 2: Apuração Consolidada (v3.86)
     const filterApuracaoVendedor = document.getElementById('filterApuracaoVendedor');
@@ -3411,10 +3419,69 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastFilteredHistPagosRows = [];
     let lastAllHistPagosRows = [];
 
+    function updateSelectAllPremiosCheckbox() {
+        if (!selectAllPremiosOS || !lastFilteredPremiosSales) return;
+        const startIndex = (currentPremiosPage - 1) * limitPremiosPerPage;
+        const paginatedSales = lastFilteredPremiosSales.slice(startIndex, startIndex + limitPremiosPerPage);
+        if (paginatedSales.length === 0) {
+            selectAllPremiosOS.checked = false;
+            selectAllPremiosOS.indeterminate = false;
+            return;
+        }
+        const checkedCount = paginatedSales.filter(s => selectedPremioIds.has(String(s.id))).length;
+        selectAllPremiosOS.checked = checkedCount === paginatedSales.length;
+        selectAllPremiosOS.indeterminate = checkedCount > 0 && checkedCount < paginatedSales.length;
+    }
+
+    if (selectAllPremiosOS) {
+        selectAllPremiosOS.addEventListener('change', () => {
+            if (!lastFilteredPremiosSales) return;
+            const startIndex = (currentPremiosPage - 1) * limitPremiosPerPage;
+            const paginatedSales = lastFilteredPremiosSales.slice(startIndex, startIndex + limitPremiosPerPage);
+            if (selectAllPremiosOS.checked) {
+                paginatedSales.forEach(s => selectedPremioIds.add(String(s.id)));
+            } else {
+                paginatedSales.forEach(s => selectedPremioIds.delete(String(s.id)));
+            }
+            if (adminPremiosTableBody) {
+                const checkboxes = adminPremiosTableBody.querySelectorAll('.chk-premio-os');
+                checkboxes.forEach(chk => {
+                    chk.checked = selectAllPremiosOS.checked;
+                });
+            }
+        });
+    }
+
+    if (btnPrevPagePremios) {
+        btnPrevPagePremios.addEventListener('click', () => {
+            if (currentPremiosPage > 1) {
+                currentPremiosPage--;
+                renderPremiosManager();
+            }
+        });
+    }
+
+    if (btnNextPagePremios) {
+        btnNextPagePremios.addEventListener('click', () => {
+            const totalItems = lastFilteredPremiosSales ? lastFilteredPremiosSales.length : 0;
+            const totalPages = Math.max(1, Math.ceil(totalItems / limitPremiosPerPage));
+            if (currentPremiosPage < totalPages) {
+                currentPremiosPage++;
+                renderPremiosManager();
+            }
+        });
+    }
+
     // Listeners de Filtros - Card 1 (Relatório de Prêmios)
     [filterPremVendedor, filterPremLoja, filterPremStatus].forEach(el => {
-        if (el) el.addEventListener('input', () => renderPremiosManager());
-        if (el && el.tagName === 'SELECT') el.addEventListener('change', () => renderPremiosManager());
+        if (el) el.addEventListener('input', () => {
+            currentPremiosPage = 1;
+            renderPremiosManager();
+        });
+        if (el && el.tagName === 'SELECT') el.addEventListener('change', () => {
+            currentPremiosPage = 1;
+            renderPremiosManager();
+        });
     });
 
     if (btnPrintSelectedPremios) {
@@ -3423,7 +3490,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Nenhum lançamento de venda encontrado para os filtros atuais!');
                 return;
             }
-            generatePremiosLancadosPDF(lastFilteredPremiosSales, 'Relatório de Lançamentos de Prêmios (Seleção)');
+            let itemsToPrint = lastFilteredPremiosSales.filter(s => selectedPremioIds.has(String(s.id)));
+            if (itemsToPrint.length === 0) {
+                itemsToPrint = lastFilteredPremiosSales;
+            }
+            generatePremiosLancadosPDF(itemsToPrint, 'Relatório de Lançamentos de Prêmios (Seleção)');
         });
     }
 
@@ -3442,6 +3513,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (filterPremVendedor) filterPremVendedor.value = '';
             if (filterPremLoja) filterPremLoja.value = '';
             if (filterPremStatus) filterPremStatus.value = '';
+            selectedPremioIds.clear();
+            currentPremiosPage = 1;
             renderPremiosManager();
         });
     }
@@ -3844,14 +3917,30 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('adminTotalPago').textContent = `R$ ${cashTotalPago.toFixed(2)}`;
         document.getElementById('adminTotalPagoOS').textContent = `${countTotalPago} O.S. Pagas (${ptsTotalPago} Pts)`;
 
-        // 2. Renderiza Tabela Detalhada (Lançamentos de Vendas)
+        // 2. Renderiza Tabela Detalhada (Lançamentos de Vendas Compacta com Expansão e Paginação)
+        const totalItems = filteredSales.length;
+        const totalPages = Math.max(1, Math.ceil(totalItems / limitPremiosPerPage));
+        if (currentPremiosPage > totalPages) {
+            currentPremiosPage = totalPages;
+        }
+        const startIndex = (currentPremiosPage - 1) * limitPremiosPerPage;
+        const endIndex = startIndex + limitPremiosPerPage;
+        const paginatedSales = filteredSales.slice(startIndex, endIndex);
+
+        if (adminPremiosPaginationInfo) {
+            adminPremiosPaginationInfo.textContent = `Página ${currentPremiosPage} de ${totalPages} (Mostrando ${totalItems === 0 ? 0 : startIndex + 1} a ${Math.min(endIndex, totalItems)} de ${totalItems} O.S.)`;
+        }
+        if (btnPrevPagePremios) btnPrevPagePremios.disabled = currentPremiosPage === 1;
+        if (btnNextPagePremios) btnNextPagePremios.disabled = currentPremiosPage === totalPages;
+
         if (filteredSales.length === 0) {
-            adminPremiosTableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Nenhum lançamento corresponde aos filtros ativos.</td></tr>`;
+            adminPremiosTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 25px 0;">Nenhum lançamento corresponde aos filtros ativos.</td></tr>`;
         } else {
-            filteredSales.forEach(sale => {
+            paginatedSales.forEach(sale => {
                 const totalVal = Number(sale.valor_lente || 0) + Number(sale.valor_ar || 0);
                 const totalPts = Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0);
                 const cashReward = totalPts * valorPontoConfig;
+                const isChecked = selectedPremioIds.has(String(sale.id));
 
                 let statusText = '';
                 let actionBtn = '';
@@ -3871,23 +3960,70 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><strong>${escapeHtml(sale.vendedor_nome)}</strong></td>
-                    <td>${escapeHtml(sale.loja || '-')}</td>
-                    <td style="text-align: center;"><code style="font-weight:700; color:var(--gold-light); font-size:12px;">${escapeHtml(sale.os)}</code></td>
-                    <td>${escapeHtml(sale.cliente_nome || '-')}</td>
-                    <td>${escapeHtml(sale.lente_familia || '-')}</td>
-                    <td>${escapeHtml(sale.ar_familia || '-')}</td>
                     <td style="text-align: center;">
-                        <strong style="color: var(--gold-light); font-size:12px;">${totalPts} Pts</strong>
-                        <br><small style="color:#10b981; font-weight:700; font-size:11px;">R$ ${cashReward.toFixed(2)}</small>
-                        <br><span style="font-size:10px; color:var(--text-muted); white-space: nowrap;">Produtos: R$ ${totalVal.toFixed(2)}</span>
+                        <button type="button" class="btn-toggle-premio-details" style="background: none; border: none; color: var(--gold-light); font-size: 15px; cursor: pointer; padding: 4px;" title="Ver detalhes">+</button>
+                    </td>
+                    <td style="text-align: center;"><strong>${escapeHtml(sale.vendedor_nome)}</strong></td>
+                    <td style="text-align: center;">
+                        <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; margin: 0; font-size: 12px;">
+                            <input type="checkbox" class="chk-premio-os" data-id="${sale.id}" ${isChecked ? 'checked' : ''} style="cursor: pointer;" />
+                            <code style="font-weight: 700; color: var(--gold-light); font-size: 12px;">${escapeHtml(sale.os)}</code>
+                        </label>
+                    </td>
+                    <td style="text-align: center;">
+                        <strong style="color: var(--gold-light); font-size: 12.5px;">${totalPts} Ptos</strong>
                     </td>
                     <td style="text-align: center;">${statusText}</td>
                     <td style="text-align: center; white-space: nowrap;"><div style="display:inline-flex; gap:4px; align-items:center; justify-content:center;">${actionBtn}</div></td>
                 `;
+
+                // Linha de Detalhes Adicionais (+)
+                const trDetails = document.createElement('tr');
+                trDetails.style.display = 'none';
+                trDetails.innerHTML = `
+                    <td></td>
+                    <td colspan="5" style="background: rgba(0,0,0,0.3); padding: 14px 18px; border-radius: 8px; border-left: 3px solid var(--gold-primary);">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; font-size: 11.5px; text-align: left;">
+                            <div><strong style="color: var(--gold-light);">Loja / Ótica:</strong><br>${escapeHtml(sale.loja || 'N/A')}</div>
+                            <div><strong style="color: var(--gold-light);">Paciente / Cliente:</strong><br>${escapeHtml(sale.cliente_nome || 'N/A')}</div>
+                            <div><strong style="color: var(--gold-light);">Família da Lente:</strong><br>${escapeHtml(sale.lente_familia || 'N/A')} <span style="color:var(--text-muted);">(${Number(sale.pontos_lente || 0)} Ptos)</span></div>
+                            <div><strong style="color: var(--gold-light);">Tratamento Antirreflexo:</strong><br>${escapeHtml(sale.ar_familia || 'N/A')} <span style="color:var(--text-muted);">(${Number(sale.pontos_ar || 0)} Ptos)</span></div>
+                            <div><strong style="color: var(--gold-light);">Total Produtos:</strong><br><span style="color: #fff; font-weight: 600;">R$ ${totalVal.toFixed(2)}</span></div>
+                            <div><strong style="color: var(--gold-light);">Prêmio Calculado:</strong><br><span style="color: #10b981; font-weight: 700;">R$ ${cashReward.toFixed(2)}</span></div>
+                            <div><strong style="color: var(--gold-light);">Data do Lançamento:</strong><br>${sale.created_at ? new Date(sale.created_at).toLocaleString('pt-BR') : 'N/A'}</div>
+                            <div><strong style="color: var(--gold-light);">Registro:</strong><br>O.S. #${escapeHtml(sale.os)}</div>
+                        </div>
+                    </td>
+                `;
+
+                // Toggle do botão +
+                const btnToggle = tr.querySelector('.btn-toggle-premio-details');
+                if (btnToggle) {
+                    btnToggle.addEventListener('click', () => {
+                        const isHidden = trDetails.style.display === 'none';
+                        trDetails.style.display = isHidden ? 'table-row' : 'none';
+                        btnToggle.textContent = isHidden ? '➖' : '+';
+                    });
+                }
+
+                // Checkbox individual
+                const chk = tr.querySelector('.chk-premio-os');
+                if (chk) {
+                    chk.addEventListener('change', () => {
+                        if (chk.checked) {
+                            selectedPremioIds.add(String(sale.id));
+                        } else {
+                            selectedPremioIds.delete(String(sale.id));
+                        }
+                        updateSelectAllPremiosCheckbox();
+                    });
+                }
+
                 adminPremiosTableBody.appendChild(tr);
+                adminPremiosTableBody.appendChild(trDetails);
             });
         }
+        updateSelectAllPremiosCheckbox();
 
         // 3. Renderiza Tabela de Payout Consolidados por Vendedor
         // Agrupa todas as O.S. com status 'Validado' (A pagar)

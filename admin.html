@@ -8,8 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=3.87">
-    <link rel="stylesheet" href="admin.css?v=3.87">
+    <link rel="stylesheet" href="style.css?v=3.88">
+    <link rel="stylesheet" href="admin.css?v=3.88">
 </head>
 <body class="admin-body">
     <!-- Modal de Autenticação do Painel Master (Bloqueio por Senha) -->
@@ -1443,26 +1443,39 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                         </div>
                     </div>
 
-                    <!-- Tabela de Lançamentos de Prêmios -->
-                    <div class="table-container" style="max-height: 480px; overflow-y: auto; overflow-x: auto;">
+                    <!-- Tabela de Lançamentos de Prêmios (Compacta com Expansão e Paginação) -->
+                    <div class="table-container" style="max-height: 520px; overflow-y: auto; overflow-x: auto;">
                         <table class="leads-table" id="adminPremiosTable">
                             <thead>
                                 <tr>
-                                    <th>Vendedor</th>
-                                    <th>Loja</th>
-                                    <th>O.S.</th>
-                                    <th>Cliente</th>
-                                    <th>Lente</th>
-                                    <th>Antirreflexo</th>
-                                    <th>Total Prêmio</th>
-                                    <th>Status</th>
-                                    <th>Ações</th>
+                                    <th style="width: 45px; text-align: center;">+</th>
+                                    <th style="text-align: center;">Vendedor</th>
+                                    <th style="text-align: center; min-width: 130px;">
+                                        <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 11px; margin: 0; text-transform: uppercase;">
+                                            <input type="checkbox" id="selectAllPremiosOS" title="Selecionar Todos para PDF" style="cursor: pointer;" />
+                                            <span>O.S.</span>
+                                        </label>
+                                    </th>
+                                    <th style="text-align: center;">Pontuação Total</th>
+                                    <th style="text-align: center;">Status</th>
+                                    <th style="text-align: center; width: 170px;">Ações</th>
                                 </tr>
                             </thead>
                             <tbody id="adminPremiosTableBody">
                                 <!-- Preenchido via JS -->
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- Passador de Páginas da Tabela de Prêmios (v3.88) -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; flex-wrap: wrap; gap: 10px; padding: 6px 0;">
+                        <div id="adminPremiosPaginationInfo" style="font-size: 12px; color: var(--text-muted);">
+                            Mostrando 0 de 0 O.S.
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnPrevPagePremios" style="padding: 6px 14px; font-weight: 700;">◀ Anterior</button>
+                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnNextPagePremios" style="padding: 6px 14px; font-weight: 700;">Próximo ▶</button>
+                        </div>
                     </div>
                 </div>
 
@@ -1615,6 +1628,6 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
             </form>
         </div>
     </div>
-    <script src="admin.js?v=3.87"></script>
+    <script src="admin.js?v=3.88"></script>
 </body>
 </html>
