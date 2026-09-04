@@ -5710,13 +5710,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const authOsTableBody = document.getElementById('authOsTableBody');
 
-    // Filtros e paginação da listagem de O.S. (v3.86)
+    // Filtros e paginação da listagem de O.S. (v3.86/v3.91)
     const filterAuthOsNumber = document.getElementById('filterAuthOsNumber');
     const filterAuthOsStore = document.getElementById('filterAuthOsStore');
     const filterAuthOsSeller = document.getElementById('filterAuthOsSeller');
     const btnPrintSelectedOs = document.getElementById('btnPrintSelectedOs');
     const btnPrintAllOs = document.getElementById('btnPrintAllOs');
     const btnClearAuthOsFilters = document.getElementById('btnClearAuthOsFilters');
+    const selectAllAuthOs = document.getElementById('selectAllAuthOs');
     
     const authOsPaginationInfo = document.getElementById('authOsPaginationInfo');
     const btnPrevPageAuthOs = document.getElementById('btnPrevPageAuthOs');
@@ -5724,8 +5725,43 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let currentAuthOsPage = 1;
     const limitAuthOsPerPage = 25;
+    const selectedAuthOsNumbers = new Set();
     let globalAuthorizedList = [];
     let globalApprovedVendedores = [];
+    let lastFilteredAuthOsList = [];
+
+    function updateSelectAllAuthOsCheckbox() {
+        if (!selectAllAuthOs || !lastFilteredAuthOsList) return;
+        const startIndex = (currentAuthOsPage - 1) * limitAuthOsPerPage;
+        const paginatedItems = lastFilteredAuthOsList.slice(startIndex, startIndex + limitAuthOsPerPage);
+        if (paginatedItems.length === 0) {
+            selectAllAuthOs.checked = false;
+            selectAllAuthOs.indeterminate = false;
+            return;
+        }
+        const checkedCount = paginatedItems.filter(item => selectedAuthOsNumbers.has(item.os)).length;
+        selectAllAuthOs.checked = checkedCount === paginatedItems.length;
+        selectAllAuthOs.indeterminate = checkedCount > 0 && checkedCount < paginatedItems.length;
+    }
+
+    if (selectAllAuthOs) {
+        selectAllAuthOs.addEventListener('change', () => {
+            if (!lastFilteredAuthOsList) return;
+            const startIndex = (currentAuthOsPage - 1) * limitAuthOsPerPage;
+            const paginatedItems = lastFilteredAuthOsList.slice(startIndex, startIndex + limitAuthOsPerPage);
+            if (selectAllAuthOs.checked) {
+                paginatedItems.forEach(item => selectedAuthOsNumbers.add(item.os));
+            } else {
+                paginatedItems.forEach(item => selectedAuthOsNumbers.delete(item.os));
+            }
+            if (authOsTableBody) {
+                const checkboxes = authOsTableBody.querySelectorAll('.chk-auth-os');
+                checkboxes.forEach(chk => {
+                    chk.checked = selectAllAuthOs.checked;
+                });
+            }
+        });
+    }
 
     // Inicializar Eventos de Filtros e Paginação de O.S.
     if (filterAuthOsNumber) {
@@ -5751,6 +5787,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (filterAuthOsNumber) filterAuthOsNumber.value = '';
             if (filterAuthOsStore) filterAuthOsStore.value = '';
             if (filterAuthOsSeller) filterAuthOsSeller.value = '';
+            selectedAuthOsNumbers.clear();
             currentAuthOsPage = 1;
             renderAuthOsTableWithFiltersAndPagination();
         });
@@ -5786,23 +5823,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (btnPrintSelectedOs) {
         btnPrintSelectedOs.addEventListener('click', () => {
-            const osQuery = filterAuthOsNumber ? filterAuthOsNumber.value.trim().toLowerCase() : '';
-            const storeQuery = filterAuthOsStore ? filterAuthOsStore.value.trim().toLowerCase() : '';
-            const sellerQuery = filterAuthOsSeller ? filterAuthOsSeller.value.trim().toLowerCase() : '';
-            
-            const filtered = globalAuthorizedList.filter(item => {
-                const vend = globalApprovedVendedores.find(v => v.cpf === item.cpf_vendedor) || { nome: 'Desconhecido', loja: item.loja || 'N/A' };
-                const sellerName = vend.nome.toLowerCase();
-                const storeName = (item.loja || vend.loja || '').toLowerCase();
-                const osNumber = item.os.toLowerCase();
-                return osNumber.includes(osQuery) && storeName.includes(storeQuery) && sellerName.includes(sellerQuery);
-            });
-            
-            if (filtered.length === 0) {
-                alert('Nenhuma O.S. encontrada para os filtros atuais!');
+            if (!globalAuthorizedList || globalAuthorizedList.length === 0) {
+                alert('Nenhuma O.S. cadastrada para gerar PDF!');
                 return;
             }
-            generateAuthOsPDF(filtered, 'Relatório de O.S. Filtradas (Seleção)');
+            let itemsToPrint = globalAuthorizedList.filter(item => selectedAuthOsNumbers.has(item.os));
+            if (itemsToPrint.length === 0) {
+                itemsToPrint = lastFilteredAuthOsList && lastFilteredAuthOsList.length > 0 ? lastFilteredAuthOsList : globalAuthorizedList;
+            }
+            generateAuthOsPDF(itemsToPrint, 'Relatório de O.S. Filtradas (Seleção)');
         });
     }
     if (btnPrintAllOs) {
@@ -5939,13 +5968,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const arProd = adminPremiosConfig.find(p => p.nome === item.ar_familia) || { pontos: 0 };
             const totalPts = (Number(lProd.pontos) || 0) + (Number(arProd.pontos) || 0);
 
+            const isChecked = selectedAuthOsNumbers.has(item.os);
+
             // Linha Principal
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td style="text-align: center;">
                     <button type="button" class="btn-toggle-os-details" style="background: none; border: none; color: var(--gold-light); font-size: 15px; cursor: pointer; padding: 3px;" title="Ver detalhes">+</button>
                 </td>
-                <td style="text-align: center;"><code style="font-weight: 700; color: var(--gold-light); font-size: 12px;">${escapeHtml(item.os)}</code></td>
+                <td style="text-align: center;">
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; margin: 0; font-size: 12px;">
+                        <input type="checkbox" class="chk-auth-os" data-os="${escapeHtml(item.os)}" ${isChecked ? 'checked' : ''} style="cursor: pointer;" />
+                        <code style="font-weight: 700; color: var(--gold-light); font-size: 12px;">${escapeHtml(item.os)}</code>
+                    </label>
+                </td>
                 <td style="text-align: left;"><strong>${escapeHtml(vend.nome)}</strong></td>
                 <td style="text-align: center;"><strong style="color: var(--gold-light); font-size: 12px;">${totalPts} Ptos</strong></td>
                 <td style="font-size: 11px;">
@@ -5985,6 +6021,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     const isHidden = trDetails.style.display === 'none';
                     trDetails.style.display = isHidden ? 'table-row' : 'none';
                     btnToggle.textContent = isHidden ? '➖' : '➕';
+                });
+            }
+
+            // Vincular Checkbox Individual
+            const chk = tr.querySelector('.chk-auth-os');
+            if (chk) {
+                chk.addEventListener('change', () => {
+                    if (chk.checked) {
+                        selectedAuthOsNumbers.add(item.os);
+                    } else {
+                        selectedAuthOsNumbers.delete(item.os);
+                    }
+                    updateSelectAllAuthOsCheckbox();
                 });
             }
 
@@ -6029,6 +6078,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             return matchOs && matchStore && matchSeller;
         });
+
+        lastFilteredAuthOsList = filtered;
         
         // 2. Calcula paginação (máximo 25 linhas)
         const totalItems = filtered.length;
@@ -6052,6 +6103,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // 4. Renderiza os itens paginados
         renderAuthOsTable(paginatedItems, globalApprovedVendedores);
+        updateSelectAllAuthOsCheckbox();
     }
 
     function generateAuthOsPDF(items, title = 'Relatório de O.S. Liberadas') {

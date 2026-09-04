@@ -587,8 +587,8 @@
     padding: 6px 4px !important;
 }
 
-#adminAuthOsTable th:nth-child(2), #adminAuthOsTable td:nth-child(2) { /* O.S. */
-    width: 95px;
+#adminAuthOsTable th:nth-child(2), #adminAuthOsTable td:nth-child(2) { /* O.S. com Checkbox */
+    width: 125px;
     text-align: center;
     white-space: nowrap !important;
 }

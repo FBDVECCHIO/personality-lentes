@@ -8,8 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=3.90">
-    <link rel="stylesheet" href="admin.css?v=3.90">
+    <link rel="stylesheet" href="style.css?v=3.91">
+    <link rel="stylesheet" href="admin.css?v=3.91">
 </head>
 <body class="admin-body">
     <!-- Modal de Autenticação do Painel Master (Bloqueio por Senha) -->
@@ -1266,7 +1266,12 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                             <thead>
                                 <tr>
                                     <th style="width: 35px; text-align: center;">+</th>
-                                    <th style="width: 95px; text-align: center;">O.S. / Pedido</th>
+                                    <th style="width: 125px; text-align: center;">
+                                        <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 11px; margin: 0; text-transform: uppercase;">
+                                            <input type="checkbox" id="selectAllAuthOs" title="Selecionar Todos para PDF" style="cursor: pointer;" />
+                                            <span>O.S. / Pedido</span>
+                                        </label>
+                                    </th>
                                     <th style="text-align: left; min-width: 120px;">Vendedor</th>
                                     <th style="width: 65px; text-align: center;">Ptos</th>
                                     <th style="text-align: left; min-width: 150px;">Lentes + AR</th>
@@ -1628,6 +1633,6 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
             </form>
         </div>
     </div>
-    <script src="admin.js?v=3.90"></script>
+    <script src="admin.js?v=3.91"></script>
 </body>
 </html>
