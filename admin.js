@@ -5943,21 +5943,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td style="text-align: center;">
-                    <button type="button" class="btn-toggle-os-details" style="background: none; border: none; color: var(--gold-light); font-size: 16px; cursor: pointer; padding: 4px;">➕</button>
+                    <button type="button" class="btn-toggle-os-details" style="background: none; border: none; color: var(--gold-light); font-size: 15px; cursor: pointer; padding: 3px;" title="Ver detalhes">+</button>
                 </td>
-                <td><strong>${escapeHtml(item.os)}</strong></td>
-                <td>${escapeHtml(vend.nome)}</td>
-                <td><strong>${totalPts} Pts</strong></td>
+                <td style="text-align: center;"><code style="font-weight: 700; color: var(--gold-light); font-size: 12px;">${escapeHtml(item.os)}</code></td>
+                <td style="text-align: left;"><strong>${escapeHtml(vend.nome)}</strong></td>
+                <td style="text-align: center;"><strong style="color: var(--gold-light); font-size: 12px;">${totalPts} Ptos</strong></td>
                 <td style="font-size: 11px;">
-                    <div><span class="badge" style="background: rgba(197, 168, 92, 0.15); color: var(--gold-light); font-size: 10px; padding: 1px 4px; border-radius: 3px;">Lente</span> ${escapeHtml(item.lente_familia)}</div>
-                    <div style="margin-top: 4px;"><span class="badge" style="background: rgba(147, 197, 253, 0.15); color: #93c5fd; font-size: 10px; padding: 1px 4px; border-radius: 3px;">AR</span> ${escapeHtml(item.ar_familia)}</div>
+                    <div><span class="badge" style="background: rgba(197, 168, 92, 0.15); color: var(--gold-light); font-size: 9.5px; padding: 1px 4px; border-radius: 3px; font-weight: 600;">Lente</span> ${escapeHtml(item.lente_familia)}</div>
+                    <div style="margin-top: 3px;"><span class="badge" style="background: rgba(147, 197, 253, 0.15); color: #93c5fd; font-size: 9.5px; padding: 1px 4px; border-radius: 3px; font-weight: 600;">AR</span> ${escapeHtml(item.ar_familia)}</div>
                 </td>
-                <td>
-                    ${item.utilizada ? '<span class="badge badge-success" style="background:#10b981; color:#fff; padding: 2px 6px; border-radius: 4px; font-size:11px;">Resgatada ✅</span>' : '<span class="badge badge-warning" style="background:#f59e0b; color:#000; padding: 2px 6px; border-radius: 4px; font-size:11px;">Pendente ⏳</span>'}
+                <td style="text-align: center;">
+                    ${item.utilizada ? '<span class="badge badge-success" style="background:#10b981; color:#fff; padding: 3px 6px; border-radius: 4px; font-size:10.5px; font-weight: 600;">Resgatada ✅</span>' : '<span class="badge badge-warning" style="background:#f59e0b; color:#000; padding: 3px 6px; border-radius: 4px; font-size:10.5px; font-weight: 600;">Pendente ⏳</span>'}
                 </td>
                 <td style="text-align: center; white-space: nowrap;">
-                    <button type="button" class="btn btn-xs btn-outline-gold btn-edit-auth-os" style="padding: 4px 8px; font-size:11px; margin-right: 6px;">✏️ Editar</button>
-                    <button type="button" class="btn btn-xs btn-danger btn-delete-auth-os" style="padding: 4px 8px; font-size:11px; border-color: rgba(255,85,85,0.3); color:#fca5a5; background:none;">Excluir 🗑️</button>
+                    <div style="display: inline-flex; gap: 4px; align-items: center; justify-content: center;">
+                        <button type="button" class="btn btn-xs btn-outline-gold btn-edit-auth-os" title="Editar O.S." style="padding: 4px 7px; font-size: 13px; line-height: 1; border-radius: 4px;">✏️</button>
+                        <button type="button" class="btn btn-xs btn-danger btn-delete-auth-os" title="Excluir O.S." style="padding: 4px 7px; font-size: 13px; line-height: 1; border-color: rgba(255,85,85,0.3); color:#fca5a5; background:none; border-radius: 4px;">🗑️</button>
+                    </div>
                 </td>
             `;
 
