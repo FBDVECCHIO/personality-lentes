@@ -3887,8 +3887,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Converte em arrays e ordena
         const sellersList = Object.keys(sellersMap).map(k => ({ name: k, val: sellersMap[k].points })).sort((a,b) => b.val - a.val);
         const storesList = Object.keys(storesMap).map(k => ({ name: k, val: storesMap[k].points })).sort((a,b) => b.val - a.val);
-        const lensesList = Object.keys(lensesMap).map(k => ({ name: k, val: lensesMap[k] })).sort((a,b) => b.val - a.val);
-        const arsList = Object.keys(arsMap).map(k => ({ name: k, val: arsMap[k] })).sort((a,b) => b.val - a.val);
+        const lensesList = Object.keys(lensesMap).map(k => ({ name: k, val: Number(lensesMap[k]) || 0 })).sort((a,b) => b.val - a.val);
+        const arsList = Object.keys(arsMap).map(k => ({ name: k, val: Number(arsMap[k]) || 0 })).sort((a,b) => b.val - a.val);
 
         // Ticket Médio por Vendedor (v3.93)
         const sellersTicketList = Object.keys(sellersMap).map(k => {
@@ -3931,21 +3931,22 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const maxVal = list[0].val;
+        const maxVal = list[0].val || 1;
         container.innerHTML = '';
 
         list.slice(0, 5).forEach((item, index) => {
-            const pct = maxVal > 0 ? (item.val / maxVal) * 100 : 0;
+            const rawVal = Number(item.val) || 0;
+            const pct = maxVal > 0 ? (rawVal / maxVal) * 100 : 0;
             let valFormatted = '';
             let detailHtml = '';
 
             if (type === 'points') {
-                valFormatted = `${item.val} Pts`;
+                valFormatted = `${rawVal} Pts`;
             } else if (type === 'sales') {
-                const textSuffix = item.val === 1 ? 'venda' : 'vendas';
-                valFormatted = `${item.val} ${textSuffix}`;
+                const textSuffix = rawVal === 1 ? 'venda' : 'vendas';
+                valFormatted = `${rawVal} ${textSuffix}`;
             } else if (type === 'currency') {
-                valFormatted = `R$ ${Number(item.val).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                valFormatted = `R$ ${rawVal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                 if (item.extraInfo) {
                     detailHtml = `<span style="font-size: 10px; color: var(--text-muted); font-weight: normal; margin-left: 4px;">(${escapeHtml(item.extraInfo)})</span>`;
                 }
@@ -4429,19 +4430,20 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!list || list.length === 0) {
                 return '<div style="color: #94a3b8; font-size: 11px; padding: 10px 0; text-align: center;">Nenhum registro para os filtros ativos.</div>';
             }
-            const maxVal = list[0].val;
+            const maxVal = list[0].val || 1;
             return list.slice(0, 5).map((item, idx) => {
-                const pct = maxVal > 0 ? (item.val / maxVal) * 100 : 0;
+                const rawVal = Number(item.val) || 0;
+                const pct = maxVal > 0 ? (rawVal / maxVal) * 100 : 0;
                 let valFormatted = '';
                 let detailText = '';
 
                 if (type === 'points') {
-                    valFormatted = `${item.val} Pts`;
+                    valFormatted = `${rawVal} Pts`;
                 } else if (type === 'sales') {
-                    const textSuffix = item.val === 1 ? 'venda' : 'vendas';
-                    valFormatted = `${item.val} ${textSuffix}`;
+                    const textSuffix = rawVal === 1 ? 'venda' : 'vendas';
+                    valFormatted = `${rawVal} ${textSuffix}`;
                 } else if (type === 'currency') {
-                    valFormatted = `R$ ${Number(item.val).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    valFormatted = `R$ ${rawVal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                     if (item.extraInfo) {
                         detailText = ` <span style="color: #64748b; font-size: 10px; font-weight: normal;">(${escapeHtml(item.extraInfo)})</span>`;
                     }
