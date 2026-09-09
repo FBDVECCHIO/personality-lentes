@@ -1316,13 +1316,25 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                             <label style="font-size: 10px; text-transform: uppercase; color: var(--gold-light); font-weight: 700; display: block; margin-bottom: 4px; white-space: nowrap;">Loja / Ótica</label>
                             <input type="text" id="dashFilterLoja" placeholder="Ótica..." style="width: 100%; padding: 7px 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 12px;">
                         </div>
-                        <div style="width: 120px; min-width: 110px;">
+                        <div style="width: 110px; min-width: 100px;">
                             <label style="font-size: 10px; text-transform: uppercase; color: var(--gold-light); font-weight: 700; display: block; margin-bottom: 4px; white-space: nowrap;">Status</label>
                             <select id="dashFilterStatus" style="width: 100%; padding: 7px 8px; background: #121216; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 12px; font-family: inherit;">
                                 <option value="">Todos</option>
                                 <option value="Pendente">Pendentes</option>
                                 <option value="Validado">Validados</option>
                                 <option value="Pago">Pagos</option>
+                            </select>
+                        </div>
+                        <div style="width: 135px; min-width: 125px;">
+                            <label style="font-size: 10px; text-transform: uppercase; color: var(--gold-light); font-weight: 700; display: block; margin-bottom: 4px; white-space: nowrap;">Tipo de Produto</label>
+                            <select id="dashFilterTipo" style="width: 100%; padding: 7px 8px; background: #121216; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 12px; font-family: inherit;">
+                                <option value="">Todos os Tipos</option>
+                                <option value="Multifocal">Multifocal</option>
+                                <option value="Lente Pronta">Lente Pronta</option>
+                                <option value="Office">Office</option>
+                                <option value="Visão Simples">Visão Simples</option>
+                                <option value="Bifocal">Bifocal</option>
+                                <option value="Antirreflexo">Antirreflexo</option>
                             </select>
                         </div>
                         <div style="width: 125px; min-width: 115px;">
@@ -1656,6 +1668,6 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
             </form>
         </div>
     </div>
-    <script src="admin.js?v=3.96"></script>
+    <script src="admin.js?v=3.97"></script>
 </body>
 </html>

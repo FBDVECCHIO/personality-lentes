@@ -3593,6 +3593,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const dashFilterVendedor = document.getElementById('dashFilterVendedor');
     const dashFilterLoja = document.getElementById('dashFilterLoja');
     const dashFilterStatus = document.getElementById('dashFilterStatus');
+    const dashFilterTipo = document.getElementById('dashFilterTipo');
     const dashDateStart = document.getElementById('dashDateStart');
     const dashDateEnd = document.getElementById('dashDateEnd');
     const btnPrintSelectedDash = document.getElementById('btnPrintSelectedDash');
@@ -3601,8 +3602,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let lastFilteredDashSales = [];
 
-    // Listeners do Dashboard (v3.87)
-    [dashFilterVendedor, dashFilterLoja, dashFilterStatus, dashDateStart, dashDateEnd].forEach(el => {
+    // Listeners do Dashboard (v3.87 / v3.97)
+    [dashFilterVendedor, dashFilterLoja, dashFilterStatus, dashFilterTipo, dashDateStart, dashDateEnd].forEach(el => {
         if (el) el.addEventListener('input', () => renderDashboardPremios());
         if (el && (el.tagName === 'SELECT' || el.type === 'date')) el.addEventListener('change', () => renderDashboardPremios());
     });
@@ -3632,6 +3633,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (dashFilterVendedor) dashFilterVendedor.value = '';
             if (dashFilterLoja) dashFilterLoja.value = '';
             if (dashFilterStatus) dashFilterStatus.value = '';
+            if (dashFilterTipo) dashFilterTipo.value = '';
             if (dashDateStart) dashDateStart.value = '';
             if (dashDateEnd) dashDateEnd.value = '';
             renderDashboardPremios();
@@ -3779,6 +3781,27 @@ document.addEventListener('DOMContentLoaded', () => {
         return valLente + valAr;
     }
 
+    function getSaleProductType(sale) {
+        if (!sale) return '';
+        if (sale.tipo) return sale.tipo;
+
+        // 1. Busca em adminPremiosConfig pelo nome exato ou sem case
+        if (sale.lente_familia && typeof adminPremiosConfig !== 'undefined' && Array.isArray(adminPremiosConfig)) {
+            const matchL = adminPremiosConfig.find(p => p.nome && (p.nome === sale.lente_familia || p.nome.trim().toLowerCase() === sale.lente_familia.trim().toLowerCase()));
+            if (matchL && matchL.tipo) return matchL.tipo;
+        }
+
+        // 2. Reconhecimento automático por padrão de nomenclatura e prefixos
+        const lf = (sale.lente_familia || '').trim().toUpperCase();
+        if (lf.startsWith('LP ') || lf.includes('LENTE PRONTA') || lf.includes('PRONTA')) return 'Lente Pronta';
+        if (lf.startsWith('PR ') || lf.includes('MULTI') || lf.includes('PROGRESSIV') || lf.includes('DESIGN') || lf.includes('TECNO') || lf.includes('MAXVISION') || lf.includes('GOLD COMFORT') || lf.includes('GOLD LINE') || lf.includes('MULTIFOCAL')) return 'Multifocal';
+        if (lf.startsWith('OF ') || lf.includes('OFFICE') || lf.includes('OCUPACIONAL')) return 'Office';
+        if (lf.startsWith('VS ') || lf.includes('VISAO SIMPLES') || lf.includes('VISÃO SIMPLES') || lf.includes('MONOFOCAL')) return 'Visão Simples';
+        if (lf.startsWith('BF ') || lf.includes('BIFOCAL')) return 'Bifocal';
+
+        return 'Outros';
+    }
+
     function renderDashboardPremios() {
         if (!allSubmittedSales) return;
 
@@ -3787,8 +3810,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const vendedorVal = dashFilterVendedor ? dashFilterVendedor.value.trim().toLowerCase() : '';
         const lojaVal = dashFilterLoja ? dashFilterLoja.value.trim().toLowerCase() : '';
         const statusVal = dashFilterStatus ? dashFilterStatus.value : '';
+        const tipoVal = dashFilterTipo ? dashFilterTipo.value : '';
 
-        // Filtra vendas por data, vendedor, loja e status (v3.87)
+        // Filtra vendas por data, vendedor, loja, status e tipo de produto (v3.97)
         const filtered = allSubmittedSales.filter(sale => {
             // Filtro de data (YYYY-MM-DD)
             if (startVal || endVal) {
@@ -3807,6 +3831,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Filtro status
             if (statusVal && sale.status !== statusVal) return false;
+
+            // Filtro tipo de produto
+            if (tipoVal) {
+                if (tipoVal === 'Antirreflexo') {
+                    const hasAr = sale.ar_familia && sale.ar_familia !== 'N/A' && sale.ar_familia !== 'Nenhum' && sale.ar_familia.trim() !== '';
+                    if (!hasAr) return false;
+                } else {
+                    const pType = getSaleProductType(sale);
+                    if (pType.toLowerCase() !== tipoVal.toLowerCase()) return false;
+                }
+            }
 
             return true;
         });
@@ -4439,6 +4474,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const vendFilter = dashFilterVendedor && dashFilterVendedor.value.trim() ? dashFilterVendedor.value.trim() : 'Todos';
         const lojaFilter = dashFilterLoja && dashFilterLoja.value.trim() ? dashFilterLoja.value.trim() : 'Todas';
         const statusFilter = dashFilterStatus && dashFilterStatus.value ? dashFilterStatus.value : 'Todos';
+        const tipoFilter = dashFilterTipo && dashFilterTipo.value ? dashFilterTipo.value : 'Todos os Tipos';
         const startFilter = dashDateStart && dashDateStart.value ? new Date(dashDateStart.value + 'T00:00:00').toLocaleDateString('pt-BR') : 'Início';
         const endFilter = dashDateEnd && dashDateEnd.value ? new Date(dashDateEnd.value + 'T00:00:00').toLocaleDateString('pt-BR') : 'Atual';
         const periodoText = (dashDateStart && dashDateStart.value) || (dashDateEnd && dashDateEnd.value) ? `${startFilter} até ${endFilter}` : 'Geral (Todo o Período)';
@@ -4533,6 +4569,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div><strong>Ótica / Loja:</strong> ${escapeHtml(lojaFilter)}</div>
                     <div><strong>Vendedor:</strong> ${escapeHtml(vendFilter)}</div>
                     <div><strong>Status:</strong> ${escapeHtml(statusFilter)}</div>
+                    <div><strong>Tipo de Produto:</strong> ${escapeHtml(tipoFilter)}</div>
                 </div>
 
                 <!-- Os 6 Cards de Indicadores do Dashboard -->
