@@ -3781,23 +3781,99 @@ document.addEventListener('DOMContentLoaded', () => {
         return valLente + valAr;
     }
 
-    function getSaleProductType(sale) {
-        if (!sale) return '';
-        if (sale.tipo) return sale.tipo;
+    function normalizeProductType(str) {
+        if (!str) return 'Outros';
+        const s = String(str).trim().toUpperCase();
 
-        // 1. Busca em adminPremiosConfig pelo nome exato ou sem case
-        if (sale.lente_familia && typeof adminPremiosConfig !== 'undefined' && Array.isArray(adminPremiosConfig)) {
-            const matchL = adminPremiosConfig.find(p => p.nome && (p.nome === sale.lente_familia || p.nome.trim().toLowerCase() === sale.lente_familia.trim().toLowerCase()));
-            if (matchL && matchL.tipo) return matchL.tipo;
+        // 1. Office / Ocupacional (Verificar antes de multifocal para não conflitar com IA/Digital)
+        if (s === 'OFFICE' || s === 'OCUPACIONAL' || s === 'OCUPACIONAIS' || s.startsWith('OF ') || s.includes('OFFICE') || s.includes('OCUPACIONAL')) {
+            return 'Office';
         }
 
-        // 2. Reconhecimento automático por padrão de nomenclatura e prefixos
-        const lf = (sale.lente_familia || '').trim().toUpperCase();
-        if (lf.startsWith('LP ') || lf.includes('LENTE PRONTA') || lf.includes('PRONTA')) return 'Lente Pronta';
-        if (lf.startsWith('PR ') || lf.includes('MULTI') || lf.includes('PROGRESSIV') || lf.includes('DESIGN') || lf.includes('TECNO') || lf.includes('MAXVISION') || lf.includes('GOLD COMFORT') || lf.includes('GOLD LINE') || lf.includes('MULTIFOCAL')) return 'Multifocal';
-        if (lf.startsWith('OF ') || lf.includes('OFFICE') || lf.includes('OCUPACIONAL')) return 'Office';
-        if (lf.startsWith('VS ') || lf.includes('VISAO SIMPLES') || lf.includes('VISÃO SIMPLES') || lf.includes('MONOFOCAL')) return 'Visão Simples';
-        if (lf.startsWith('BF ') || lf.includes('BIFOCAL')) return 'Bifocal';
+        // 2. Multifocais / Progressivas (PR, Multi, Progressiva, IA, etc.)
+        if (
+            s === 'MULTIFOCAL' || s === 'MULTIFOCAIS' || 
+            s === 'PROGRESSIVA' || s === 'PROGRESSIVAS' || 
+            s === 'PROGRESSIVO' || s === 'PROGRESSIVOS' || 
+            s.startsWith('PR ') || s.startsWith('PR-') || 
+            s.includes('MULTI') || s.includes('PROGRESSIV') || 
+            s.includes('DIGITAL HD') || s.includes('MAXVISION') || 
+            s.includes('TECNO LINE') || s.includes('GOLD DESIGN') || 
+            s.includes('GOLD COMFORT') || s.includes('GOLD LINE') || 
+            s.includes('GOLD PREMIUM') || s.includes('PREMIUM HD')
+        ) {
+            return 'Multifocal';
+        }
+
+        // 3. Lentes Prontas (LP, Estoque, Pronta)
+        if (
+            s === 'LENTE PRONTA' || s === 'LENTES PRONTAS' || 
+            s.startsWith('LP ') || s.startsWith('LP-') || 
+            s.includes('LENTE PRONTA') || s.includes('PRONTA') || 
+            s.includes('ESTOQUE')
+        ) {
+            return 'Lente Pronta';
+        }
+
+        // 4. Visão Simples / Monofocal (Surfaçada / Digital)
+        if (
+            s === 'VISÃO SIMPLES' || s === 'VISAO SIMPLES' || 
+            s === 'MONOFOCAL' || s === 'MONOFOCAIS' || 
+            s === 'SINGLE VISION' || 
+            s.startsWith('VS ') || s.startsWith('VS-') || 
+            s.includes('VISAO SIMPLES') || s.includes('VISÃO SIMPLES') || 
+            s.includes('MONOFOCAL')
+        ) {
+            return 'Visão Simples';
+        }
+
+        // 5. Bifocais
+        if (s === 'BIFOCAL' || s === 'BIFOCAIS' || s.startsWith('BF ') || s.includes('BIFOCAL')) {
+            return 'Bifocal';
+        }
+
+        // 6. Antirreflexo / Tratamentos
+        if (
+            s === 'ANTIRREFLEXO' || s === 'ANTIRREFLEXOS' || 
+            s === 'AR' || s.startsWith('AR ') || 
+            s.includes('ANTIRREFLEXO') || s.includes('CLEAN GREEN') || 
+            s.includes('BLUE CONTROL') || s.includes('SUPER CLEAN') || 
+            s.includes('BLUECUT') || s.includes('FILTRO AZUL')
+        ) {
+            return 'Antirreflexo';
+        }
+
+        return 'Outros';
+    }
+
+    function getSaleProductType(sale) {
+        if (!sale) return 'Outros';
+
+        const lf = sale.lente_familia || '';
+
+        // 1. Busca se há correspondência na configuração de produtos (adminPremiosConfig)
+        if (lf && typeof adminPremiosConfig !== 'undefined' && Array.isArray(adminPremiosConfig)) {
+            const matchL = adminPremiosConfig.find(p => p.nome && (p.nome === lf || p.nome.trim().toLowerCase() === lf.trim().toLowerCase()));
+            if (matchL) {
+                if (matchL.tipo) {
+                    const norm = normalizeProductType(matchL.tipo);
+                    if (norm !== 'Outros') return norm;
+                }
+                if (matchL.categoria === 'antirreflexo') return 'Antirreflexo';
+            }
+        }
+
+        // 2. Normaliza diretamente a partir da família/nome da lente (ex: "PR MULTI PREMIUM 1.61", "LP PERSONALITY 1.61", etc.)
+        if (lf) {
+            const normLf = normalizeProductType(lf);
+            if (normLf !== 'Outros') return normLf;
+        }
+
+        // 3. Fallback se a O.S. tiver campo tipo explícito
+        if (sale.tipo) {
+            const normSaleTipo = normalizeProductType(sale.tipo);
+            if (normSaleTipo !== 'Outros') return normSaleTipo;
+        }
 
         return 'Outros';
     }
@@ -3834,12 +3910,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Filtro tipo de produto
             if (tipoVal) {
-                if (tipoVal === 'Antirreflexo') {
+                const targetNorm = normalizeProductType(tipoVal);
+                if (targetNorm === 'Antirreflexo') {
                     const hasAr = sale.ar_familia && sale.ar_familia !== 'N/A' && sale.ar_familia !== 'Nenhum' && sale.ar_familia.trim() !== '';
-                    if (!hasAr) return false;
+                    const isArLens = getSaleProductType(sale) === 'Antirreflexo';
+                    if (!hasAr && !isArLens) return false;
                 } else {
                     const pType = getSaleProductType(sale);
-                    if (pType.toLowerCase() !== tipoVal.toLowerCase()) return false;
+                    if (pType !== targetNorm) return false;
                 }
             }
 
