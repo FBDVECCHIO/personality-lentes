@@ -3700,17 +3700,45 @@ document.addEventListener('DOMContentLoaded', () => {
         renderDashboardPremios();
     }
 
+    function getSellerInfo(row, sellersList = []) {
+        const rowIdStr = row.vendedor_id !== undefined && row.vendedor_id !== null ? String(row.vendedor_id).trim() : '';
+        const rowName = (row.vendedor_nome || '').trim().toLowerCase();
+        const rowCpf = (row.cpf || row.cpf_vendedor || '').replace(/\D/g, '');
+
+        const found = (sellersList || []).find(s => {
+            const sIdStr = s.id !== undefined && s.id !== null ? String(s.id).trim() : '';
+            const sName = (s.nome || '').trim().toLowerCase();
+            const sCpf = (s.cpf_cnpj || s.cpf || '').replace(/\D/g, '');
+
+            if (rowIdStr && sIdStr && rowIdStr === sIdStr) return true;
+            if (rowName && sName && rowName === sName) return true;
+            if (rowCpf && sCpf && rowCpf === sCpf) return true;
+            return false;
+        });
+
+        return found || {
+            cpf_cnpj: row.cpf || row.cpf_vendedor || 'n/d',
+            whatsapp: row.whatsapp || '',
+            loja_clinica: row.loja || ''
+        };
+    }
+
     async function loadPremiosManager() {
         if (!adminPremiosTableBody) return;
 
         await loadGeneralConfig();
+
+        // Garante que a lista de membros/vendedores esteja carregada para cruzar CPF, WhatsApp e Ótica
+        if (!loadedMembersList || loadedMembersList.length === 0) {
+            await loadProfessionals();
+        }
 
         const url = getSupabaseUrl();
         const key = getSupabaseKey();
         const table = localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
 
         if (url && key) {
-            adminPremiosTableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted);">Buscando lançamentos...</td></tr>`;
+            adminPremiosTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Buscando lançamentos...</td></tr>`;
             try {
                 const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
                 const response = await fetch(`${cleanUrl}/rest/v1/${table}?select=*&order=created_at.desc`, {
@@ -4026,22 +4054,29 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSelectAllPremiosCheckbox();
 
         // 3. Renderiza Tabela de Payout Consolidados por Vendedor
-        // Agrupa todas as O.S. com status 'Validado' (A pagar)
+        const sellersList = (loadedMembersList || []).filter(m => m.tipo === 'vend');
+
+        // Agrupa todas as O.S. com status 'Validado' / 'A Pagar'
         const validadosPorVendedor = {};
         
         allSubmittedSales.forEach(sale => {
-            if (sale.status === 'Validado') {
-                const vId = sale.vendedor_id;
-                if (!validadosPorVendedor[vId]) {
-                    validadosPorVendedor[vId] = {
-                        vendedor_nome: sale.vendedor_nome,
-                        loja: sale.loja,
+            const st = (sale.status || '').trim().toLowerCase();
+            if (st === 'validado' || st === 'a pagar') {
+                const vKey = sale.vendedor_id ? String(sale.vendedor_id) : (sale.vendedor_nome ? 'nome_' + sale.vendedor_nome.trim().toLowerCase() : 'vend_' + (sale.os || Math.random()));
+                if (!validadosPorVendedor[vKey]) {
+                    validadosPorVendedor[vKey] = {
+                        vendedor_nome: sale.vendedor_nome || 'Vendedor Desconhecido',
+                        loja: sale.loja || '',
                         total_pontos: 0,
-                        vendedor_id: vId,
+                        vendedor_id: sale.vendedor_id || '',
+                        cpf: sale.cpf_vendedor || sale.cpf || '',
                         status: 'Validado'
                     };
                 }
-                validadosPorVendedor[vId].total_pontos += (Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0));
+                validadosPorVendedor[vKey].total_pontos += (Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0));
+                if (!validadosPorVendedor[vKey].loja && sale.loja) {
+                    validadosPorVendedor[vKey].loja = sale.loja;
+                }
             }
         });
 
@@ -4049,27 +4084,50 @@ document.addEventListener('DOMContentLoaded', () => {
         const pagosPorVendedor = {};
         
         allSubmittedSales.forEach(sale => {
-            if (sale.status === 'Pago') {
-                const vId = sale.vendedor_id;
-                if (!pagosPorVendedor[vId]) {
-                    pagosPorVendedor[vId] = {
-                        vendedor_nome: sale.vendedor_nome,
-                        loja: sale.loja,
+            const st = (sale.status || '').trim().toLowerCase();
+            if (st === 'pago' || st === 'pago e conciliado' || st.startsWith('pago')) {
+                const vKey = sale.vendedor_id ? String(sale.vendedor_id) : (sale.vendedor_nome ? 'nome_' + sale.vendedor_nome.trim().toLowerCase() : 'vend_' + (sale.os || Math.random()));
+                if (!pagosPorVendedor[vKey]) {
+                    pagosPorVendedor[vKey] = {
+                        vendedor_nome: sale.vendedor_nome || 'Vendedor Desconhecido',
+                        loja: sale.loja || '',
                         total_pontos: 0,
-                        vendedor_id: vId,
+                        vendedor_id: sale.vendedor_id || '',
+                        cpf: sale.cpf_vendedor || sale.cpf || '',
                         status: 'Pago'
                     };
                 }
-                pagosPorVendedor[vId].total_pontos += (Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0));
+                pagosPorVendedor[vKey].total_pontos += (Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0));
+                if (!pagosPorVendedor[vKey].loja && sale.loja) {
+                    pagosPorVendedor[vKey].loja = sale.loja;
+                }
             }
         });
 
-        // Para pegar o WhatsApp e o CPF do vendedor, mapear com a lista de membros
-        const sellersList = loadedMembersList.filter(m => m.tipo === 'vend');
-        const allConsolidadoRows = Object.values(validadosPorVendedor);
-        const allConsolidadoPagosRows = Object.values(pagosPorVendedor);
-
         // Filtros do Card 2 (Apuração Consolidada)
+        const apuracaoStatusVal = filterApuracaoStatus ? filterApuracaoStatus.value : '';
+        let allConsolidadoRows = Object.values(validadosPorVendedor);
+
+        if (apuracaoStatusVal === 'Todos') {
+            const todosPorVendedor = {};
+            allSubmittedSales.forEach(sale => {
+                const vKey = sale.vendedor_id ? String(sale.vendedor_id) : (sale.vendedor_nome ? 'nome_' + sale.vendedor_nome.trim().toLowerCase() : 'vend_' + (sale.os || Math.random()));
+                if (!todosPorVendedor[vKey]) {
+                    todosPorVendedor[vKey] = {
+                        vendedor_nome: sale.vendedor_nome || 'Vendedor Desconhecido',
+                        loja: sale.loja || '',
+                        total_pontos: 0,
+                        vendedor_id: sale.vendedor_id || '',
+                        cpf: sale.cpf_vendedor || sale.cpf || '',
+                        status: sale.status || 'Pendente'
+                    };
+                }
+                todosPorVendedor[vKey].total_pontos += (Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0));
+                if (!todosPorVendedor[vKey].loja && sale.loja) todosPorVendedor[vKey].loja = sale.loja;
+            });
+            allConsolidadoRows = Object.values(todosPorVendedor);
+        }
+
         const apuracaoVendVal = filterApuracaoVendedor ? filterApuracaoVendedor.value.trim().toLowerCase() : '';
         const apuracaoLojaVal = filterApuracaoLoja ? filterApuracaoLoja.value.trim().toLowerCase() : '';
         
@@ -4086,24 +4144,26 @@ document.addEventListener('DOMContentLoaded', () => {
             adminConsolidadoTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Nenhum vendedor possui saldo pendente de pagamento correspondente aos filtros.</td></tr>`;
         } else {
             filteredConsolidadoRows.forEach(row => {
-                const sellerInfo = sellersList.find(s => s.id === row.vendedor_id) || {};
+                const sellerInfo = getSellerInfo(row, sellersList);
                 const totalCash = row.total_pontos * valorPontoConfig;
+                const storeDisplay = row.loja || sellerInfo.loja_clinica || 'Não informada';
+                const cpfDisplay = sellerInfo.cpf_cnpj || row.cpf || 'n/d';
                 
                 const rawPhone = (sellerInfo.whatsapp || '').replace(/\D/g, '');
-                const waLink = rawPhone ? `<a href="https://wa.me/55${rawPhone}" target="_blank" class="wa-link">💬 ${escapeHtml(sellerInfo.whatsapp)}</a>` : 'Não informado';
+                const waLink = rawPhone ? `<a href="https://wa.me/55${rawPhone}" target="_blank" class="wa-link">💬 ${escapeHtml(sellerInfo.whatsapp)}</a>` : '<span style="color:var(--text-muted);">Não informado</span>';
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><strong>${escapeHtml(row.vendedor_nome)}</strong></td>
-                    <td><code>${escapeHtml(sellerInfo.cpf_cnpj || 'n/d')}</code></td>
-                    <td>${escapeHtml(row.loja)}</td>
+                    <td><code>${escapeHtml(cpfDisplay)}</code></td>
+                    <td>${escapeHtml(storeDisplay)}</td>
                     <td>${waLink}</td>
                     <td>
                         <strong style="color: #10b981; font-size:16px;">R$ ${totalCash.toFixed(2)}</strong>
                         <br><small style="color:var(--text-muted);">${row.total_pontos} Pts acumulados</small>
                     </td>
                     <td>
-                        <button class="btn btn-success btn-sm btn-bulk-payout" data-vendedor-id="${row.vendedor_id}" data-name="${escapeHtml(row.vendedor_nome)}" style="font-weight:700;">Pagar Todos desse Vendedor 💰</button>
+                        <button class="btn btn-success btn-sm btn-bulk-payout" data-vendedor-id="${row.vendedor_id || ''}" data-name="${escapeHtml(row.vendedor_nome || '')}" style="font-weight:700;">Pagar Todos desse Vendedor 💰</button>
                     </td>
                 `;
                 adminConsolidadoTableBody.appendChild(tr);
@@ -4111,6 +4171,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Filtros do Card 3 (Histórico de Pagos Consolidado)
+        const histStatusVal = filterHistPagosStatus ? filterHistPagosStatus.value : '';
+        let allConsolidadoPagosRows = Object.values(pagosPorVendedor);
+
+        if (histStatusVal === 'Todos') {
+            const todosHistPorVendedor = {};
+            allSubmittedSales.forEach(sale => {
+                const vKey = sale.vendedor_id ? String(sale.vendedor_id) : (sale.vendedor_nome ? 'nome_' + sale.vendedor_nome.trim().toLowerCase() : 'vend_' + (sale.os || Math.random()));
+                if (!todosHistPorVendedor[vKey]) {
+                    todosHistPorVendedor[vKey] = {
+                        vendedor_nome: sale.vendedor_nome || 'Vendedor Desconhecido',
+                        loja: sale.loja || '',
+                        total_pontos: 0,
+                        vendedor_id: sale.vendedor_id || '',
+                        cpf: sale.cpf_vendedor || sale.cpf || '',
+                        status: sale.status || 'Pago'
+                    };
+                }
+                todosHistPorVendedor[vKey].total_pontos += (Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0));
+                if (!todosHistPorVendedor[vKey].loja && sale.loja) todosHistPorVendedor[vKey].loja = sale.loja;
+            });
+            allConsolidadoPagosRows = Object.values(todosHistPorVendedor);
+        }
+
         const histVendVal = filterHistPagosVendedor ? filterHistPagosVendedor.value.trim().toLowerCase() : '';
         const histLojaVal = filterHistPagosLoja ? filterHistPagosLoja.value.trim().toLowerCase() : '';
 
@@ -4130,17 +4213,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 adminConsolidadoPagosTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Nenhum pagamento correspondente aos filtros ativos.</td></tr>`;
             } else {
                 filteredConsolidadoPagosRows.forEach(row => {
-                    const sellerInfo = sellersList.find(s => s.id === row.vendedor_id) || {};
+                    const sellerInfo = getSellerInfo(row, sellersList);
                     const totalCashPaid = row.total_pontos * valorPontoConfig;
+                    const storeDisplay = row.loja || sellerInfo.loja_clinica || 'Não informada';
+                    const cpfDisplay = sellerInfo.cpf_cnpj || row.cpf || 'n/d';
                     
                     const rawPhone = (sellerInfo.whatsapp || '').replace(/\D/g, '');
-                    const waLink = rawPhone ? `<a href="https://wa.me/55${rawPhone}" target="_blank" class="wa-link">💬 ${escapeHtml(sellerInfo.whatsapp)}</a>` : 'Não informado';
+                    const waLink = rawPhone ? `<a href="https://wa.me/55${rawPhone}" target="_blank" class="wa-link">💬 ${escapeHtml(sellerInfo.whatsapp)}</a>` : '<span style="color:var(--text-muted);">Não informado</span>';
 
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td><strong>${escapeHtml(row.vendedor_nome)}</strong></td>
-                        <td><code>${escapeHtml(sellerInfo.cpf_cnpj || 'n/d')}</code></td>
-                        <td>${escapeHtml(row.loja)}</td>
+                        <td><code>${escapeHtml(cpfDisplay)}</code></td>
+                        <td>${escapeHtml(storeDisplay)}</td>
                         <td>${waLink}</td>
                         <td>
                             <strong style="color: #60a5fa; font-size:16px;">R$ ${totalCashPaid.toFixed(2)}</strong>
@@ -4468,7 +4553,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const sellersList = loadedMembersList.filter(m => m.tipo === 'vend');
+        const sellersList = (loadedMembersList || []).filter(m => m.tipo === 'vend');
         let totalGeralPts = 0;
         let totalGeralCash = 0;
 
@@ -4526,14 +4611,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     </thead>
                     <tbody>
                         ${items.map(row => {
-                            const sellerInfo = sellersList.find(s => s.id === row.vendedor_id) || {};
+                            const sellerInfo = getSellerInfo(row, sellersList);
                             const cash = row.total_pontos * valorPontoConfig;
+                            const storeDisplay = row.loja || sellerInfo.loja_clinica || 'Não informada';
+                            const cpfDisplay = sellerInfo.cpf_cnpj || row.cpf || 'n/d';
+                            const waDisplay = sellerInfo.whatsapp || 'Não informado';
                             return `
                                 <tr>
                                     <td><strong>${escapeHtml(row.vendedor_nome)}</strong></td>
-                                    <td><code>${escapeHtml(sellerInfo.cpf_cnpj || 'n/d')}</code></td>
-                                    <td>${escapeHtml(row.loja)}</td>
-                                    <td>${escapeHtml(sellerInfo.whatsapp || 'Não informado')}</td>
+                                    <td><code>${escapeHtml(cpfDisplay)}</code></td>
+                                    <td>${escapeHtml(storeDisplay)}</td>
+                                    <td>${escapeHtml(waDisplay)}</td>
                                     <td class="pts-column">${row.total_pontos} Pts</td>
                                     <td class="cash-column">R$ ${cash.toFixed(2)}</td>
                                     <td>A Pagar (Validado) ⏳</td>
@@ -4570,7 +4658,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const sellersList = loadedMembersList.filter(m => m.tipo === 'vend');
+        const sellersList = (loadedMembersList || []).filter(m => m.tipo === 'vend');
         let totalGeralPts = 0;
         let totalGeralCash = 0;
 
@@ -4628,14 +4716,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     </thead>
                     <tbody>
                         ${items.map(row => {
-                            const sellerInfo = sellersList.find(s => s.id === row.vendedor_id) || {};
+                            const sellerInfo = getSellerInfo(row, sellersList);
                             const cash = row.total_pontos * valorPontoConfig;
+                            const storeDisplay = row.loja || sellerInfo.loja_clinica || 'Não informada';
+                            const cpfDisplay = sellerInfo.cpf_cnpj || row.cpf || 'n/d';
+                            const waDisplay = sellerInfo.whatsapp || 'Não informado';
                             return `
                                 <tr>
                                     <td><strong>${escapeHtml(row.vendedor_nome)}</strong></td>
-                                    <td><code>${escapeHtml(sellerInfo.cpf_cnpj || 'n/d')}</code></td>
-                                    <td>${escapeHtml(row.loja)}</td>
-                                    <td>${escapeHtml(sellerInfo.whatsapp || 'Não informado')}</td>
+                                    <td><code>${escapeHtml(cpfDisplay)}</code></td>
+                                    <td>${escapeHtml(storeDisplay)}</td>
+                                    <td>${escapeHtml(waDisplay)}</td>
                                     <td class="pts-column">${row.total_pontos} Pts</td>
                                     <td class="cash-column">R$ ${cash.toFixed(2)}</td>
                                     <td>Pago e Conciliado ✅</td>
@@ -4706,10 +4797,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (bulkPayoutBtns) {
             bulkPayoutBtns.forEach(btn => {
                 btn.addEventListener('click', async () => {
-                    const vendedorId = btn.getAttribute('data-vendedor-id');
-                    const vendedorName = btn.getAttribute('data-name');
+                    const vendedorId = btn.getAttribute('data-vendedor-id') || '';
+                    const vendedorName = btn.getAttribute('data-name') || '';
                     if (confirm(`Confirmar o pagamento geral de prêmios em lote para o vendedor "${vendedorName}"? Todas as O.S. validadas dele serão marcadas como Pagas.`)) {
-                        await payBulkSalesForSeller(vendedorId);
+                        await payBulkSalesForSeller(vendedorId, vendedorName);
                     }
                 });
             });
@@ -4789,7 +4880,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('personality_local_premios', JSON.stringify(filtered));
     }
 
-    async function payBulkSalesForSeller(vendedorId) {
+    async function payBulkSalesForSeller(vendedorId, vendedorName) {
         const url = getSupabaseUrl();
         const key = getSupabaseKey();
         const table = localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
@@ -4797,8 +4888,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (url && key) {
             try {
                 const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
-                // Filtra as validadas desse vendedor
-                const response = await fetch(`${cleanUrl}/rest/v1/${table}?vendedor_id=eq.${vendedorId}&status=eq.Validado`, {
+                const filterQuery = vendedorId ? `vendedor_id=eq.${encodeURIComponent(vendedorId)}` : `vendedor_nome=eq.${encodeURIComponent(vendedorName)}`;
+                const response = await fetch(`${cleanUrl}/rest/v1/${table}?${filterQuery}&status=in.(Validado,validado,"A Pagar")`, {
                     method: 'PATCH',
                     headers: {
                         'apikey': key,
@@ -4808,26 +4899,37 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({ status: 'Pago' })
                 });
                 if (!response.ok) {
-                    throw new Error('Falha no update em lote.');
+                    await fetch(`${cleanUrl}/rest/v1/${table}?${filterQuery}&status=eq.Validado`, {
+                        method: 'PATCH',
+                        headers: {
+                            'apikey': key,
+                            'Authorization': `Bearer ${key}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ status: 'Pago' })
+                    });
                 }
                 alert('Pagamento geral em lote concluído com sucesso!');
             } catch (err) {
                 console.error(err);
-                payLocalBulkSales(vendedorId);
+                payLocalBulkSales(vendedorId, vendedorName);
                 alert('Pagamento geral concluído localmente.');
             }
         } else {
-            payLocalBulkSales(vendedorId);
+            payLocalBulkSales(vendedorId, vendedorName);
             alert('Pagamento geral concluído localmente.');
         }
 
-        loadPremiosManager();
+        await loadPremiosManager();
     }
 
-    function payLocalBulkSales(vendedorId) {
+    function payLocalBulkSales(vendedorId, vendedorName) {
         const local = JSON.parse(localStorage.getItem('personality_local_premios')) || [];
         local.forEach(s => {
-            if (s.vendedor_id === vendedorId && s.status === 'Validado') {
+            const matchId = vendedorId && String(s.vendedor_id) === String(vendedorId);
+            const matchName = vendedorName && s.vendedor_nome && s.vendedor_nome.trim().toLowerCase() === vendedorName.trim().toLowerCase();
+            const st = (s.status || '').trim().toLowerCase();
+            if ((matchId || matchName) && (st === 'validado' || st === 'a pagar')) {
                 s.status = 'Pago';
             }
         });
