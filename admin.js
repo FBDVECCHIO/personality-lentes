@@ -3887,8 +3887,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Converte em arrays e ordena
         const sellersList = Object.keys(sellersMap).map(k => ({ name: k, val: sellersMap[k].points })).sort((a,b) => b.val - a.val);
         const storesList = Object.keys(storesMap).map(k => ({ name: k, val: storesMap[k].points })).sort((a,b) => b.val - a.val);
-        const lensesList = Object.keys(lensesMap).map(k => ({ name: k, val: lensesMap[k].salesCount })).sort((a,b) => b.val - a.val);
-        const arsList = Object.keys(arsMap).map(k => ({ name: k, val: arsMap[k].salesCount })).sort((a,b) => b.val - a.val);
+        const lensesList = Object.keys(lensesMap).map(k => ({ name: k, val: lensesMap[k] })).sort((a,b) => b.val - a.val);
+        const arsList = Object.keys(arsMap).map(k => ({ name: k, val: arsMap[k] })).sort((a,b) => b.val - a.val);
 
         // Ticket Médio por Vendedor (v3.93)
         const sellersTicketList = Object.keys(sellersMap).map(k => {
