@@ -3832,25 +3832,34 @@ document.addEventListener('DOMContentLoaded', () => {
             totalPoints += pts;
             totalRevenue += saleRev;
 
-            if (sale.loja) storesSet.add(sale.loja.trim());
+            if (sale.loja) storesSet.add(sale.loja.trim().toLowerCase());
 
-            // Vendedores
-            const seller = sale.vendedor_nome || 'Desconhecido';
-            if (!sellersMap[seller]) {
-                sellersMap[seller] = { points: 0, salesCount: 0, revenue: 0 };
+            // Vendedores (agrupamento inteligente insensível a maiúsculas/minúsculas)
+            const rawSeller = (sale.vendedor_nome || 'Desconhecido').trim();
+            const sellerKey = rawSeller.toLowerCase();
+            if (!sellersMap[sellerKey]) {
+                sellersMap[sellerKey] = { name: rawSeller, points: 0, salesCount: 0, revenue: 0 };
             }
-            sellersMap[seller].points += pts;
-            sellersMap[seller].salesCount++;
-            sellersMap[seller].revenue += saleRev;
+            // Prioriza o nome com capitalização correta/mais completa
+            if (rawSeller !== rawSeller.toLowerCase() && (sellersMap[sellerKey].name === sellersMap[sellerKey].name.toLowerCase() || rawSeller.length > sellersMap[sellerKey].name.length)) {
+                sellersMap[sellerKey].name = rawSeller;
+            }
+            sellersMap[sellerKey].points += pts;
+            sellersMap[sellerKey].salesCount++;
+            sellersMap[sellerKey].revenue += saleRev;
 
-            // Lojas
-            const store = sale.loja || 'Sem Loja';
-            if (!storesMap[store]) {
-                storesMap[store] = { points: 0, salesCount: 0, revenue: 0 };
+            // Lojas (agrupamento inteligente insensível a maiúsculas/minúsculas)
+            const rawStore = (sale.loja || 'Sem Loja').trim();
+            const storeKey = rawStore.toLowerCase();
+            if (!storesMap[storeKey]) {
+                storesMap[storeKey] = { name: rawStore, points: 0, salesCount: 0, revenue: 0 };
             }
-            storesMap[store].points += pts;
-            storesMap[store].salesCount++;
-            storesMap[store].revenue += saleRev;
+            if (rawStore !== rawStore.toLowerCase() && (storesMap[storeKey].name === storesMap[storeKey].name.toLowerCase() || rawStore.length > storesMap[storeKey].name.length)) {
+                storesMap[storeKey].name = rawStore;
+            }
+            storesMap[storeKey].points += pts;
+            storesMap[storeKey].salesCount++;
+            storesMap[storeKey].revenue += saleRev;
 
             // Lentes (por quantidade)
             if (sale.lente_familia) {
@@ -3885,30 +3894,30 @@ document.addEventListener('DOMContentLoaded', () => {
         if (elAvgTicket) elAvgTicket.textContent = `R$ ${avgTicketGeneral.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
         // Converte em arrays e ordena
-        const sellersList = Object.keys(sellersMap).map(k => ({ name: k, val: sellersMap[k].points })).sort((a,b) => b.val - a.val);
-        const storesList = Object.keys(storesMap).map(k => ({ name: k, val: storesMap[k].points })).sort((a,b) => b.val - a.val);
+        const sellersList = Object.values(sellersMap).map(item => ({ name: item.name, val: item.points })).sort((a,b) => b.val - a.val);
+        const storesList = Object.values(storesMap).map(item => ({ name: item.name, val: item.points })).sort((a,b) => b.val - a.val);
         const lensesList = Object.keys(lensesMap).map(k => ({ name: k, val: Number(lensesMap[k]) || 0 })).sort((a,b) => b.val - a.val);
         const arsList = Object.keys(arsMap).map(k => ({ name: k, val: Number(arsMap[k]) || 0 })).sort((a,b) => b.val - a.val);
 
         // Ticket Médio por Vendedor (v3.93)
-        const sellersTicketList = Object.keys(sellersMap).map(k => {
-            const avg = sellersMap[k].salesCount > 0 ? (sellersMap[k].revenue / sellersMap[k].salesCount) : 0;
-            const osText = sellersMap[k].salesCount === 1 ? '1 O.S.' : `${sellersMap[k].salesCount} O.S.`;
-            const totText = `R$ ${sellersMap[k].revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const sellersTicketList = Object.values(sellersMap).map(item => {
+            const avg = item.salesCount > 0 ? (item.revenue / item.salesCount) : 0;
+            const osText = item.salesCount === 1 ? '1 O.S.' : `${item.salesCount} O.S.`;
+            const totText = `R$ ${item.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             return {
-                name: k,
+                name: item.name,
                 val: avg,
                 extraInfo: `${osText} • Total ${totText}`
             };
         }).sort((a,b) => b.val - a.val);
 
         // Ticket Médio por Loja (v3.93)
-        const storesTicketList = Object.keys(storesMap).map(k => {
-            const avg = storesMap[k].salesCount > 0 ? (storesMap[k].revenue / storesMap[k].salesCount) : 0;
-            const osText = storesMap[k].salesCount === 1 ? '1 O.S.' : `${storesMap[k].salesCount} O.S.`;
-            const totText = `R$ ${storesMap[k].revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const storesTicketList = Object.values(storesMap).map(item => {
+            const avg = item.salesCount > 0 ? (item.revenue / item.salesCount) : 0;
+            const osText = item.salesCount === 1 ? '1 O.S.' : `${item.salesCount} O.S.`;
+            const totText = `R$ ${item.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             return {
-                name: k,
+                name: item.name,
                 val: avg,
                 extraInfo: `${osText} • Total ${totText}`
             };
@@ -4350,25 +4359,33 @@ document.addEventListener('DOMContentLoaded', () => {
             totalPoints += pts;
             totalRevenue += saleRev;
 
-            if (sale.loja) storesSet.add(sale.loja.trim());
+            if (sale.loja) storesSet.add(sale.loja.trim().toLowerCase());
 
-            // Vendedores
-            const seller = sale.vendedor_nome || 'Desconhecido';
-            if (!sellersMap[seller]) {
-                sellersMap[seller] = { points: 0, salesCount: 0, revenue: 0 };
+            // Vendedores (agrupamento inteligente insensível a maiúsculas/minúsculas)
+            const rawSeller = (sale.vendedor_nome || 'Desconhecido').trim();
+            const sellerKey = rawSeller.toLowerCase();
+            if (!sellersMap[sellerKey]) {
+                sellersMap[sellerKey] = { name: rawSeller, points: 0, salesCount: 0, revenue: 0 };
             }
-            sellersMap[seller].points += pts;
-            sellersMap[seller].salesCount++;
-            sellersMap[seller].revenue += saleRev;
+            if (rawSeller !== rawSeller.toLowerCase() && (sellersMap[sellerKey].name === sellersMap[sellerKey].name.toLowerCase() || rawSeller.length > sellersMap[sellerKey].name.length)) {
+                sellersMap[sellerKey].name = rawSeller;
+            }
+            sellersMap[sellerKey].points += pts;
+            sellersMap[sellerKey].salesCount++;
+            sellersMap[sellerKey].revenue += saleRev;
 
-            // Lojas
-            const store = sale.loja || 'Sem Loja';
-            if (!storesMap[store]) {
-                storesMap[store] = { points: 0, salesCount: 0, revenue: 0 };
+            // Lojas (agrupamento inteligente insensível a maiúsculas/minúsculas)
+            const rawStore = (sale.loja || 'Sem Loja').trim();
+            const storeKey = rawStore.toLowerCase();
+            if (!storesMap[storeKey]) {
+                storesMap[storeKey] = { name: rawStore, points: 0, salesCount: 0, revenue: 0 };
             }
-            storesMap[store].points += pts;
-            storesMap[store].salesCount++;
-            storesMap[store].revenue += saleRev;
+            if (rawStore !== rawStore.toLowerCase() && (storesMap[storeKey].name === storesMap[storeKey].name.toLowerCase() || rawStore.length > storesMap[storeKey].name.length)) {
+                storesMap[storeKey].name = rawStore;
+            }
+            storesMap[storeKey].points += pts;
+            storesMap[storeKey].salesCount++;
+            storesMap[storeKey].revenue += saleRev;
 
             // Lentes
             if (sale.lente_familia) {
@@ -4389,30 +4406,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const avgTicketGeneral = totalSales > 0 ? (totalRevenue / totalSales) : 0;
         const activeStoresCount = storesSet.size;
 
-        const sellersList = Object.keys(sellersMap).map(k => ({ name: k, val: sellersMap[k].points })).sort((a,b) => b.val - a.val);
-        const storesList = Object.keys(storesMap).map(k => ({ name: k, val: storesMap[k].points })).sort((a,b) => b.val - a.val);
+        const sellersList = Object.values(sellersMap).map(item => ({ name: item.name, val: item.points })).sort((a,b) => b.val - a.val);
+        const storesList = Object.values(storesMap).map(item => ({ name: item.name, val: item.points })).sort((a,b) => b.val - a.val);
         const lensesList = Object.keys(lensesMap).map(k => ({ name: k, val: lensesMap[k] })).sort((a,b) => b.val - a.val);
         const arsList = Object.keys(arsMap).map(k => ({ name: k, val: arsMap[k] })).sort((a,b) => b.val - a.val);
 
         // Ticket Médio por Vendedor
-        const sellersTicketList = Object.keys(sellersMap).map(k => {
-            const avg = sellersMap[k].salesCount > 0 ? (sellersMap[k].revenue / sellersMap[k].salesCount) : 0;
-            const osText = sellersMap[k].salesCount === 1 ? '1 O.S.' : `${sellersMap[k].salesCount} O.S.`;
-            const totText = `R$ ${sellersMap[k].revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const sellersTicketList = Object.values(sellersMap).map(item => {
+            const avg = item.salesCount > 0 ? (item.revenue / item.salesCount) : 0;
+            const osText = item.salesCount === 1 ? '1 O.S.' : `${item.salesCount} O.S.`;
+            const totText = `R$ ${item.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             return {
-                name: k,
+                name: item.name,
                 val: avg,
                 extraInfo: `${osText} • Total ${totText}`
             };
         }).sort((a,b) => b.val - a.val);
 
         // Ticket Médio por Loja
-        const storesTicketList = Object.keys(storesMap).map(k => {
-            const avg = storesMap[k].salesCount > 0 ? (storesMap[k].revenue / storesMap[k].salesCount) : 0;
-            const osText = storesMap[k].salesCount === 1 ? '1 O.S.' : `${storesMap[k].salesCount} O.S.`;
-            const totText = `R$ ${storesMap[k].revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const storesTicketList = Object.values(storesMap).map(item => {
+            const avg = item.salesCount > 0 ? (item.revenue / item.salesCount) : 0;
+            const osText = item.salesCount === 1 ? '1 O.S.' : `${item.salesCount} O.S.`;
+            const totText = `R$ ${item.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             return {
-                name: k,
+                name: item.name,
                 val: avg,
                 extraInfo: `${osText} • Total ${totText}`
             };
