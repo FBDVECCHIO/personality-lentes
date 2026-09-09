@@ -717,3 +717,36 @@ textarea {
 .password-toggle-btn:hover {
     color: var(--gold-light) !important;
 }
+
+/* Dashboard Performance KPIs & Rankings Responsive Grids (v3.93) */
+.dash-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    margin: 20px 0 25px 0;
+}
+
+@media (max-width: 1200px) {
+    .dash-kpi-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .dash-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.dash-rankings-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+}
+
+@media (max-width: 900px) {
+    .dash-rankings-grid {
+        grid-template-columns: 1fr;
+    }
+}
+

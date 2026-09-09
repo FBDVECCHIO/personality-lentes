@@ -1340,7 +1340,7 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                     </div>
 
                     <!-- Métricas Rápidas do Dashboard -->
-                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin: 20px 0 25px 0;">
+                    <div class="dash-kpi-grid">
                         <div class="glass-card" style="padding: 12px; background: rgba(255, 255, 255, 0.01); text-align: center;">
                             <span style="font-size: 10px; text-transform: uppercase; color: var(--text-muted);">O.S. Resgatadas</span>
                             <div style="font-size: 18px; font-weight: 800; color: #fff; margin-top: 4px;" id="dashTotalSales">0</div>
@@ -1357,20 +1357,28 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                             <span style="font-size: 10px; text-transform: uppercase; color: var(--text-muted);">Óticas Ativas</span>
                             <div style="font-size: 18px; font-weight: 800; color: #fff; margin-top: 4px;" id="dashActiveStores">0</div>
                         </div>
+                        <div class="glass-card" style="padding: 12px; background: rgba(16, 185, 129, 0.03); border: 1px solid rgba(16, 185, 129, 0.2); text-align: center;">
+                            <span style="font-size: 10px; text-transform: uppercase; color: #10b981; font-weight: 700;">Volume em Vendas</span>
+                            <div style="font-size: 18px; font-weight: 800; color: #10b981; margin-top: 4px;" id="dashTotalRevenue">R$ 0,00</div>
+                        </div>
+                        <div class="glass-card" style="padding: 12px; background: rgba(197, 168, 92, 0.04); border: 1px solid rgba(197, 168, 92, 0.3); text-align: center;">
+                            <span style="font-size: 10px; text-transform: uppercase; color: var(--gold-light); font-weight: 700;">Ticket Médio Geral</span>
+                            <div style="font-size: 18px; font-weight: 800; color: var(--gold-light); margin-top: 4px;" id="dashAverageTicket">R$ 0,00</div>
+                        </div>
                     </div>
 
                     <!-- Grades de Rankings (Lado a Lado) -->
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px;">
+                    <div class="dash-rankings-grid">
                         <!-- Ranking Vendedores -->
                         <div class="glass-card" style="padding: 15px; background: rgba(255, 255, 255, 0.01);">
-                            <h3 style="font-size: 11px; text-transform: uppercase; color: var(--gold-light); margin-bottom: 12px; font-weight: 700;">🏆 Ranking de Vendedores</h3>
+                            <h3 style="font-size: 11px; text-transform: uppercase; color: var(--gold-light); margin-bottom: 12px; font-weight: 700;">🏆 Ranking de Vendedores (Pontos)</h3>
                             <div id="dashRankingSellers" style="font-size: 11px; color: var(--text-muted);">
                                 <!-- Preenchido dinamicamente -->
                             </div>
                         </div>
                         <!-- Ranking Lojas -->
                         <div class="glass-card" style="padding: 15px; background: rgba(255, 255, 255, 0.01);">
-                            <h3 style="font-size: 11px; text-transform: uppercase; color: var(--gold-light); margin-bottom: 12px; font-weight: 700;">🏪 Ranking de Lojas (Óticas)</h3>
+                            <h3 style="font-size: 11px; text-transform: uppercase; color: var(--gold-light); margin-bottom: 12px; font-weight: 700;">🏪 Ranking de Lojas (Pontos)</h3>
                             <div id="dashRankingStores" style="font-size: 11px; color: var(--text-muted);">
                                 <!-- Preenchido dinamicamente -->
                             </div>
@@ -1386,6 +1394,20 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                         <div class="glass-card" style="padding: 15px; background: rgba(255, 255, 255, 0.01);">
                             <h3 style="font-size: 11px; text-transform: uppercase; color: var(--gold-light); margin-bottom: 12px; font-weight: 700;">✨ Tratamentos Antirreflexo</h3>
                             <div id="dashRankingArs" style="font-size: 11px; color: var(--text-muted);">
+                                <!-- Preenchido dinamicamente -->
+                            </div>
+                        </div>
+                        <!-- Ticket Médio por Vendedor (v3.93) -->
+                        <div class="glass-card" style="padding: 15px; background: rgba(255, 255, 255, 0.01); border-left: 3px solid #10b981;">
+                            <h3 style="font-size: 11px; text-transform: uppercase; color: #10b981; margin-bottom: 12px; font-weight: 700;">💰 Ticket Médio por Vendedor</h3>
+                            <div id="dashRankingTicketSellers" style="font-size: 11px; color: var(--text-muted);">
+                                <!-- Preenchido dinamicamente -->
+                            </div>
+                        </div>
+                        <!-- Ticket Médio por Loja (v3.93) -->
+                        <div class="glass-card" style="padding: 15px; background: rgba(255, 255, 255, 0.01); border-left: 3px solid #10b981;">
+                            <h3 style="font-size: 11px; text-transform: uppercase; color: #10b981; margin-bottom: 12px; font-weight: 700;">🏬 Ticket Médio por Loja (Ótica)</h3>
+                            <div id="dashRankingTicketStores" style="font-size: 11px; color: var(--text-muted);">
                                 <!-- Preenchido dinamicamente -->
                             </div>
                         </div>
@@ -1634,6 +1656,6 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
             </form>
         </div>
     </div>
-    <script src="admin.js?v=3.92"></script>
+    <script src="admin.js?v=3.93"></script>
 </body>
 </html>

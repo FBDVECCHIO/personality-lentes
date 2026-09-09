@@ -3762,6 +3762,23 @@ document.addEventListener('DOMContentLoaded', () => {
         renderDashboardPremios();
     }
 
+    function getSaleRevenue(sale) {
+        let valLente = Number(sale.valor_lente) || 0;
+        let valAr = Number(sale.valor_ar) || 0;
+
+        // Fallback se o valor do produto não foi persistido diretamente na O.S., busca na config de produtos
+        if (valLente === 0 && sale.lente_familia && typeof adminPremiosConfig !== 'undefined' && Array.isArray(adminPremiosConfig) && adminPremiosConfig.length > 0) {
+            const matchL = adminPremiosConfig.find(c => c.categoria === 'lente' && c.nome === sale.lente_familia);
+            if (matchL && matchL.valor) valLente = Number(matchL.valor) || 0;
+        }
+        if (valAr === 0 && sale.ar_familia && typeof adminPremiosConfig !== 'undefined' && Array.isArray(adminPremiosConfig) && adminPremiosConfig.length > 0) {
+            const matchA = adminPremiosConfig.find(c => c.categoria === 'antirreflexo' && c.nome === sale.ar_familia);
+            if (matchA && matchA.valor) valAr = Number(matchA.valor) || 0;
+        }
+
+        return valLente + valAr;
+    }
+
     function renderDashboardPremios() {
         if (!allSubmittedSales) return;
 
@@ -3799,24 +3816,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // 1. Métricas Rápidas
         const totalSales = filtered.length;
         let totalPoints = 0;
+        let totalRevenue = 0;
         const storesSet = new Set();
-
-        filtered.forEach(sale => {
-            totalPoints += (Number(sale.pontos_lente) || 0) + (Number(sale.pontos_ar) || 0);
-            if (sale.loja) storesSet.add(sale.loja.trim());
-        });
-
-        const avgPoints = totalSales > 0 ? Math.round(totalPoints / totalSales) : 0;
-
-        const elTotalSales = document.getElementById('dashTotalSales');
-        const elTotalPoints = document.getElementById('dashTotalPoints');
-        const elAvgPoints = document.getElementById('dashAveragePoints');
-        const elActiveStores = document.getElementById('dashActiveStores');
-
-        if (elTotalSales) elTotalSales.textContent = totalSales;
-        if (elTotalPoints) elTotalPoints.textContent = `${totalPoints} Pts`;
-        if (elAvgPoints) elAvgPoints.textContent = avgPoints;
-        if (elActiveStores) elActiveStores.textContent = storesSet.size;
 
         // 2. Agrupamentos para Rankings
         const sellersMap = {};
@@ -3825,16 +3826,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const arsMap = {};
 
         filtered.forEach(sale => {
-            // Vendedores (por pontos)
             const pts = (Number(sale.pontos_lente) || 0) + (Number(sale.pontos_ar) || 0);
-            const seller = sale.vendedor_nome || 'Desconhecido';
-            if (!sellersMap[seller]) sellersMap[seller] = 0;
-            sellersMap[seller] += pts;
+            const saleRev = getSaleRevenue(sale);
 
-            // Lojas (por pontos)
+            totalPoints += pts;
+            totalRevenue += saleRev;
+
+            if (sale.loja) storesSet.add(sale.loja.trim());
+
+            // Vendedores
+            const seller = sale.vendedor_nome || 'Desconhecido';
+            if (!sellersMap[seller]) {
+                sellersMap[seller] = { points: 0, salesCount: 0, revenue: 0 };
+            }
+            sellersMap[seller].points += pts;
+            sellersMap[seller].salesCount++;
+            sellersMap[seller].revenue += saleRev;
+
+            // Lojas
             const store = sale.loja || 'Sem Loja';
-            if (!storesMap[store]) storesMap[store] = 0;
-            storesMap[store] += pts;
+            if (!storesMap[store]) {
+                storesMap[store] = { points: 0, salesCount: 0, revenue: 0 };
+            }
+            storesMap[store].points += pts;
+            storesMap[store].salesCount++;
+            storesMap[store].revenue += saleRev;
 
             // Lentes (por quantidade)
             if (sale.lente_familia) {
@@ -3851,23 +3867,66 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        const avgPoints = totalSales > 0 ? Math.round(totalPoints / totalSales) : 0;
+        const avgTicketGeneral = totalSales > 0 ? (totalRevenue / totalSales) : 0;
+
+        const elTotalSales = document.getElementById('dashTotalSales');
+        const elTotalPoints = document.getElementById('dashTotalPoints');
+        const elAvgPoints = document.getElementById('dashAveragePoints');
+        const elActiveStores = document.getElementById('dashActiveStores');
+        const elTotalRevenue = document.getElementById('dashTotalRevenue');
+        const elAvgTicket = document.getElementById('dashAverageTicket');
+
+        if (elTotalSales) elTotalSales.textContent = totalSales;
+        if (elTotalPoints) elTotalPoints.textContent = `${totalPoints} Pts`;
+        if (elAvgPoints) elAvgPoints.textContent = avgPoints;
+        if (elActiveStores) elActiveStores.textContent = storesSet.size;
+        if (elTotalRevenue) elTotalRevenue.textContent = `R$ ${totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        if (elAvgTicket) elAvgTicket.textContent = `R$ ${avgTicketGeneral.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
         // Converte em arrays e ordena
-        const sellersList = Object.keys(sellersMap).map(k => ({ name: k, val: sellersMap[k] })).sort((a,b) => b.val - a.val);
-        const storesList = Object.keys(storesMap).map(k => ({ name: k, val: storesMap[k] })).sort((a,b) => b.val - a.val);
-        const lensesList = Object.keys(lensesMap).map(k => ({ name: k, val: lensesMap[k] })).sort((a,b) => b.val - a.val);
-        const arsList = Object.keys(arsMap).map(k => ({ name: k, val: arsMap[k] })).sort((a,b) => b.val - a.val);
+        const sellersList = Object.keys(sellersMap).map(k => ({ name: k, val: sellersMap[k].points })).sort((a,b) => b.val - a.val);
+        const storesList = Object.keys(storesMap).map(k => ({ name: k, val: storesMap[k].points })).sort((a,b) => b.val - a.val);
+        const lensesList = Object.keys(lensesMap).map(k => ({ name: k, val: lensesMap[k].salesCount })).sort((a,b) => b.val - a.val);
+        const arsList = Object.keys(arsMap).map(k => ({ name: k, val: arsMap[k].salesCount })).sort((a,b) => b.val - a.val);
+
+        // Ticket Médio por Vendedor (v3.93)
+        const sellersTicketList = Object.keys(sellersMap).map(k => {
+            const avg = sellersMap[k].salesCount > 0 ? (sellersMap[k].revenue / sellersMap[k].salesCount) : 0;
+            const osText = sellersMap[k].salesCount === 1 ? '1 O.S.' : `${sellersMap[k].salesCount} O.S.`;
+            const totText = `R$ ${sellersMap[k].revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            return {
+                name: k,
+                val: avg,
+                extraInfo: `${osText} • Total ${totText}`
+            };
+        }).sort((a,b) => b.val - a.val);
+
+        // Ticket Médio por Loja (v3.93)
+        const storesTicketList = Object.keys(storesMap).map(k => {
+            const avg = storesMap[k].salesCount > 0 ? (storesMap[k].revenue / storesMap[k].salesCount) : 0;
+            const osText = storesMap[k].salesCount === 1 ? '1 O.S.' : `${storesMap[k].salesCount} O.S.`;
+            const totText = `R$ ${storesMap[k].revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            return {
+                name: k,
+                val: avg,
+                extraInfo: `${osText} • Total ${totText}`
+            };
+        }).sort((a,b) => b.val - a.val);
 
         // Renderiza
         renderRankingList('dashRankingSellers', sellersList, 'points');
         renderRankingList('dashRankingStores', storesList, 'points');
         renderRankingList('dashRankingLenses', lensesList, 'sales');
         renderRankingList('dashRankingArs', arsList, 'sales');
+        renderRankingList('dashRankingTicketSellers', sellersTicketList, 'currency');
+        renderRankingList('dashRankingTicketStores', storesTicketList, 'currency');
     }
 
     function renderRankingList(containerId, list, type) {
         const container = document.getElementById(containerId);
         if (!container) return;
-        if (list.length === 0) {
+        if (!list || list.length === 0) {
             container.innerHTML = '<div style="padding: 15px 0; text-align: center; color: var(--text-muted); font-size: 11px;">Nenhum lançamento no período</div>';
             return;
         }
@@ -3877,15 +3936,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
         list.slice(0, 5).forEach((item, index) => {
             const pct = maxVal > 0 ? (item.val / maxVal) * 100 : 0;
-            const textSuffix = type === 'points' ? 'Pts' : (item.val === 1 ? 'venda' : 'vendas');
+            let valFormatted = '';
+            let detailHtml = '';
+
+            if (type === 'points') {
+                valFormatted = `${item.val} Pts`;
+            } else if (type === 'sales') {
+                const textSuffix = item.val === 1 ? 'venda' : 'vendas';
+                valFormatted = `${item.val} ${textSuffix}`;
+            } else if (type === 'currency') {
+                valFormatted = `R$ ${Number(item.val).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                if (item.extraInfo) {
+                    detailHtml = `<span style="font-size: 10px; color: var(--text-muted); font-weight: normal; margin-left: 4px;">(${escapeHtml(item.extraInfo)})</span>`;
+                }
+            }
+
+            const valColor = type === 'currency' ? '#10b981' : 'var(--gold-light)';
+            const barBg = type === 'currency' 
+                ? 'linear-gradient(90deg, #059669, #10b981)' 
+                : 'linear-gradient(90deg, #cfad52, #e5c060)';
+
             const itemHtml = `
                 <div style="margin-bottom: 12px;">
-                    <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: #fff;">
-                        <span style="font-weight: 500;">#${index + 1} ${escapeHtml(item.name)}</span>
-                        <strong style="color: var(--gold-light);">${item.val} ${textSuffix}</strong>
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; margin-bottom: 4px; color: #fff;">
+                        <span style="font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 65%;" title="${escapeHtml(item.name)}">
+                            #${index + 1} ${escapeHtml(item.name)} ${detailHtml}
+                        </span>
+                        <strong style="color: ${valColor}; white-space: nowrap; margin-left: 8px;">${valFormatted}</strong>
                     </div>
                     <div style="width: 100%; height: 5px; background: rgba(255,255,255,0.03); border-radius: 3px; overflow: hidden;">
-                        <div style="width: ${pct}%; height: 100%; background: linear-gradient(90deg, #cfad52, #e5c060); border-radius: 3px;"></div>
+                        <div style="width: ${pct}%; height: 100%; background: ${barBg}; border-radius: 3px;"></div>
                     </div>
                 </div>
             `;
@@ -4255,6 +4335,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 1. Calcula Métricas Rápidas
         const totalSales = items.length;
         let totalPoints = 0;
+        let totalRevenue = 0;
         const storesSet = new Set();
         const sellersMap = {};
         const storesMap = {};
@@ -4263,18 +4344,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
         items.forEach(sale => {
             const pts = (Number(sale.pontos_lente) || 0) + (Number(sale.pontos_ar) || 0);
+            const saleRev = getSaleRevenue(sale);
+
             totalPoints += pts;
+            totalRevenue += saleRev;
+
             if (sale.loja) storesSet.add(sale.loja.trim());
 
             // Vendedores
             const seller = sale.vendedor_nome || 'Desconhecido';
-            if (!sellersMap[seller]) sellersMap[seller] = 0;
-            sellersMap[seller] += pts;
+            if (!sellersMap[seller]) {
+                sellersMap[seller] = { points: 0, salesCount: 0, revenue: 0 };
+            }
+            sellersMap[seller].points += pts;
+            sellersMap[seller].salesCount++;
+            sellersMap[seller].revenue += saleRev;
 
             // Lojas
             const store = sale.loja || 'Sem Loja';
-            if (!storesMap[store]) storesMap[store] = 0;
-            storesMap[store] += pts;
+            if (!storesMap[store]) {
+                storesMap[store] = { points: 0, salesCount: 0, revenue: 0 };
+            }
+            storesMap[store].points += pts;
+            storesMap[store].salesCount++;
+            storesMap[store].revenue += saleRev;
 
             // Lentes
             if (sale.lente_familia) {
@@ -4292,12 +4385,37 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const avgPoints = totalSales > 0 ? Math.round(totalPoints / totalSales) : 0;
+        const avgTicketGeneral = totalSales > 0 ? (totalRevenue / totalSales) : 0;
         const activeStoresCount = storesSet.size;
 
-        const sellersList = Object.keys(sellersMap).map(k => ({ name: k, val: sellersMap[k] })).sort((a,b) => b.val - a.val);
-        const storesList = Object.keys(storesMap).map(k => ({ name: k, val: storesMap[k] })).sort((a,b) => b.val - a.val);
+        const sellersList = Object.keys(sellersMap).map(k => ({ name: k, val: sellersMap[k].points })).sort((a,b) => b.val - a.val);
+        const storesList = Object.keys(storesMap).map(k => ({ name: k, val: storesMap[k].points })).sort((a,b) => b.val - a.val);
         const lensesList = Object.keys(lensesMap).map(k => ({ name: k, val: lensesMap[k] })).sort((a,b) => b.val - a.val);
         const arsList = Object.keys(arsMap).map(k => ({ name: k, val: arsMap[k] })).sort((a,b) => b.val - a.val);
+
+        // Ticket Médio por Vendedor
+        const sellersTicketList = Object.keys(sellersMap).map(k => {
+            const avg = sellersMap[k].salesCount > 0 ? (sellersMap[k].revenue / sellersMap[k].salesCount) : 0;
+            const osText = sellersMap[k].salesCount === 1 ? '1 O.S.' : `${sellersMap[k].salesCount} O.S.`;
+            const totText = `R$ ${sellersMap[k].revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            return {
+                name: k,
+                val: avg,
+                extraInfo: `${osText} • Total ${totText}`
+            };
+        }).sort((a,b) => b.val - a.val);
+
+        // Ticket Médio por Loja
+        const storesTicketList = Object.keys(storesMap).map(k => {
+            const avg = storesMap[k].salesCount > 0 ? (storesMap[k].revenue / storesMap[k].salesCount) : 0;
+            const osText = storesMap[k].salesCount === 1 ? '1 O.S.' : `${storesMap[k].salesCount} O.S.`;
+            const totText = `R$ ${storesMap[k].revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            return {
+                name: k,
+                val: avg,
+                extraInfo: `${osText} • Total ${totText}`
+            };
+        }).sort((a,b) => b.val - a.val);
 
         // Filtros textuais
         const vendFilter = dashFilterVendedor && dashFilterVendedor.value.trim() ? dashFilterVendedor.value.trim() : 'Todos';
@@ -4314,15 +4432,34 @@ document.addEventListener('DOMContentLoaded', () => {
             const maxVal = list[0].val;
             return list.slice(0, 5).map((item, idx) => {
                 const pct = maxVal > 0 ? (item.val / maxVal) * 100 : 0;
-                const textSuffix = type === 'points' ? 'Pts' : (item.val === 1 ? 'venda' : 'vendas');
+                let valFormatted = '';
+                let detailText = '';
+
+                if (type === 'points') {
+                    valFormatted = `${item.val} Pts`;
+                } else if (type === 'sales') {
+                    const textSuffix = item.val === 1 ? 'venda' : 'vendas';
+                    valFormatted = `${item.val} ${textSuffix}`;
+                } else if (type === 'currency') {
+                    valFormatted = `R$ ${Number(item.val).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    if (item.extraInfo) {
+                        detailText = ` <span style="color: #64748b; font-size: 10px; font-weight: normal;">(${escapeHtml(item.extraInfo)})</span>`;
+                    }
+                }
+
+                const valColor = type === 'currency' ? '#059669' : '#b48c36';
+                const barGradient = type === 'currency' 
+                    ? 'linear-gradient(90deg, #10b981, #34d399)' 
+                    : 'linear-gradient(90deg, #c5a85c, #e5c060)';
+
                 return `
                     <div style="margin-bottom: 12px;">
-                        <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
-                            <span style="font-weight: 600; color: #1e293b;">#${idx + 1} ${escapeHtml(item.name)}</span>
-                            <strong style="color: #b48c36;">${item.val} ${textSuffix}</strong>
+                        <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; margin-bottom: 4px;">
+                            <span style="font-weight: 600; color: #1e293b;">#${idx + 1} ${escapeHtml(item.name)}${detailText}</span>
+                            <strong style="color: ${valColor}; white-space: nowrap; margin-left: 8px;">${valFormatted}</strong>
                         </div>
                         <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
-                            <div style="width: ${pct}%; height: 100%; background: linear-gradient(90deg, #c5a85c, #e5c060); border-radius: 3px; -webkit-print-color-adjust: exact; print-color-adjust: exact;"></div>
+                            <div style="width: ${pct}%; height: 100%; background: ${barGradient}; border-radius: 3px; -webkit-print-color-adjust: exact; print-color-adjust: exact;"></div>
                         </div>
                     </div>
                 `;
@@ -4341,14 +4478,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     .header h1 { font-size: 22px; color: #c5a85c; margin: 0; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
                     .header span { font-size: 11px; color: #64748b; font-weight: 500; }
                     .filters-info { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 18px; margin-bottom: 25px; font-size: 11px; display: flex; gap: 25px; flex-wrap: wrap; }
-                    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
-                    .kpi-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px 12px; text-align: center; }
-                    .kpi-title { font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.5px; }
-                    .kpi-value { font-size: 22px; font-weight: 800; color: #0f172a; }
+                    .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 30px; }
+                    .kpi-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 10px; text-align: center; }
+                    .kpi-card.emerald { background: #f0fdf4; border-color: #bbf7d0; }
+                    .kpi-card.gold-card { background: #fefce8; border-color: #fef08a; }
+                    .kpi-title { font-size: 9.5px; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.5px; }
+                    .kpi-value { font-size: 19px; font-weight: 800; color: #0f172a; }
                     .kpi-value.gold { color: #b48c36; }
+                    .kpi-value.emerald-text { color: #059669; }
                     .rankings-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px; }
                     .ranking-box { border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+                    .ranking-box.emerald-border { border-left: 3px solid #10b981; }
                     .ranking-box h3 { margin: 0 0 14px 0; font-size: 12px; text-transform: uppercase; color: #b48c36; font-weight: 800; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+                    .ranking-box.emerald-border h3 { color: #059669; }
                     .footer { margin-top: 35px; font-size: 10px; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 15px; }
                     @media print {
                         body { padding: 15px; }
@@ -4374,7 +4516,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div><strong>Status:</strong> ${escapeHtml(statusFilter)}</div>
                 </div>
 
-                <!-- Os 4 Cards de Indicadores do Dashboard -->
+                <!-- Os 6 Cards de Indicadores do Dashboard -->
                 <div class="kpi-grid">
                     <div class="kpi-card">
                         <div class="kpi-title">O.S. Resgatadas</div>
@@ -4385,24 +4527,32 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="kpi-value gold">${totalPoints} Pts</div>
                     </div>
                     <div class="kpi-card">
-                        <div class="kpi-title">Média de Pontos/O.S.</div>
+                        <div class="kpi-title">Média Pontos/O.S.</div>
                         <div class="kpi-value">${avgPoints}</div>
                     </div>
                     <div class="kpi-card">
                         <div class="kpi-title">Óticas Ativas</div>
                         <div class="kpi-value">${activeStoresCount}</div>
                     </div>
+                    <div class="kpi-card emerald">
+                        <div class="kpi-title" style="color:#059669;">Volume em Vendas</div>
+                        <div class="kpi-value emerald-text">R$ ${totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                    </div>
+                    <div class="kpi-card gold-card">
+                        <div class="kpi-title" style="color:#b48c36;">Ticket Médio Geral</div>
+                        <div class="kpi-value gold">R$ ${avgTicketGeneral.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                    </div>
                 </div>
 
-                <!-- Os 4 Rankings com Gráficos / Barras de Desempenho -->
+                <!-- Os 6 Rankings com Gráficos / Barras de Desempenho -->
                 <div class="rankings-grid">
                     <div class="ranking-box">
-                        <h3>🏆 Ranking de Vendedores</h3>
+                        <h3>🏆 Ranking de Vendedores (Pontos)</h3>
                         ${renderRankingHtml(sellersList, 'points')}
                     </div>
 
                     <div class="ranking-box">
-                        <h3>🏪 Ranking de Lojas (Óticas)</h3>
+                        <h3>🏪 Ranking de Lojas (Pontos)</h3>
                         ${renderRankingHtml(storesList, 'points')}
                     </div>
 
@@ -4414,6 +4564,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="ranking-box">
                         <h3>✨ Tratamentos Antirreflexo</h3>
                         ${renderRankingHtml(arsList, 'sales')}
+                    </div>
+
+                    <div class="ranking-box emerald-border">
+                        <h3>💰 Ticket Médio por Vendedor</h3>
+                        ${renderRankingHtml(sellersTicketList, 'currency')}
+                    </div>
+
+                    <div class="ranking-box emerald-border">
+                        <h3>🏬 Ticket Médio por Loja (Ótica)</h3>
+                        ${renderRankingHtml(storesTicketList, 'currency')}
                     </div>
                 </div>
 
