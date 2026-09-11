@@ -1662,6 +1662,24 @@ document.addEventListener('DOMContentLoaded', () => {
                             })
                         });
                         if (!response.ok) throw new Error('Falha no Supabase');
+
+                        // Sincroniza a nova loja nas vendas do vendedor em segundo plano no Supabase
+                        const premiosTable = localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
+                        try {
+                            await fetch(`${cleanUrl}/rest/v1/${premiosTable}?vendedor_id=eq.${id}`, {
+                                method: 'PATCH',
+                                headers: {
+                                    'apikey': key,
+                                    'Authorization': `Bearer ${key}`,
+                                    'Content-Type': 'application/json',
+                                    'Prefer': 'return=minimal'
+                                },
+                                body: JSON.stringify({ loja: lojaClinica })
+                            });
+                        } catch (syncErr) {
+                            console.warn('Sincronização de loja nas O.S.:', syncErr);
+                        }
+
                         alert('Vendedor atualizado com sucesso!');
                     } catch (err) {
                         console.error(err);
@@ -1675,7 +1693,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             editMemberModal.style.display = 'none';
-            loadProfessionals();
+            await loadProfessionals();
+            if (typeof loadPremiosManager === 'function') {
+                await loadPremiosManager();
+            }
         });
     }
 
@@ -3599,6 +3620,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnPrintSelectedDash = document.getElementById('btnPrintSelectedDash');
     const btnPrintAllDash = document.getElementById('btnPrintAllDash');
     const btnClearDashFilter = document.getElementById('btnClearDashFilter');
+    const btnRefreshDashboard = document.getElementById('btnRefreshDashboard');
+    const btnRefreshDashboardHeader = document.getElementById('btnRefreshDashboardHeader');
 
     let lastFilteredDashSales = [];
 
@@ -3607,6 +3630,64 @@ document.addEventListener('DOMContentLoaded', () => {
         if (el) el.addEventListener('input', () => renderDashboardPremios());
         if (el && (el.tagName === 'SELECT' || el.type === 'date')) el.addEventListener('change', () => renderDashboardPremios());
     });
+
+    async function handleRefreshDashboard(btn) {
+        if (!btn) return;
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '🔄 Atualizando...';
+
+        try {
+            // 1. Recarrega configurações gerais
+            await loadGeneralConfig();
+
+            // 2. Recarrega lista atualizada de membros/vendedores do banco
+            await loadProfessionals();
+
+            // 3. Recarrega configurações de produtos / prêmios
+            await loadRewardsConfig();
+
+            // 4. Recarrega todos os lançamentos de vendas do Supabase (com timestamp anti-cache)
+            const url = getSupabaseUrl();
+            const key = getSupabaseKey();
+            const table = localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
+
+            if (url && key) {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                const response = await fetch(`${cleanUrl}/rest/v1/${table}?select=*&order=created_at.desc&_t=${Date.now()}`, {
+                    method: 'GET',
+                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                });
+                if (response.ok) {
+                    allSubmittedSales = await response.json();
+                }
+            }
+
+            // 5. Renderiza tudo com os dados frescos
+            renderPremiosManager();
+            renderDashboardPremios();
+
+            btn.innerHTML = '✅ Atualizado!';
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 1500);
+        } catch (err) {
+            console.error('Erro ao sincronizar dados:', err);
+            btn.innerHTML = '⚠️ Erro';
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 2000);
+        }
+    }
+
+    if (btnRefreshDashboard) {
+        btnRefreshDashboard.addEventListener('click', () => handleRefreshDashboard(btnRefreshDashboard));
+    }
+    if (btnRefreshDashboardHeader) {
+        btnRefreshDashboardHeader.addEventListener('click', () => handleRefreshDashboard(btnRefreshDashboardHeader));
+    }
 
     if (btnPrintSelectedDash) {
         btnPrintSelectedDash.addEventListener('click', () => {
@@ -3702,27 +3783,35 @@ document.addEventListener('DOMContentLoaded', () => {
         renderDashboardPremios();
     }
 
-    function getSellerInfo(row, sellersList = []) {
+    function getSellerInfo(row, sellersList = null) {
+        const list = Array.isArray(sellersList) && sellersList.length > 0 ? sellersList : (loadedMembersList || []);
         const rowIdStr = row.vendedor_id !== undefined && row.vendedor_id !== null ? String(row.vendedor_id).trim() : '';
-        const rowName = (row.vendedor_nome || '').trim().toLowerCase();
+        const rowName = (row.vendedor_nome || row.nome || '').trim().toLowerCase();
         const rowCpf = (row.cpf || row.cpf_vendedor || '').replace(/\D/g, '');
 
-        const found = (sellersList || []).find(s => {
+        const found = list.find(s => {
             const sIdStr = s.id !== undefined && s.id !== null ? String(s.id).trim() : '';
-            const sName = (s.nome || '').trim().toLowerCase();
+            const sName = (s.nome || s.vendedor_nome || '').trim().toLowerCase();
             const sCpf = (s.cpf_cnpj || s.cpf || '').replace(/\D/g, '');
 
             if (rowIdStr && sIdStr && rowIdStr === sIdStr) return true;
-            if (rowName && sName && rowName === sName) return true;
             if (rowCpf && sCpf && rowCpf === sCpf) return true;
+            if (rowName && sName && rowName === sName) return true;
             return false;
         });
 
         return found || {
             cpf_cnpj: row.cpf || row.cpf_vendedor || 'n/d',
             whatsapp: row.whatsapp || '',
-            loja_clinica: row.loja || ''
+            loja_clinica: row.loja || row.loja_clinica || ''
         };
+    }
+
+    function getSaleCurrentStore(sale) {
+        if (!sale) return 'Sem Loja';
+        const sellerInfo = getSellerInfo(sale, loadedMembersList);
+        const store = (sellerInfo.loja_clinica || sellerInfo.loja || sale.loja || 'Sem Loja').trim();
+        return store || 'Sem Loja';
     }
 
     async function loadPremiosManager() {
@@ -3902,8 +3991,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // Filtro vendedor
             if (vendedorVal && !(sale.vendedor_nome || '').toLowerCase().includes(vendedorVal)) return false;
 
-            // Filtro loja
-            if (lojaVal && !(sale.loja || '').toLowerCase().includes(lojaVal)) return false;
+            // Filtro loja (verifica tanto a ótica atual do vendedor quanto a original registrada na venda)
+            if (lojaVal) {
+                const sStore = getSaleCurrentStore(sale).toLowerCase();
+                const origStore = (sale.loja || '').toLowerCase();
+                if (!sStore.includes(lojaVal) && !origStore.includes(lojaVal)) return false;
+            }
 
             // Filtro status
             if (statusVal && sale.status !== statusVal) return false;
@@ -3945,7 +4038,10 @@ document.addEventListener('DOMContentLoaded', () => {
             totalPoints += pts;
             totalRevenue += saleRev;
 
-            if (sale.loja) storesSet.add(sale.loja.trim().toLowerCase());
+            const currentStore = getSaleCurrentStore(sale);
+            if (currentStore && currentStore !== 'Sem Loja') {
+                storesSet.add(currentStore.toLowerCase());
+            }
 
             // Vendedores (agrupamento inteligente insensível a maiúsculas/minúsculas)
             const rawSeller = (sale.vendedor_nome || 'Desconhecido').trim();
@@ -3961,14 +4057,13 @@ document.addEventListener('DOMContentLoaded', () => {
             sellersMap[sellerKey].salesCount++;
             sellersMap[sellerKey].revenue += saleRev;
 
-            // Lojas (agrupamento inteligente insensível a maiúsculas/minúsculas)
-            const rawStore = (sale.loja || 'Sem Loja').trim();
-            const storeKey = rawStore.toLowerCase();
+            // Lojas (agrupamento inteligente baseado na ótica atual do vendedor)
+            const storeKey = currentStore.toLowerCase();
             if (!storesMap[storeKey]) {
-                storesMap[storeKey] = { name: rawStore, points: 0, salesCount: 0, revenue: 0 };
+                storesMap[storeKey] = { name: currentStore, points: 0, salesCount: 0, revenue: 0 };
             }
-            if (rawStore !== rawStore.toLowerCase() && (storesMap[storeKey].name === storesMap[storeKey].name.toLowerCase() || rawStore.length > storesMap[storeKey].name.length)) {
-                storesMap[storeKey].name = rawStore;
+            if (currentStore !== currentStore.toLowerCase() && (storesMap[storeKey].name === storesMap[storeKey].name.toLowerCase() || currentStore.length > storesMap[storeKey].name.length)) {
+                storesMap[storeKey].name = currentStore;
             }
             storesMap[storeKey].points += pts;
             storesMap[storeKey].salesCount++;
@@ -4472,7 +4567,10 @@ document.addEventListener('DOMContentLoaded', () => {
             totalPoints += pts;
             totalRevenue += saleRev;
 
-            if (sale.loja) storesSet.add(sale.loja.trim().toLowerCase());
+            const currentStore = getSaleCurrentStore(sale);
+            if (currentStore && currentStore !== 'Sem Loja') {
+                storesSet.add(currentStore.toLowerCase());
+            }
 
             // Vendedores (agrupamento inteligente insensível a maiúsculas/minúsculas)
             const rawSeller = (sale.vendedor_nome || 'Desconhecido').trim();
@@ -4487,14 +4585,13 @@ document.addEventListener('DOMContentLoaded', () => {
             sellersMap[sellerKey].salesCount++;
             sellersMap[sellerKey].revenue += saleRev;
 
-            // Lojas (agrupamento inteligente insensível a maiúsculas/minúsculas)
-            const rawStore = (sale.loja || 'Sem Loja').trim();
-            const storeKey = rawStore.toLowerCase();
+            // Lojas (agrupamento inteligente baseado na loja atual do vendedor)
+            const storeKey = currentStore.toLowerCase();
             if (!storesMap[storeKey]) {
-                storesMap[storeKey] = { name: rawStore, points: 0, salesCount: 0, revenue: 0 };
+                storesMap[storeKey] = { name: currentStore, points: 0, salesCount: 0, revenue: 0 };
             }
-            if (rawStore !== rawStore.toLowerCase() && (storesMap[storeKey].name === storesMap[storeKey].name.toLowerCase() || rawStore.length > storesMap[storeKey].name.length)) {
-                storesMap[storeKey].name = rawStore;
+            if (currentStore !== currentStore.toLowerCase() && (storesMap[storeKey].name === storesMap[storeKey].name.toLowerCase() || currentStore.length > storesMap[storeKey].name.length)) {
+                storesMap[storeKey].name = currentStore;
             }
             storesMap[storeKey].points += pts;
             storesMap[storeKey].salesCount++;

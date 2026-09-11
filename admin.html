@@ -1301,9 +1301,14 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                 
                 <!-- Painel de Performance e Dashboard (v3.60) -->
                 <div class="glass-card section-card" style="margin-bottom: 30px;" id="dashboardPremiosCard">
-                    <div class="card-header" style="margin-bottom: 15px;">
-                        <h2>📈 Dashboard de Performance & Rankings</h2>
-                        <p>Análise de vendas, ranking de balconistas, óticas parceiras e produtos mais vendidos no período.</p>
+                    <div class="card-header" style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h2>📈 Dashboard de Performance & Rankings</h2>
+                            <p>Análise de vendas, ranking de balconistas, óticas parceiras e produtos mais vendidos no período.</p>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnRefreshDashboardHeader" title="Recarregar e sincronizar informações com o banco de dados" style="padding: 6px 14px; font-weight: 700; height: 32px; display: inline-flex; align-items: center; gap: 6px;">🔄 Sincronizar Banco</button>
+                        </div>
                     </div>
 
                     <!-- Filtros do Dashboard na mesma linha (v3.88) -->
@@ -1346,6 +1351,7 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                             <input type="date" id="dashDateEnd" style="width: 100%; padding: 6px 8px; background: #121216; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 11px;">
                         </div>
                         <div style="display: flex; gap: 8px; align-items: flex-end;">
+                            <button type="button" class="btn btn-gold btn-xs" id="btnRefreshDashboard" title="Recarregar e sincronizar informações com o banco de dados" style="padding: 7px 14px; font-weight: 700; height: 34px; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;">🔄 Atualizar</button>
                             <button type="button" class="btn btn-outline-gold btn-xs" id="btnPrintSelectedDash" style="padding: 7px 14px; font-weight: 700; height: 34px; white-space: nowrap;">📄 Gerar PDF</button>
                             <button type="button" class="btn btn-danger btn-xs" id="btnClearDashFilter" title="Limpar Filtros" style="padding: 7px 12px; font-weight: 700; height: 34px; white-space: nowrap;">🧹 Limpar</button>
                         </div>
@@ -1668,6 +1674,6 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
             </form>
         </div>
     </div>
-    <script src="admin.js?v=3.98"></script>
+    <script src="admin.js?v=3.99"></script>
 </body>
 </html>
