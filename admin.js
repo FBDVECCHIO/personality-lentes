@@ -3635,7 +3635,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!btn) return;
         const originalText = btn.innerHTML;
         btn.disabled = true;
-        btn.innerHTML = '🔄 Atualizando...';
+        btn.innerHTML = '⏳';
 
         try {
             // 1. Recarrega configurações gerais
@@ -3667,14 +3667,14 @@ document.addEventListener('DOMContentLoaded', () => {
             renderPremiosManager();
             renderDashboardPremios();
 
-            btn.innerHTML = '✅ Atualizado!';
+            btn.innerHTML = '✅';
             setTimeout(() => {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
-            }, 1500);
+            }, 1200);
         } catch (err) {
             console.error('Erro ao sincronizar dados:', err);
-            btn.innerHTML = '⚠️ Erro';
+            btn.innerHTML = '⚠️';
             setTimeout(() => {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
