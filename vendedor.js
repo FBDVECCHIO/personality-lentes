@@ -1230,9 +1230,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const activeLoja = sessionStorage.getItem('active_vendedor_loja');
             const activeCpf = sessionStorage.getItem('active_vendedor_cpf');
 
-            // Busca pontos e valores configurados
+            // Busca pontos e valores configurados com proteção contra valores corrompidos
             const lensConf = currentRewardsConfig.find(c => c.categoria === 'lente' && c.nome === lensVal) || { pontos: 0, valor: 0 };
             const arConf = currentRewardsConfig.find(c => c.categoria === 'antirreflexo' && c.nome === arVal) || { pontos: 0, valor: 0 };
+
+            let safeLensPoints = Number(lensConf.pontos) || 0;
+            if (safeLensPoints > 150) {
+                const uLens = (lensVal || '').toUpperCase();
+                if (uLens.startsWith('PR ') || uLens.startsWith('OC ') || uLens.includes('OFFICE') || uLens.includes('MULTI')) {
+                    safeLensPoints = 30;
+                } else if (uLens.startsWith('LP ') || uLens.startsWith('VS ') || uLens.includes('PRONTA') || uLens.includes('VISAO') || uLens.includes('VISÃO')) {
+                    safeLensPoints = 15;
+                } else {
+                    safeLensPoints = 30;
+                }
+            }
+
+            let safeArPoints = Number(arConf.pontos) || 0;
+            if (safeArPoints > 100) safeArPoints = 0;
 
             const saleData = {
                 vendedor_id: activeId,
@@ -1243,10 +1258,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 lente_familia: lensVal,
                 ar_familia: arVal,
                 data_venda: dateVal,
-                pontos_lente: lensConf.pontos,
-                valor_lente: lensConf.valor,
-                pontos_ar: arConf.pontos,
-                valor_ar: arConf.valor,
+                pontos_lente: safeLensPoints,
+                valor_lente: Number(lensConf.valor) || 0,
+                pontos_ar: safeArPoints,
+                valor_ar: Number(arConf.valor) || 0,
                 status: 'Pendente',
                 created_at: new Date().toISOString()
             };

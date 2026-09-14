@@ -2853,6 +2853,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Mapeamento das colunas (robusto usando prefixos/substrings para contornar falhas de encoding)
         const idxProd = headers.findIndex(h => h.includes("prod") || h.includes("lent") || h.includes("nome"));
         const idxPreco = headers.findIndex(h => h.includes("pre") || h.includes("val") || h.includes("r$") || h.includes("preo"));
+        const idxPontos = headers.findIndex(h => h.includes("ponto") || h.includes("pto") || h.includes("pts") || h.includes("score"));
         const idxTipo = headers.findIndex(h => h.includes("tip"));
         const idxTecnologia = headers.findIndex(h => h.includes("tec") || h.includes("tech"));
         const idxFamilia = headers.findIndex(h => h.includes("fam"));
@@ -2907,12 +2908,33 @@ document.addEventListener('DOMContentLoaded', () => {
             // Se for "Antirreflexo" (case insensitive), categoria = "antirreflexo", caso contrário "lente"
             const categoria = (tipo.toLowerCase() === "antirreflexo") ? "antirreflexo" : "lente";
 
+            // Determina pontos da campanha
+            let pontos = 0;
+            if (idxPontos !== -1 && cols[idxPontos]) {
+                const parsedPts = parseInt(cols[idxPontos].replace(/\D/g, ''));
+                if (!isNaN(parsedPts) && parsedPts <= 150) {
+                    pontos = parsedPts;
+                }
+            }
+            if (pontos === 0 && categoria !== 'antirreflexo') {
+                const normTipo = normalizeProductType(tipo || nome);
+                if (normTipo === 'Multifocal' || normTipo === 'Office' || nome.toUpperCase().startsWith('PR ') || nome.toUpperCase().startsWith('OC ')) {
+                    pontos = 30;
+                } else if (normTipo === 'Lente Pronta' || normTipo === 'Visão Simples' || nome.toUpperCase().startsWith('LP ') || nome.toUpperCase().startsWith('VS ')) {
+                    pontos = 15;
+                } else if (normTipo === 'Bifocal') {
+                    pontos = 20;
+                } else {
+                    pontos = 15;
+                }
+            }
+
             const keyMap = `${categoria}_${nome.toLowerCase()}`;
             localPremiosMap.set(keyMap, {
                 categoria,
                 nome,
                 valor: preco,
-                pontos: preco, // inicializa pontos = valor
+                pontos: pontos,
                 tipo,
                 tecnologia,
                 familia,
@@ -3353,13 +3375,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Auto-preenche Pontos ao digitar Preço no modo Adição (v3.82)
-    const newProdValue = document.getElementById('newProdValue');
+    // Sugere Pontos com base no Tipo de Produto no modo Adição (v4.01)
+    const newProdType = document.getElementById('newProdType');
     const newProdPoints = document.getElementById('newProdPoints');
-    if (newProdValue && newProdPoints) {
-        newProdValue.addEventListener('input', () => {
+    if (newProdType && newProdPoints) {
+        newProdType.addEventListener('change', () => {
             if (editingProductIndex === null) {
-                newProdPoints.value = Math.round(Number(newProdValue.value) || 0);
+                const norm = normalizeProductType(newProdType.value);
+                if (norm === 'Antirreflexo') newProdPoints.value = 0;
+                else if (norm === 'Multifocal' || norm === 'Office') newProdPoints.value = 30;
+                else if (norm === 'Visão Simples' || norm === 'Lente Pronta') newProdPoints.value = 15;
+                else if (norm === 'Bifocal') newProdPoints.value = 20;
+                else newProdPoints.value = 15;
             }
         });
     }
