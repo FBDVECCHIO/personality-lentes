@@ -4864,20 +4864,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const adminConsolidadoFixedSummary = document.getElementById('adminConsolidadoFixedSummary');
         if (adminConsolidadoFixedSummary) {
             adminConsolidadoFixedSummary.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                    <span style="font-size: 13px; font-weight: 800; color: var(--gold-light); text-transform: uppercase; letter-spacing: 0.5px;">💰 TOTAL GERAL ACUMULADO (A PAGAR):</span>
-                    <span class="badge" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #10b981; font-weight: 700; padding: 4px 12px; border-radius: 12px; font-size: 12.5px;">${totalGeralOS} O.S. Validadas</span>
+                <div style="display: inline-flex; align-items: center; gap: 10px; flex-shrink: 0;">
+                    <span style="font-size: 12.5px; font-weight: 800; color: var(--gold-light); text-transform: uppercase; letter-spacing: 0.5px;">💰 TOTAL GERAL (A PAGAR):</span>
+                    <span class="badge" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #10b981; font-weight: 700; padding: 3px 10px; border-radius: 12px; font-size: 12px;">${totalGeralOS} O.S. Validadas</span>
                 </div>
-                <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                <div style="display: inline-flex; align-items: center; gap: 16px; flex-shrink: 0;">
                     <div style="font-size: 12px; color: var(--text-muted);">
-                        Vendedores com Saldo: <strong style="color: #fff; font-size: 13px;">${totalGeralVendedores}</strong>
+                        Vendedores com Saldo: <strong style="color: #fff; font-size: 12.5px;">${totalGeralVendedores}</strong>
                     </div>
                     <div style="font-size: 12px; color: var(--gold-light);">
-                        Pontuação Acumulada: <strong style="color: var(--gold-light); font-size: 13.5px;">${totalGeralPontos} Pts</strong>
+                        Pontuação Acumulada: <strong style="color: var(--gold-light); font-size: 13px;">${totalGeralPontos} Pts</strong>
                     </div>
-                    <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); padding: 5px 14px; border-radius: 6px;">
-                        <span style="font-size: 11px; color: #a7f3d0; text-transform: uppercase; font-weight: 600; margin-right: 4px;">Total a Pagar:</span>
-                        <strong style="color: #10b981; font-size: 16px;">R$ ${totalGeralCash.toFixed(2)}</strong>
+                    <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); padding: 4px 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px;">
+                        <span style="font-size: 11px; color: #a7f3d0; text-transform: uppercase; font-weight: 600;">TOTAL A PAGAR:</span>
+                        <strong style="color: #10b981; font-size: 15px;">R$ ${totalGeralCash.toFixed(2)}</strong>
                     </div>
                 </div>
             `;
@@ -4910,9 +4910,6 @@ document.addEventListener('DOMContentLoaded', () => {
             filteredApuracaoGroups.forEach(group => {
                 const sellerInfo = getSellerInfo(group, sellersList);
                 const storeDisplay = group.loja || sellerInfo.loja_clinica || 'Não informada';
-                const cpfDisplay = sellerInfo.cpf_cnpj || group.cpf || 'n/d';
-                const rawPhone = (sellerInfo.whatsapp || '').replace(/\D/g, '');
-                const waLink = rawPhone ? `<a href="https://wa.me/55${rawPhone}" target="_blank" class="wa-link">💬 ${escapeHtml(sellerInfo.whatsapp)}</a>` : '<span style="color:var(--text-muted);">Sem WhatsApp</span>';
 
                 const tr = document.createElement('tr');
                 tr.className = 'group-row-apuracao';
@@ -4921,15 +4918,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td style="text-align: left; padding: 10px 15px;">
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <button type="button" class="btn-toggle-apuracao-icon" style="background: none; border: none; color: var(--gold-light); font-size: 16px; cursor: pointer; padding: 4px;" title="Expandir O.S. deste vendedor">+</button>
-                            <div>
-                                <strong style="color: #fff; font-size: 13.5px; cursor: pointer;" class="btn-toggle-apuracao-name" title="Clique para expandir/recolher">${escapeHtml(group.vendedor_nome)}</strong>
-                                <div style="font-size: 11px; margin-top: 2px;">${waLink}</div>
-                            </div>
+                            <strong style="color: #fff; font-size: 13.5px; cursor: pointer;" class="btn-toggle-apuracao-name" title="Clique para expandir/recolher">${escapeHtml(group.vendedor_nome)}</strong>
                         </div>
                     </td>
                     <td style="text-align: left; padding-left: 12px;">
-                        <div style="font-weight: 600; color: var(--gold-light); font-size: 12px;">🏬 ${escapeHtml(storeDisplay)}</div>
-                        <code style="font-size: 11px; color: var(--text-muted);">${escapeHtml(cpfDisplay)}</code>
+                        <div style="font-weight: 600; color: var(--gold-light); font-size: 12.5px;">🏬 ${escapeHtml(storeDisplay)}</div>
                     </td>
                     <td style="text-align: center;">
                         <span class="badge" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); color: #10b981; font-weight: 700; padding: 4px 10px; border-radius: 12px; font-size: 12px;">${group.validados_count} O.S. A Pagar</span>
@@ -5717,9 +5710,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <thead>
                         <tr>
                             <th>Nome do Vendedor</th>
-                            <th>CPF</th>
                             <th>Ótica / Clínica</th>
-                            <th>WhatsApp</th>
                             <th style="text-align: center;">O.S. Validadas</th>
                             <th style="text-align: center;">Pontos Acumulados</th>
                             <th style="text-align: right;">Subtotal a Pagar (R$)</th>
@@ -5733,14 +5724,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             const cash = pts * valorPontoConfig;
                             const osCount = Number(row.validados_count !== undefined ? row.validados_count : (row.sales ? row.sales.length : 0));
                             const storeDisplay = row.loja || sellerInfo.loja_clinica || 'Não informada';
-                            const cpfDisplay = sellerInfo.cpf_cnpj || row.cpf || 'n/d';
-                            const waDisplay = sellerInfo.whatsapp || 'Não informado';
                             return `
                                 <tr>
                                     <td><strong>${escapeHtml(row.vendedor_nome)}</strong></td>
-                                    <td><code>${escapeHtml(cpfDisplay)}</code></td>
                                     <td>${escapeHtml(storeDisplay)}</td>
-                                    <td>${escapeHtml(waDisplay)}</td>
                                     <td style="text-align: center; font-weight: bold;">${osCount} O.S.</td>
                                     <td class="pts-column" style="text-align: center;">${pts} Pts</td>
                                     <td class="cash-column" style="text-align: right;">R$ ${cash.toFixed(2)}</td>
@@ -5797,8 +5784,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const groupsHtml = items.map(group => {
             const sellerInfo = getSellerInfo(group, sellersList);
             const storeDisplay = group.loja || sellerInfo.loja_clinica || 'Não informada';
-            const cpfDisplay = sellerInfo.cpf_cnpj || group.cpf || 'n/d';
-            const waDisplay = sellerInfo.whatsapp || 'Não informado';
             const sales = group.sales || [];
 
             let groupPts = 0;
@@ -5828,10 +5813,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div style="margin-top: 20px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; page-break-inside: avoid;">
                     <div style="background: #f8fafc; border-bottom: 2px solid #c5a85c; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                         <div>
-                            <span style="font-size: 13px; font-weight: 800; color: #0f172a;">👤 ${escapeHtml(group.vendedor_nome)}</span>
-                            <span style="font-size: 11px; color: #64748b; margin-left: 12px;">🏬 Ótica: <b>${escapeHtml(storeDisplay)}</b></span>
-                            <span style="font-size: 11px; color: #64748b; margin-left: 12px;">📄 CPF: <b>${escapeHtml(cpfDisplay)}</b></span>
-                            <span style="font-size: 11px; color: #64748b; margin-left: 12px;">💬 Tel: <b>${escapeHtml(waDisplay)}</b></span>
+                            <span style="font-size: 13.5px; font-weight: 800; color: #0f172a;">👤 ${escapeHtml(group.vendedor_nome)}</span>
+                            <span style="font-size: 11.5px; color: #64748b; margin-left: 12px;">🏬 Ótica: <b>${escapeHtml(storeDisplay)}</b></span>
                         </div>
                         <div style="font-size: 12px; font-weight: bold; color: #15803d;">
                             Subtotal do Vendedor: R$ ${groupCash.toFixed(2)} (${groupPts} Pts / ${sales.length} O.S.)
