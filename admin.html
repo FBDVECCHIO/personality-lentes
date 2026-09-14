@@ -1516,15 +1516,21 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                             <thead id="adminPremiosTableHead">
                                 <tr>
                                     <th style="width: 45px; text-align: center;">+</th>
-                                    <th style="text-align: left; padding-left: 15px;">Vendedor</th>
+                                    <th id="thSortPremSeller" style="text-align: left; padding-left: 15px; cursor: pointer; user-select: none;" title="Ordenar por Vendedor">
+                                        Vendedor <span id="arrowSortPremSeller" style="font-size: 11px; margin-left: 4px; opacity: 0.4;">⇅</span>
+                                    </th>
                                     <th style="text-align: center; min-width: 130px;">
                                         <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 11px; margin: 0; text-transform: uppercase;">
                                             <input type="checkbox" id="selectAllPremiosOS" title="Selecionar Todos para PDF" style="cursor: pointer;" />
                                             <span>O.S.</span>
                                         </label>
                                     </th>
-                                    <th style="text-align: center;">Pontuação Total</th>
-                                    <th style="text-align: center;">Status</th>
+                                    <th id="thSortPremPoints" style="text-align: center; cursor: pointer; user-select: none;" title="Ordenar por Pontuação">
+                                        Pontuação Total <span id="arrowSortPremPoints" style="font-size: 11px; margin-left: 4px; opacity: 0.4;">⇅</span>
+                                    </th>
+                                    <th id="thSortPremStatus" style="text-align: center; cursor: pointer; user-select: none;" title="Ordenar por Status">
+                                        Status <span id="arrowSortPremStatus" style="font-size: 11px; margin-left: 4px; opacity: 0.4;">⇅</span>
+                                    </th>
                                     <th style="text-align: center; width: 170px;">Ações</th>
                                 </tr>
                             </thead>
@@ -1701,6 +1707,6 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
             </form>
         </div>
     </div>
-    <script src="admin.js?v=4.08"></script>
+    <script src="admin.js?v=4.10"></script>
 </body>
 </html>

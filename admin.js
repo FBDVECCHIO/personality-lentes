@@ -3446,6 +3446,61 @@ document.addEventListener('DOMContentLoaded', () => {
     const limitPremiosPerPage = 25;
     const selectedPremioIds = new Set();
     let lastGroupedSellersCount = 0;
+    let premiosSortField = null; // 'seller' | 'points' | 'status'
+    let premiosSortDir = 'asc'; // 'asc' | 'desc'
+
+    function handlePremiosSort(field, defaultDir = 'asc') {
+        if (premiosSortField === field) {
+            premiosSortDir = premiosSortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+            premiosSortField = field;
+            premiosSortDir = defaultDir;
+        }
+        currentPremiosPage = 1;
+        renderPremiosManager();
+    }
+
+    function updatePremiosSortIcons() {
+        const arrowSeller = document.getElementById('arrowSortPremSeller');
+        const arrowPoints = document.getElementById('arrowSortPremPoints');
+        const arrowStatus = document.getElementById('arrowSortPremStatus');
+
+        if (arrowSeller) {
+            if (premiosSortField === 'seller') {
+                arrowSeller.textContent = premiosSortDir === 'asc' ? '▲' : '▼';
+                arrowSeller.style.opacity = '1';
+                arrowSeller.style.color = 'var(--gold-light)';
+            } else {
+                arrowSeller.textContent = '⇅';
+                arrowSeller.style.opacity = '0.4';
+                arrowSeller.style.color = '';
+            }
+        }
+
+        if (arrowPoints) {
+            if (premiosSortField === 'points') {
+                arrowPoints.textContent = premiosSortDir === 'desc' ? '▼' : '▲';
+                arrowPoints.style.opacity = '1';
+                arrowPoints.style.color = 'var(--gold-light)';
+            } else {
+                arrowPoints.textContent = '⇅';
+                arrowPoints.style.opacity = '0.4';
+                arrowPoints.style.color = '';
+            }
+        }
+
+        if (arrowStatus) {
+            if (premiosSortField === 'status') {
+                arrowStatus.textContent = premiosSortDir === 'asc' ? '▲' : '▼';
+                arrowStatus.style.opacity = '1';
+                arrowStatus.style.color = 'var(--gold-light)';
+            } else {
+                arrowStatus.textContent = '⇅';
+                arrowStatus.style.opacity = '0.4';
+                arrowStatus.style.color = '';
+            }
+        }
+    }
 
     // Filtros e Botões do Card 2: Apuração Consolidada (v3.86)
     const filterApuracaoVendedor = document.getElementById('filterApuracaoVendedor');
@@ -3607,6 +3662,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (filterPremStatus) filterPremStatus.value = '';
             if (filterPremGroupBy) filterPremGroupBy.value = '';
             selectedPremioIds.clear();
+            premiosSortField = null;
+            premiosSortDir = 'asc';
             currentPremiosPage = 1;
             renderPremiosManager();
         });
@@ -4383,10 +4440,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 adminPremiosTableHead.innerHTML = `
                     <tr>
                         <th style="width: 45px; text-align: center;">+</th>
-                        <th style="text-align: left; padding-left: 15px;">Vendedor / Ótica</th>
+                        <th id="thSortPremSeller" style="text-align: left; padding-left: 15px; cursor: pointer; user-select: none;" title="Ordenar por Vendedor">
+                            Vendedor / Ótica <span id="arrowSortPremSeller" style="font-size: 11px; margin-left: 4px; opacity: 0.4;">⇅</span>
+                        </th>
                         <th style="text-align: center; min-width: 140px;">O.S. Vinculadas</th>
-                        <th style="text-align: center; min-width: 160px;">Pontos / A Pagar</th>
-                        <th style="text-align: center; min-width: 150px;">Status Resumo</th>
+                        <th id="thSortPremPoints" style="text-align: center; min-width: 160px; cursor: pointer; user-select: none;" title="Ordenar por Pontuação / Valor">
+                            Pontos / A Pagar <span id="arrowSortPremPoints" style="font-size: 11px; margin-left: 4px; opacity: 0.4;">⇅</span>
+                        </th>
+                        <th id="thSortPremStatus" style="text-align: center; min-width: 150px; cursor: pointer; user-select: none;" title="Ordenar por Status">
+                            Status Resumo <span id="arrowSortPremStatus" style="font-size: 11px; margin-left: 4px; opacity: 0.4;">⇅</span>
+                        </th>
                         <th style="text-align: center; width: 170px;">Ações</th>
                     </tr>
                 `;
@@ -4394,15 +4457,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 adminPremiosTableHead.innerHTML = `
                     <tr>
                         <th style="width: 45px; text-align: center;">+</th>
-                        <th style="text-align: left; padding-left: 15px;">Vendedor</th>
+                        <th id="thSortPremSeller" style="text-align: left; padding-left: 15px; cursor: pointer; user-select: none;" title="Ordenar por Vendedor">
+                            Vendedor <span id="arrowSortPremSeller" style="font-size: 11px; margin-left: 4px; opacity: 0.4;">⇅</span>
+                        </th>
                         <th style="text-align: center; min-width: 130px;">
                             <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 11px; margin: 0; text-transform: uppercase;">
                                 <input type="checkbox" id="selectAllPremiosOS" title="Selecionar Todos para PDF" style="cursor: pointer;" />
                                 <span>O.S.</span>
                             </label>
                         </th>
-                        <th style="text-align: center;">Pontuação Total</th>
-                        <th style="text-align: center;">Status</th>
+                        <th id="thSortPremPoints" style="text-align: center; cursor: pointer; user-select: none;" title="Ordenar por Pontuação">
+                            Pontuação Total <span id="arrowSortPremPoints" style="font-size: 11px; margin-left: 4px; opacity: 0.4;">⇅</span>
+                        </th>
+                        <th id="thSortPremStatus" style="text-align: center; cursor: pointer; user-select: none;" title="Ordenar por Status">
+                            Status <span id="arrowSortPremStatus" style="font-size: 11px; margin-left: 4px; opacity: 0.4;">⇅</span>
+                        </th>
                         <th style="text-align: center; width: 170px;">Ações</th>
                     </tr>
                 `;
@@ -4425,6 +4494,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 }
             }
+
+            const thSortSeller = document.getElementById('thSortPremSeller');
+            const thSortPoints = document.getElementById('thSortPremPoints');
+            const thSortStatus = document.getElementById('thSortPremStatus');
+
+            if (thSortSeller) {
+                thSortSeller.addEventListener('click', () => handlePremiosSort('seller', 'asc'));
+            }
+            if (thSortPoints) {
+                thSortPoints.addEventListener('click', () => handlePremiosSort('points', 'desc'));
+            }
+            if (thSortStatus) {
+                thSortStatus.addEventListener('click', () => handlePremiosSort('status', 'asc'));
+            }
+            updatePremiosSortIcons();
         }
 
         if (groupByVal === 'vendedor') {
@@ -4482,7 +4566,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 return g;
             });
 
-            sellerGroups.sort((a, b) => (b.valorAPagar - a.valorAPagar) || (b.totalPts - a.totalPts) || a.vendedor_nome.localeCompare(b.vendedor_nome));
+            if (premiosSortField === 'seller') {
+                sellerGroups.sort((a, b) => {
+                    const cmp = (a.vendedor_nome || '').localeCompare(b.vendedor_nome || '', 'pt-BR');
+                    return premiosSortDir === 'asc' ? cmp : -cmp;
+                });
+            } else if (premiosSortField === 'points') {
+                sellerGroups.sort((a, b) => {
+                    const ptsA = (a.valorAPagar > 0 ? a.valorAPagar : (a.totalPts * valorPontoConfig));
+                    const ptsB = (b.valorAPagar > 0 ? b.valorAPagar : (b.totalPts * valorPontoConfig));
+                    return premiosSortDir === 'asc' ? (ptsA - ptsB) : (ptsB - ptsA);
+                });
+            } else if (premiosSortField === 'status') {
+                sellerGroups.sort((a, b) => {
+                    const rankA = a.pendentesCount > 0 ? 1 : (a.validadosCount > 0 ? 2 : 3);
+                    const rankB = b.pendentesCount > 0 ? 1 : (b.validadosCount > 0 ? 2 : 3);
+                    return premiosSortDir === 'asc' ? (rankA - rankB) : (rankB - rankA);
+                });
+            } else {
+                sellerGroups.sort((a, b) => (b.valorAPagar - a.valorAPagar) || (b.totalPts - a.totalPts) || (a.vendedor_nome || '').localeCompare(b.vendedor_nome || '', 'pt-BR'));
+            }
 
             lastGroupedSellersCount = sellerGroups.length;
 
@@ -4682,6 +4785,31 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             // 2. Renderiza Tabela Detalhada Individual (Lançamentos de Vendas Compacta com Expansão e Paginação)
+            if (premiosSortField === 'seller') {
+                filteredSales.sort((a, b) => {
+                    const cmp = (a.vendedor_nome || '').localeCompare(b.vendedor_nome || '', 'pt-BR');
+                    return premiosSortDir === 'asc' ? cmp : -cmp;
+                });
+            } else if (premiosSortField === 'points') {
+                filteredSales.sort((a, b) => {
+                    const ptsA = Number(a.pontos_lente || 0) + Number(a.pontos_ar || 0);
+                    const ptsB = Number(b.pontos_lente || 0) + Number(b.pontos_ar || 0);
+                    return premiosSortDir === 'asc' ? (ptsA - ptsB) : (ptsB - ptsA);
+                });
+            } else if (premiosSortField === 'status') {
+                const getStatusRank = (st) => {
+                    const s = (st || '').trim().toLowerCase();
+                    if (s === 'pendente') return 1;
+                    if (s === 'validado' || s === 'a pagar') return 2;
+                    return 3;
+                };
+                filteredSales.sort((a, b) => {
+                    const rankA = getStatusRank(a.status);
+                    const rankB = getStatusRank(b.status);
+                    return premiosSortDir === 'asc' ? (rankA - rankB) : (rankB - rankA);
+                });
+            }
+
             const totalItems = filteredSales.length;
             const totalPages = Math.max(1, Math.ceil(totalItems / limitPremiosPerPage));
             if (currentPremiosPage > totalPages) {
