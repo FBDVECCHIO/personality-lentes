@@ -1272,10 +1272,25 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                                             <span>O.S. / Pedido</span>
                                         </label>
                                     </th>
-                                    <th style="text-align: left; min-width: 120px;">Vendedor</th>
-                                    <th style="width: 65px; text-align: center;">Ptos</th>
+                                    <th style="text-align: left; min-width: 120px; cursor: pointer; user-select: none;" id="thSortAuthOsSeller" title="Clique para ordenar por Vendedor (A-Z / Z-A)">
+                                        <div style="display: inline-flex; align-items: center; gap: 5px;">
+                                            <span>Vendedor</span>
+                                            <span id="arrowSortAuthOsSeller" style="font-size: 10px; opacity: 0.5;">⇅</span>
+                                        </div>
+                                    </th>
+                                    <th style="width: 75px; text-align: center; cursor: pointer; user-select: none;" id="thSortAuthOsPoints" title="Clique para ordenar por Pontuação (Maior/Menor)">
+                                        <div style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: 100%;">
+                                            <span>Ptos</span>
+                                            <span id="arrowSortAuthOsPoints" style="font-size: 10px; opacity: 0.5;">⇅</span>
+                                        </div>
+                                    </th>
                                     <th style="text-align: left; min-width: 150px;">Lentes + AR</th>
-                                    <th style="width: 85px; text-align: center;">Status</th>
+                                    <th style="width: 95px; text-align: center; cursor: pointer; user-select: none;" id="thSortAuthOsStatus" title="Clique para ordenar por Status (Pendente / Resgatada)">
+                                        <div style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: 100%;">
+                                            <span>Status</span>
+                                            <span id="arrowSortAuthOsStatus" style="font-size: 10px; opacity: 0.5;">⇅</span>
+                                        </div>
+                                    </th>
                                     <th style="width: 75px; text-align: center;">Ações</th>
                                 </tr>
                             </thead>
@@ -1674,6 +1689,6 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
             </form>
         </div>
     </div>
-    <script src="admin.js?v=4.01"></script>
+    <script src="admin.js?v=4.02"></script>
 </body>
 </html>

@@ -6243,12 +6243,89 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnPrevPageAuthOs = document.getElementById('btnPrevPageAuthOs');
     const btnNextPageAuthOs = document.getElementById('btnNextPageAuthOs');
     
+    // Elementos de ordenação da tabela de O.S. (v4.02)
+    const thSortAuthOsSeller = document.getElementById('thSortAuthOsSeller');
+    const thSortAuthOsPoints = document.getElementById('thSortAuthOsPoints');
+    const thSortAuthOsStatus = document.getElementById('thSortAuthOsStatus');
+
     let currentAuthOsPage = 1;
     const limitAuthOsPerPage = 25;
     const selectedAuthOsNumbers = new Set();
     let globalAuthorizedList = [];
     let globalApprovedVendedores = [];
     let lastFilteredAuthOsList = [];
+    let authOsSortField = null; // 'seller' | 'points' | 'status'
+    let authOsSortDir = 'asc'; // 'asc' | 'desc'
+
+    function getAuthOsTotalPoints(item) {
+        if (!item) return 0;
+        const lProd = adminPremiosConfig.find(p => p.nome === item.lente_familia) || { pontos: 0 };
+        const arProd = adminPremiosConfig.find(p => p.nome === item.ar_familia) || { pontos: 0 };
+        return (Number(lProd.pontos) || 0) + (Number(arProd.pontos) || 0);
+    }
+
+    function handleAuthOsSort(field, defaultDir = 'asc') {
+        if (authOsSortField === field) {
+            authOsSortDir = authOsSortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+            authOsSortField = field;
+            authOsSortDir = defaultDir;
+        }
+        currentAuthOsPage = 1;
+        renderAuthOsTableWithFiltersAndPagination();
+    }
+
+    if (thSortAuthOsSeller) {
+        thSortAuthOsSeller.addEventListener('click', () => handleAuthOsSort('seller', 'asc'));
+    }
+    if (thSortAuthOsPoints) {
+        thSortAuthOsPoints.addEventListener('click', () => handleAuthOsSort('points', 'desc'));
+    }
+    if (thSortAuthOsStatus) {
+        thSortAuthOsStatus.addEventListener('click', () => handleAuthOsSort('status', 'asc'));
+    }
+
+    function updateAuthOsSortIcons() {
+        const arrowSeller = document.getElementById('arrowSortAuthOsSeller');
+        const arrowPoints = document.getElementById('arrowSortAuthOsPoints');
+        const arrowStatus = document.getElementById('arrowSortAuthOsStatus');
+
+        if (arrowSeller) {
+            if (authOsSortField === 'seller') {
+                arrowSeller.textContent = authOsSortDir === 'asc' ? '▲' : '▼';
+                arrowSeller.style.opacity = '1';
+                arrowSeller.style.color = 'var(--gold-light)';
+            } else {
+                arrowSeller.textContent = '⇅';
+                arrowSeller.style.opacity = '0.4';
+                arrowSeller.style.color = '';
+            }
+        }
+
+        if (arrowPoints) {
+            if (authOsSortField === 'points') {
+                arrowPoints.textContent = authOsSortDir === 'desc' ? '▼' : '▲';
+                arrowPoints.style.opacity = '1';
+                arrowPoints.style.color = 'var(--gold-light)';
+            } else {
+                arrowPoints.textContent = '⇅';
+                arrowPoints.style.opacity = '0.4';
+                arrowPoints.style.color = '';
+            }
+        }
+
+        if (arrowStatus) {
+            if (authOsSortField === 'status') {
+                arrowStatus.textContent = authOsSortDir === 'asc' ? '▲' : '▼';
+                arrowStatus.style.opacity = '1';
+                arrowStatus.style.color = 'var(--gold-light)';
+            } else {
+                arrowStatus.textContent = '⇅';
+                arrowStatus.style.opacity = '0.4';
+                arrowStatus.style.color = '';
+            }
+        }
+    }
 
     function updateSelectAllAuthOsCheckbox() {
         if (!selectAllAuthOs || !lastFilteredAuthOsList) return;
@@ -6308,6 +6385,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (filterAuthOsStore) filterAuthOsStore.value = '';
             if (filterAuthOsSeller) filterAuthOsSeller.value = '';
             selectedAuthOsNumbers.clear();
+            authOsSortField = null;
+            authOsSortDir = 'asc';
             currentAuthOsPage = 1;
             renderAuthOsTableWithFiltersAndPagination();
         });
@@ -6484,9 +6563,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const vend = sellersList.find(v => v.cpf === item.cpf_vendedor) || { nome: 'Desconhecido', loja: item.loja || 'N/A' };
 
             // Calcula a pontuação total da Lente + AR
-            const lProd = adminPremiosConfig.find(p => p.nome === item.lente_familia) || { pontos: 0 };
-            const arProd = adminPremiosConfig.find(p => p.nome === item.ar_familia) || { pontos: 0 };
-            const totalPts = (Number(lProd.pontos) || 0) + (Number(arProd.pontos) || 0);
+            const totalPts = getAuthOsTotalPoints(item);
 
             const isChecked = selectedAuthOsNumbers.has(item.os);
 
@@ -6599,9 +6676,34 @@ document.addEventListener('DOMContentLoaded', () => {
             return matchOs && matchStore && matchSeller;
         });
 
+        // 2. Ordenação da lista de O.S. (v4.02)
+        if (authOsSortField) {
+            filtered.sort((a, b) => {
+                if (authOsSortField === 'seller') {
+                    const vendA = globalApprovedVendedores.find(v => v.cpf === a.cpf_vendedor) || { nome: '' };
+                    const vendB = globalApprovedVendedores.find(v => v.cpf === b.cpf_vendedor) || { nome: '' };
+                    const nameA = (vendA.nome || '').trim().toLowerCase();
+                    const nameB = (vendB.nome || '').trim().toLowerCase();
+                    const cmp = nameA.localeCompare(nameB, 'pt-BR');
+                    return authOsSortDir === 'asc' ? cmp : -cmp;
+                } else if (authOsSortField === 'points') {
+                    const ptsA = getAuthOsTotalPoints(a);
+                    const ptsB = getAuthOsTotalPoints(b);
+                    return authOsSortDir === 'asc' ? (ptsA - ptsB) : (ptsB - ptsA);
+                } else if (authOsSortField === 'status') {
+                    // Pendente (false -> 0) primeiro no asc; Resgatada (true -> 1) depois
+                    const stA = a.utilizada ? 1 : 0;
+                    const stB = b.utilizada ? 1 : 0;
+                    return authOsSortDir === 'asc' ? (stA - stB) : (stB - stA);
+                }
+                return 0;
+            });
+        }
+
         lastFilteredAuthOsList = filtered;
+        updateAuthOsSortIcons();
         
-        // 2. Calcula paginação (máximo 25 linhas)
+        // 3. Calcula paginação (máximo 25 linhas)
         const totalItems = filtered.length;
         const totalPages = Math.max(1, Math.ceil(totalItems / limitAuthOsPerPage));
         
@@ -6613,7 +6715,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const endIndex = startIndex + limitAuthOsPerPage;
         const paginatedItems = filtered.slice(startIndex, endIndex);
         
-        // 3. Atualiza info de paginação no HTML
+        // 4. Atualiza info de paginação no HTML
         if (authOsPaginationInfo) {
             authOsPaginationInfo.textContent = `Página ${currentAuthOsPage} de ${totalPages} (Mostrando ${totalItems === 0 ? 0 : startIndex + 1} a ${Math.min(endIndex, totalItems)} de ${totalItems} O.S.)`;
         }
@@ -6621,7 +6723,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnPrevPageAuthOs) btnPrevPageAuthOs.disabled = currentAuthOsPage === 1;
         if (btnNextPageAuthOs) btnNextPageAuthOs.disabled = currentAuthOsPage === totalPages;
         
-        // 4. Renderiza os itens paginados
+        // 5. Renderiza os itens paginados
         renderAuthOsTable(paginatedItems, globalApprovedVendedores);
         updateSelectAllAuthOsCheckbox();
     }
