@@ -4805,7 +4805,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (adminConsolidadoTableFoot) {
             adminConsolidadoTableFoot.innerHTML = `
                 <tr>
-                    <td colspan="3" style="text-align: right; padding: 12px 15px; color: var(--gold-light); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <td colspan="2" style="text-align: right; padding: 12px 15px; color: var(--gold-light); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
                         <strong>TOTAL GERAL ACUMULADO (A PAGAR):</strong>
                     </td>
                     <td style="text-align: center; padding: 12px; color: #fff; font-size: 13px;">
@@ -4823,7 +4823,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (filteredApuracaoGroups.length === 0) {
-            adminConsolidadoTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 25px 0;">Nenhum vendedor possui saldo pendente de pagamento correspondente aos filtros.</td></tr>`;
+            adminConsolidadoTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 25px 0;">Nenhum vendedor possui saldo pendente de pagamento correspondente aos filtros.</td></tr>`;
         } else {
             filteredApuracaoGroups.forEach(group => {
                 const sellerInfo = getSellerInfo(group, sellersList);
@@ -4836,12 +4836,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 tr.className = 'group-row-apuracao';
 
                 tr.innerHTML = `
-                    <td style="text-align: center;">
-                        <button type="button" class="btn-toggle-apuracao-icon" style="background: none; border: none; color: var(--gold-light); font-size: 16px; cursor: pointer; padding: 4px;" title="Expandir O.S. deste vendedor">+</button>
-                    </td>
-                    <td style="text-align: left; padding-left: 15px;">
-                        <strong style="color: #fff; font-size: 13.5px;">${escapeHtml(group.vendedor_nome)}</strong>
-                        <div style="font-size: 11px; margin-top: 2px;">${waLink}</div>
+                    <td style="text-align: left; padding: 10px 15px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button type="button" class="btn-toggle-apuracao-icon" style="background: rgba(212, 175, 55, 0.15); border: 1px solid rgba(212, 175, 55, 0.4); color: var(--gold-light); font-size: 13px; font-weight: bold; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;" title="Expandir/Recolher O.S. deste vendedor">+</button>
+                            <div>
+                                <strong style="color: #fff; font-size: 13.5px; cursor: pointer;" class="btn-toggle-apuracao-name" title="Clique para expandir/recolher">${escapeHtml(group.vendedor_nome)}</strong>
+                                <div style="font-size: 11px; margin-top: 2px;">${waLink}</div>
+                            </div>
+                        </div>
                     </td>
                     <td style="text-align: center;">
                         <div style="font-weight: 600; color: var(--gold-light); font-size: 12px;">🏬 ${escapeHtml(storeDisplay)}</div>
@@ -4856,9 +4858,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     </td>
                     <td style="text-align: center; white-space: nowrap;">
                         <div style="display: inline-flex; gap: 5px; align-items: center; justify-content: center; flex-wrap: wrap;">
-                            <button type="button" class="btn btn-success btn-xs btn-bulk-payout" data-vendedor-id="${escapeHtml(group.vendedor_id)}" data-name="${escapeHtml(group.vendedor_nome)}" data-vendedor-key="${escapeHtml(group.key)}" style="padding: 5px 10px; font-size: 11.5px; font-weight: 700; border-radius: 4px;" title="Pagar todas as O.S. ou as selecionadas deste vendedor">Pagar Todos desse Vendedor 💰</button>
+                            <button type="button" class="btn btn-success btn-xs btn-bulk-payout" data-vendedor-id="${escapeHtml(group.vendedor_id)}" data-name="${escapeHtml(group.vendedor_nome)}" data-vendedor-key="${escapeHtml(group.key)}" style="padding: 5px 10px; font-size: 11.5px; font-weight: 700; border-radius: 4px;" title="Pagar todas as O.S. ou as selecionadas deste vendedor">Pagar Todos 💰</button>
                             <button type="button" class="btn btn-outline-gold btn-xs btn-print-seller-pdf" data-vendedor-key="${escapeHtml(group.key)}" style="padding: 5px 8px; font-size: 11px;" title="Exportar demonstrativo PDF deste vendedor para o Financeiro">📄 PDF Vendedor</button>
-                            <button type="button" class="btn btn-outline-gold btn-xs btn-toggle-apuracao-os" style="padding: 5px 8px; font-size: 11px;">Ver O.S. (${group.sales.length}) 📂</button>
                         </div>
                     </td>
                 `;
@@ -4927,7 +4928,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 trSubTable.innerHTML = `
-                    <td colspan="6" style="background: rgba(10, 10, 14, 0.7); padding: 12px 18px; border-left: 3px solid #10b981; border-bottom: 1px solid rgba(16, 185, 129, 0.25);">
+                    <td colspan="5" style="background: rgba(10, 10, 14, 0.7); padding: 12px 18px; border-left: 3px solid #10b981; border-bottom: 1px solid rgba(16, 185, 129, 0.25);">
                         <div style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                             <div style="font-size: 12px; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 0.5px;">
                                 📋 Ordens de Serviço a Pagar de ${escapeHtml(group.vendedor_nome)} (${group.sales.length} O.S.)
@@ -4963,16 +4964,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     const isHidden = trSubTable.style.display === 'none';
                     trSubTable.style.display = isHidden ? 'table-row' : 'none';
                     const iconBtn = tr.querySelector('.btn-toggle-apuracao-icon');
-                    if (iconBtn) iconBtn.textContent = isHidden ? '➖' : '+';
-                    const txtBtn = tr.querySelector('.btn-toggle-apuracao-os');
-                    if (txtBtn) txtBtn.textContent = isHidden ? `Ocultar O.S. 📂` : `Ver O.S. (${group.sales.length}) 📂`;
+                    if (iconBtn) {
+                        iconBtn.textContent = isHidden ? '➖' : '+';
+                        iconBtn.style.background = isHidden ? 'rgba(239, 68, 68, 0.15)' : 'rgba(212, 175, 55, 0.15)';
+                        iconBtn.style.borderColor = isHidden ? 'rgba(239, 68, 68, 0.4)' : 'rgba(212, 175, 55, 0.4)';
+                    }
                 };
 
                 const iconBtn = tr.querySelector('.btn-toggle-apuracao-icon');
                 if (iconBtn) iconBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleApuracaoExpander(); });
                 
-                const txtBtn = tr.querySelector('.btn-toggle-apuracao-os');
-                if (txtBtn) txtBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleApuracaoExpander(); });
+                const nameClickable = tr.querySelector('.btn-toggle-apuracao-name');
+                if (nameClickable) nameClickable.addEventListener('click', (e) => { e.stopPropagation(); toggleApuracaoExpander(); });
 
                 adminConsolidadoTableBody.appendChild(tr);
                 adminConsolidadoTableBody.appendChild(trSubTable);
