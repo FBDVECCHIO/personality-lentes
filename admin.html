@@ -1577,21 +1577,24 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                         </div>
                     </div>
 
-                    <div class="table-container" style="max-height: 450px; overflow-y: auto; overflow-x: auto;">
+                    <div class="table-container" style="max-height: 520px; overflow-y: auto; overflow-x: auto;">
                         <table class="leads-table" id="adminConsolidadoTable">
-                            <thead>
+                            <thead id="adminConsolidadoTableHead">
                                 <tr>
-                                    <th>Nome do Vendedor</th>
-                                    <th>CPF</th>
-                                    <th>Ótica de Trabalho</th>
-                                    <th>WhatsApp</th>
-                                    <th>Total a Pagar (Validados)</th>
-                                    <th>Ação de Payout</th>
+                                    <th style="width: 45px; text-align: center;">+</th>
+                                    <th style="text-align: left; padding-left: 15px;">Vendedor & Contato</th>
+                                    <th style="text-align: center; min-width: 140px;">Ótica / CPF</th>
+                                    <th style="text-align: center; min-width: 120px;">O.S. Validadas</th>
+                                    <th style="text-align: center; min-width: 160px;">Subtotal Acumulado</th>
+                                    <th style="text-align: center; width: 250px;">Ações de Payout</th>
                                 </tr>
                             </thead>
                             <tbody id="adminConsolidadoTableBody">
                                 <!-- Preenchido via JS -->
                             </tbody>
+                            <tfoot id="adminConsolidadoTableFoot" style="background: rgba(0,0,0,0.4); border-top: 2px solid var(--gold-primary); font-weight: 700;">
+                                <!-- Preenchido via JS com Total Geral -->
+                            </tfoot>
                         </table>
                     </div>
                 </div>
@@ -1696,6 +1699,6 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
             </form>
         </div>
     </div>
-    <script src="admin.js?v=4.03"></script>
+    <script src="admin.js?v=4.04"></script>
 </body>
 </html>

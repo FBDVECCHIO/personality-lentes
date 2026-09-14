@@ -4463,8 +4463,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     let actionButtons = `<div style="display: inline-flex; gap: 5px; align-items: center; justify-content: center; flex-wrap: wrap;">`;
-                    if (group.validadosCount > 0) {
-                        actionButtons += `<button type="button" class="btn btn-primary btn-xs btn-bulk-payout" data-vendedor-id="${escapeHtml(group.vendedor_id)}" data-name="${escapeHtml(group.vendedor_nome)}" style="padding: 4px 10px; font-size: 11px; background: var(--gold-light); color: #000; font-weight: 700; border-radius: 4px;" title="Pagar todas as O.S. validadas deste vendedor">Pagar Lote 💰</button>`;
+                    if (group.pendentesCount > 0) {
+                        actionButtons += `<button type="button" class="btn btn-success btn-xs btn-bulk-validate" data-vendedor-id="${escapeHtml(group.vendedor_id)}" data-name="${escapeHtml(group.vendedor_nome)}" style="padding: 4px 10px; font-size: 11px; font-weight: 700; border-radius: 4px;" title="Validar todas as ${group.pendentesCount} O.S. pendentes deste vendedor e encaminhar para a Apuração de Pagamentos">Validar Lote (${group.pendentesCount}) ✅</button>`;
                     }
                     actionButtons += `<button type="button" class="btn btn-outline-gold btn-xs btn-toggle-group-os" style="padding: 4px 8px; font-size: 11px;">Ver O.S. (${group.sales.length}) 📂</button></div>`;
 
@@ -4512,10 +4512,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             sStatusBadge = `<span class="status-vendedor-pendente" style="font-size: 10.5px; padding: 2px 6px;">Pendente</span>`;
                             sActionBtns = `<button type="button" class="btn btn-success btn-xs btn-os-validate" data-id="${sale.id}" style="padding: 3px 6px; font-size: 10.5px; margin-right: 4px;">Validar ✅</button>`;
                         } else if (sale.status === 'Validado') {
-                            sStatusBadge = `<span class="status-vendedor-validado" style="font-size: 10.5px; padding: 2px 6px;">A Pagar</span>`;
-                            sActionBtns = `<button type="button" class="btn btn-primary btn-xs btn-os-pay" data-id="${sale.id}" style="padding: 3px 6px; font-size: 10.5px; margin-right: 4px; background: var(--gold-light); color:#000;">Pagar 💵</button>`;
+                            sStatusBadge = `<span class="status-vendedor-validado" style="font-size: 10.5px; padding: 2px 6px;">Validado (Na Apuração) ⏳</span>`;
                         } else {
-                            sStatusBadge = `<span class="status-vendedor-pago" style="font-size: 10.5px; padding: 2px 6px;">Pago</span>`;
+                            sStatusBadge = `<span class="status-vendedor-pago" style="font-size: 10.5px; padding: 2px 6px;">Pago ✅</span>`;
                         }
 
                         sActionBtns += `<button type="button" class="btn btn-outline-gold btn-xs btn-os-delete" data-id="${sale.id}" style="border-color: rgba(255, 85, 85, 0.3); color: #fca5a5; padding: 3px 6px; font-size: 10.5px;">🗑️</button>`;
@@ -4535,8 +4534,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <div style="font-size: 10.5px; color: var(--text-muted);">Data: ${dtFormatada}</div>
                                 </td>
                                 <td style="padding: 8px 10px; font-size: 11.5px; text-align: left;">
-                                    <div>${escapeHtml(sale.lente_familia || 'Lente Padrão')} <small style="color:var(--gold-light);">(${Number(sale.pontos_lente || 0)} Pts)</small></div>
-                                    ${sale.ar_familia ? `<div style="color: var(--text-muted); font-size: 10.5px;">+ ${escapeHtml(sale.ar_familia)} (${Number(sale.pontos_ar || 0)} Pts)</div>` : ''}
+                                    <div>${escapeHtml(sale.lente_familia || 'Lente Padrão')} <small style="color:var(--gold-light);">(${Number(sale.pontos_lente || 0)} Ptos)</small></div>
+                                    ${sale.ar_familia ? `<div style="color: var(--text-muted); font-size: 10.5px;">+ ${escapeHtml(sale.ar_familia)} (${Number(sale.pontos_ar || 0)} Ptos)</div>` : ''}
                                 </td>
                                 <td style="padding: 8px 10px; font-size: 12px; text-align: center;">
                                     <strong style="color: var(--gold-light);">${sPts} Pts</strong>
@@ -4652,12 +4651,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     if (sale.status === 'Pendente') {
                         statusText = `<span class="status-vendedor-pendente">Pendente</span>`;
-                        actionBtn = `<button type="button" class="btn btn-success btn-xs btn-os-validate" data-id="${sale.id}" style="padding: 4px 8px; font-size:11px; margin-right: 5px;">Validar O.S. ✅</button>`;
+                        actionBtn = `<button type="button" class="btn btn-success btn-xs btn-os-validate" data-id="${sale.id}" style="padding: 4px 8px; font-size:11px; margin-right: 5px;" title="Validar O.S. e encaminhar para a Apuração de Pagamentos">Validar O.S. ✅</button>`;
                     } else if (sale.status === 'Validado') {
-                        statusText = `<span class="status-vendedor-validado">A Pagar</span>`;
-                        actionBtn = `<button type="button" class="btn btn-primary btn-xs btn-os-pay" data-id="${sale.id}" style="padding: 4px 8px; font-size:11px; margin-right: 5px; background: var(--gold-light); color:#000;">Marcar Pago 💵</button>`;
+                        statusText = `<span class="status-vendedor-validado" title="Validado e encaminhado para Apuração de Pagamentos">Validado (Na Apuração) ⏳</span>`;
                     } else {
-                        statusText = `<span class="status-vendedor-pago">Pago</span>`;
+                        statusText = `<span class="status-vendedor-pago">Pago ✅</span>`;
                     }
 
                     // Botão de deletar lançamento
@@ -4731,120 +4729,253 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         updateSelectAllPremiosCheckbox();
 
-        // 3. Renderiza Tabela de Payout Consolidados por Vendedor
+        // 3. Renderiza Tabela de Apuração Consolidada por Vendedor (Card 2) com Subtotal e Total Geral
         const sellersList = (loadedMembersList || []).filter(m => m.tipo === 'vend');
-
-        // Agrupa todas as O.S. com status 'Validado' / 'A Pagar'
-        const validadosPorVendedor = {};
-        
-        allSubmittedSales.forEach(sale => {
-            const st = (sale.status || '').trim().toLowerCase();
-            if (st === 'validado' || st === 'a pagar') {
-                const vKey = sale.vendedor_id ? String(sale.vendedor_id) : (sale.vendedor_nome ? 'nome_' + sale.vendedor_nome.trim().toLowerCase() : 'vend_' + (sale.os || Math.random()));
-                if (!validadosPorVendedor[vKey]) {
-                    validadosPorVendedor[vKey] = {
-                        vendedor_nome: sale.vendedor_nome || 'Vendedor Desconhecido',
-                        loja: sale.loja || '',
-                        total_pontos: 0,
-                        vendedor_id: sale.vendedor_id || '',
-                        cpf: sale.cpf_vendedor || sale.cpf || '',
-                        status: 'Validado'
-                    };
-                }
-                validadosPorVendedor[vKey].total_pontos += (Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0));
-                if (!validadosPorVendedor[vKey].loja && sale.loja) {
-                    validadosPorVendedor[vKey].loja = sale.loja;
-                }
-            }
-        });
-
-        // Agrupa todas as O.S. com status 'Pago' (Já Pago)
-        const pagosPorVendedor = {};
-        
-        allSubmittedSales.forEach(sale => {
-            const st = (sale.status || '').trim().toLowerCase();
-            if (st === 'pago' || st === 'pago e conciliado' || st.startsWith('pago')) {
-                const vKey = sale.vendedor_id ? String(sale.vendedor_id) : (sale.vendedor_nome ? 'nome_' + sale.vendedor_nome.trim().toLowerCase() : 'vend_' + (sale.os || Math.random()));
-                if (!pagosPorVendedor[vKey]) {
-                    pagosPorVendedor[vKey] = {
-                        vendedor_nome: sale.vendedor_nome || 'Vendedor Desconhecido',
-                        loja: sale.loja || '',
-                        total_pontos: 0,
-                        vendedor_id: sale.vendedor_id || '',
-                        cpf: sale.cpf_vendedor || sale.cpf || '',
-                        status: 'Pago'
-                    };
-                }
-                pagosPorVendedor[vKey].total_pontos += (Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0));
-                if (!pagosPorVendedor[vKey].loja && sale.loja) {
-                    pagosPorVendedor[vKey].loja = sale.loja;
-                }
-            }
-        });
-
-        // Filtros do Card 2 (Apuração Consolidada)
         const apuracaoStatusVal = filterApuracaoStatus ? filterApuracaoStatus.value : '';
-        let allConsolidadoRows = Object.values(validadosPorVendedor);
-
-        if (apuracaoStatusVal === 'Todos') {
-            const todosPorVendedor = {};
-            allSubmittedSales.forEach(sale => {
-                const vKey = sale.vendedor_id ? String(sale.vendedor_id) : (sale.vendedor_nome ? 'nome_' + sale.vendedor_nome.trim().toLowerCase() : 'vend_' + (sale.os || Math.random()));
-                if (!todosPorVendedor[vKey]) {
-                    todosPorVendedor[vKey] = {
-                        vendedor_nome: sale.vendedor_nome || 'Vendedor Desconhecido',
-                        loja: sale.loja || '',
-                        total_pontos: 0,
-                        vendedor_id: sale.vendedor_id || '',
-                        cpf: sale.cpf_vendedor || sale.cpf || '',
-                        status: sale.status || 'Pendente'
-                    };
-                }
-                todosPorVendedor[vKey].total_pontos += (Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0));
-                if (!todosPorVendedor[vKey].loja && sale.loja) todosPorVendedor[vKey].loja = sale.loja;
-            });
-            allConsolidadoRows = Object.values(todosPorVendedor);
-        }
-
         const apuracaoVendVal = filterApuracaoVendedor ? filterApuracaoVendedor.value.trim().toLowerCase() : '';
         const apuracaoLojaVal = filterApuracaoLoja ? filterApuracaoLoja.value.trim().toLowerCase() : '';
-        
-        const filteredConsolidadoRows = allConsolidadoRows.filter(row => {
-            const vendMatch = !apuracaoVendVal || (row.vendedor_nome || '').toLowerCase().includes(apuracaoVendVal);
-            const lojaMatch = !apuracaoLojaVal || (row.loja || '').toLowerCase().includes(apuracaoLojaVal);
+
+        const apuracaoGroupsMap = {};
+
+        allSubmittedSales.forEach(sale => {
+            const st = (sale.status || '').trim().toLowerCase();
+            const isValidado = (st === 'validado' || st === 'a pagar');
+            const isMatchStatus = apuracaoStatusVal === 'Todos' ? true : isValidado;
+
+            if (isMatchStatus) {
+                const vKey = sale.vendedor_id 
+                    ? String(sale.vendedor_id) 
+                    : (sale.vendedor_nome ? 'nome_' + sale.vendedor_nome.trim().toLowerCase() : 'vend_' + (sale.os || Math.random()));
+
+                if (!apuracaoGroupsMap[vKey]) {
+                    apuracaoGroupsMap[vKey] = {
+                        key: vKey,
+                        vendedor_id: sale.vendedor_id || '',
+                        vendedor_nome: sale.vendedor_nome || 'Vendedor Desconhecido',
+                        loja: sale.loja || '',
+                        cpf: sale.cpf_vendedor || sale.cpf || '',
+                        sales: [],
+                        total_pontos: 0,
+                        validados_pontos: 0,
+                        validados_count: 0
+                    };
+                }
+
+                const pts = Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0);
+                apuracaoGroupsMap[vKey].sales.push(sale);
+                apuracaoGroupsMap[vKey].total_pontos += pts;
+                if (!apuracaoGroupsMap[vKey].loja && sale.loja) apuracaoGroupsMap[vKey].loja = sale.loja;
+
+                if (isValidado) {
+                    apuracaoGroupsMap[vKey].validados_pontos += pts;
+                    apuracaoGroupsMap[vKey].validados_count++;
+                }
+            }
+        });
+
+        const allApuracaoGroups = Object.values(apuracaoGroupsMap).map(g => {
+            g.subtotal_a_pagar = g.validados_pontos * valorPontoConfig;
+            return g;
+        });
+
+        const filteredApuracaoGroups = allApuracaoGroups.filter(g => {
+            const vendMatch = !apuracaoVendVal || (g.vendedor_nome || '').toLowerCase().includes(apuracaoVendVal);
+            const lojaMatch = !apuracaoLojaVal || (g.loja || '').toLowerCase().includes(apuracaoLojaVal);
             return vendMatch && lojaMatch;
         });
 
-        lastFilteredApuracaoRows = filteredConsolidadoRows;
-        lastAllApuracaoRows = allConsolidadoRows;
+        filteredApuracaoGroups.sort((a, b) => (b.subtotal_a_pagar - a.subtotal_a_pagar) || (b.total_pontos - a.total_pontos) || a.vendedor_nome.localeCompare(b.vendedor_nome));
 
-        if (filteredConsolidadoRows.length === 0) {
-            adminConsolidadoTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Nenhum vendedor possui saldo pendente de pagamento correspondente aos filtros.</td></tr>`;
+        lastFilteredApuracaoRows = filteredApuracaoGroups;
+        lastAllApuracaoRows = allApuracaoGroups;
+
+        // Calcula Totais Gerais da Apuração
+        let totalGeralVendedores = filteredApuracaoGroups.length;
+        let totalGeralOS = 0;
+        let totalGeralPontos = 0;
+        let totalGeralCash = 0;
+
+        filteredApuracaoGroups.forEach(g => {
+            totalGeralOS += g.validados_count;
+            totalGeralPontos += g.validados_pontos;
+            totalGeralCash += g.subtotal_a_pagar;
+        });
+
+        const adminConsolidadoTableFoot = document.getElementById('adminConsolidadoTableFoot');
+        if (adminConsolidadoTableFoot) {
+            adminConsolidadoTableFoot.innerHTML = `
+                <tr>
+                    <td colspan="3" style="text-align: right; padding: 12px 15px; color: var(--gold-light); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <strong>TOTAL GERAL ACUMULADO (A PAGAR):</strong>
+                    </td>
+                    <td style="text-align: center; padding: 12px; color: #fff; font-size: 13px;">
+                        <span class="badge" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #10b981; font-weight: 700; padding: 4px 10px; border-radius: 12px; font-size: 12px;">${totalGeralOS} O.S. Validadas</span>
+                    </td>
+                    <td style="text-align: center; padding: 12px;">
+                        <strong style="color: #10b981; font-size: 15px;">R$ ${totalGeralCash.toFixed(2)}</strong>
+                        <div style="font-size: 11px; color: var(--gold-light);">${totalGeralPontos} Pts totais</div>
+                    </td>
+                    <td style="text-align: center; padding: 12px; font-size: 11.5px; color: var(--text-muted);">
+                        ${totalGeralVendedores} Vendedores a Pagar
+                    </td>
+                </tr>
+            `;
+        }
+
+        if (filteredApuracaoGroups.length === 0) {
+            adminConsolidadoTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 25px 0;">Nenhum vendedor possui saldo pendente de pagamento correspondente aos filtros.</td></tr>`;
         } else {
-            filteredConsolidadoRows.forEach(row => {
-                const sellerInfo = getSellerInfo(row, sellersList);
-                const totalCash = row.total_pontos * valorPontoConfig;
-                const storeDisplay = row.loja || sellerInfo.loja_clinica || 'Não informada';
-                const cpfDisplay = sellerInfo.cpf_cnpj || row.cpf || 'n/d';
-                
+            filteredApuracaoGroups.forEach(group => {
+                const sellerInfo = getSellerInfo(group, sellersList);
+                const storeDisplay = group.loja || sellerInfo.loja_clinica || 'Não informada';
+                const cpfDisplay = sellerInfo.cpf_cnpj || group.cpf || 'n/d';
                 const rawPhone = (sellerInfo.whatsapp || '').replace(/\D/g, '');
-                const waLink = rawPhone ? `<a href="https://wa.me/55${rawPhone}" target="_blank" class="wa-link">💬 ${escapeHtml(sellerInfo.whatsapp)}</a>` : '<span style="color:var(--text-muted);">Não informado</span>';
+                const waLink = rawPhone ? `<a href="https://wa.me/55${rawPhone}" target="_blank" class="wa-link">💬 ${escapeHtml(sellerInfo.whatsapp)}</a>` : '<span style="color:var(--text-muted);">Sem WhatsApp</span>';
 
                 const tr = document.createElement('tr');
+                tr.className = 'group-row-apuracao';
+
                 tr.innerHTML = `
-                    <td><strong>${escapeHtml(row.vendedor_nome)}</strong></td>
-                    <td><code>${escapeHtml(cpfDisplay)}</code></td>
-                    <td>${escapeHtml(storeDisplay)}</td>
-                    <td>${waLink}</td>
-                    <td>
-                        <strong style="color: #10b981; font-size:16px;">R$ ${totalCash.toFixed(2)}</strong>
-                        <br><small style="color:var(--text-muted);">${row.total_pontos} Pts acumulados</small>
+                    <td style="text-align: center;">
+                        <button type="button" class="btn-toggle-apuracao-icon" style="background: none; border: none; color: var(--gold-light); font-size: 16px; cursor: pointer; padding: 4px;" title="Expandir O.S. deste vendedor">+</button>
                     </td>
-                    <td>
-                        <button class="btn btn-success btn-sm btn-bulk-payout" data-vendedor-id="${row.vendedor_id || ''}" data-name="${escapeHtml(row.vendedor_nome || '')}" style="font-weight:700;">Pagar Todos desse Vendedor 💰</button>
+                    <td style="text-align: left; padding-left: 15px;">
+                        <strong style="color: #fff; font-size: 13.5px;">${escapeHtml(group.vendedor_nome)}</strong>
+                        <div style="font-size: 11px; margin-top: 2px;">${waLink}</div>
+                    </td>
+                    <td style="text-align: center;">
+                        <div style="font-weight: 600; color: var(--gold-light); font-size: 12px;">🏬 ${escapeHtml(storeDisplay)}</div>
+                        <code style="font-size: 11px; color: var(--text-muted);">${escapeHtml(cpfDisplay)}</code>
+                    </td>
+                    <td style="text-align: center;">
+                        <span class="badge" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); color: #10b981; font-weight: 700; padding: 4px 10px; border-radius: 12px; font-size: 12px;">${group.validados_count} O.S. A Pagar</span>
+                    </td>
+                    <td style="text-align: center;">
+                        <div><strong style="color: #10b981; font-size: 14px;">R$ ${group.subtotal_a_pagar.toFixed(2)}</strong> <span style="font-size: 11px; color: #a7f3d0; font-weight: 600;">Subtotal</span></div>
+                        <div style="font-size: 11px; color: var(--gold-light); margin-top: 2px;">${group.validados_pontos} Pts acumulados</div>
+                    </td>
+                    <td style="text-align: center; white-space: nowrap;">
+                        <div style="display: inline-flex; gap: 5px; align-items: center; justify-content: center; flex-wrap: wrap;">
+                            <button type="button" class="btn btn-success btn-xs btn-bulk-payout" data-vendedor-id="${escapeHtml(group.vendedor_id)}" data-name="${escapeHtml(group.vendedor_nome)}" data-vendedor-key="${escapeHtml(group.key)}" style="padding: 5px 10px; font-size: 11.5px; font-weight: 700; border-radius: 4px;" title="Pagar todas as O.S. ou as selecionadas deste vendedor">Pagar Todos desse Vendedor 💰</button>
+                            <button type="button" class="btn btn-outline-gold btn-xs btn-print-seller-pdf" data-vendedor-key="${escapeHtml(group.key)}" style="padding: 5px 8px; font-size: 11px;" title="Exportar demonstrativo PDF deste vendedor para o Financeiro">📄 PDF Vendedor</button>
+                            <button type="button" class="btn btn-outline-gold btn-xs btn-toggle-apuracao-os" style="padding: 5px 8px; font-size: 11px;">Ver O.S. (${group.sales.length}) 📂</button>
+                        </div>
                     </td>
                 `;
+
+                // Sub-tabela de Ordens por Vendedor (Card 2)
+                const trSubTable = document.createElement('tr');
+                trSubTable.className = 'apuracao-subtable-row';
+                trSubTable.setAttribute('data-vendedor-key', group.key);
+                trSubTable.style.display = 'none';
+
+                let subRowsHtml = '';
+                group.sales.forEach(sale => {
+                    const sValProdutos = Number(sale.valor_lente || 0) + Number(sale.valor_ar || 0);
+                    const sPts = Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0);
+                    const sCash = sPts * valorPontoConfig;
+                    const isChecked = true;
+
+                    let sStatusBadge = '';
+                    let sActionBtns = '';
+
+                    const st = (sale.status || '').trim().toLowerCase();
+                    if (st === 'validado' || st === 'a pagar') {
+                        sStatusBadge = `<span class="status-vendedor-validado" style="font-size: 10.5px; padding: 2px 6px;">A Pagar</span>`;
+                        sActionBtns = `<button type="button" class="btn btn-primary btn-xs btn-os-pay" data-id="${sale.id}" style="padding: 3px 8px; font-size: 11px; background: var(--gold-light); color:#000; font-weight:700;">Pagar 💵</button>`;
+                    } else if (st === 'pago' || st.startsWith('pago')) {
+                        sStatusBadge = `<span class="status-vendedor-pago" style="font-size: 10.5px; padding: 2px 6px;">Pago ✅</span>`;
+                    } else {
+                        sStatusBadge = `<span class="status-vendedor-pendente" style="font-size: 10.5px; padding: 2px 6px;">Pendente</span>`;
+                    }
+
+                    const dtFormatada = sale.created_at ? new Date(sale.created_at).toLocaleDateString('pt-BR') : '-';
+
+                    subRowsHtml += `
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(0,0,0,0.15);">
+                            <td style="padding: 8px 10px; text-align: center;">
+                                <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; margin: 0; font-size: 12px;">
+                                    <input type="checkbox" class="chk-apuracao-os" data-id="${sale.id}" data-vendedor-key="${group.key}" ${isChecked ? 'checked' : ''} style="cursor: pointer;" />
+                                    <code style="font-weight: 700; color: var(--gold-light); font-size: 12px;">#${escapeHtml(sale.os)}</code>
+                                </label>
+                            </td>
+                            <td style="padding: 8px 10px; font-size: 11.5px; color: #ddd; text-align: left;">
+                                <div><strong>${escapeHtml(sale.cliente_nome || 'Cliente não informado')}</strong></div>
+                                <div style="font-size: 10.5px; color: var(--text-muted);">Data: ${dtFormatada}</div>
+                            </td>
+                            <td style="padding: 8px 10px; font-size: 11.5px; text-align: left;">
+                                <div>${escapeHtml(sale.lente_familia || 'Lente Padrão')} <small style="color:var(--gold-light);">(${Number(sale.pontos_lente || 0)} Pts)</small></div>
+                                ${sale.ar_familia ? `<div style="color: var(--text-muted); font-size: 10.5px;">+ ${escapeHtml(sale.ar_familia)} (${Number(sale.pontos_ar || 0)} Pts)</div>` : ''}
+                            </td>
+                            <td style="padding: 8px 10px; font-size: 12px; text-align: center;">
+                                <strong style="color: var(--gold-light);">${sPts} Pts</strong>
+                                <div style="font-size: 10.5px; color: var(--text-muted);">R$ ${sValProdutos.toFixed(2)} venda</div>
+                            </td>
+                            <td style="padding: 8px 10px; font-size: 12px; text-align: center;">
+                                <strong style="color: #10b981;">R$ ${sCash.toFixed(2)}</strong>
+                            </td>
+                            <td style="padding: 8px 10px; text-align: center;">
+                                ${sStatusBadge}
+                            </td>
+                            <td style="padding: 8px 10px; text-align: center; white-space: nowrap;">
+                                <div style="display:inline-flex; gap:3px; align-items:center; justify-content:center;">
+                                    ${sActionBtns}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                trSubTable.innerHTML = `
+                    <td colspan="6" style="background: rgba(10, 10, 14, 0.7); padding: 12px 18px; border-left: 3px solid #10b981; border-bottom: 1px solid rgba(16, 185, 129, 0.25);">
+                        <div style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                            <div style="font-size: 12px; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 0.5px;">
+                                📋 Ordens de Serviço a Pagar de ${escapeHtml(group.vendedor_nome)} (${group.sales.length} O.S.)
+                            </div>
+                            <div style="display: flex; gap: 12px; align-items: center; font-size: 11.5px; color: #fff;">
+                                <div>Subtotal a Pagar: <strong style="color: #10b981; font-size: 13px;">R$ ${group.subtotal_a_pagar.toFixed(2)}</strong> (${group.validados_pontos} Pts)</div>
+                                <button type="button" class="btn btn-outline-gold btn-xs btn-print-seller-pdf" data-vendedor-key="${escapeHtml(group.key)}" style="padding: 3px 8px; font-size: 11px;">📄 PDF deste Vendedor</button>
+                            </div>
+                        </div>
+                        <div style="max-height: 280px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.06); border-radius: 6px;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 11.5px;">
+                                <thead>
+                                    <tr style="background: rgba(255,255,255,0.04); color: var(--gold-light); font-size: 10.5px; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                                        <th style="padding: 6px 10px; text-align: center;">O.S.</th>
+                                        <th style="padding: 6px 10px; text-align: left;">Cliente / Data</th>
+                                        <th style="padding: 6px 10px; text-align: left;">Lente / Tratamento</th>
+                                        <th style="padding: 6px 10px; text-align: center;">Pontuação</th>
+                                        <th style="padding: 6px 10px; text-align: center;">Valor a Pagar</th>
+                                        <th style="padding: 6px 10px; text-align: center;">Status</th>
+                                        <th style="padding: 6px 10px; text-align: center;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${subRowsHtml}
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                `;
+
+                // Toggle expander function
+                const toggleApuracaoExpander = () => {
+                    const isHidden = trSubTable.style.display === 'none';
+                    trSubTable.style.display = isHidden ? 'table-row' : 'none';
+                    const iconBtn = tr.querySelector('.btn-toggle-apuracao-icon');
+                    if (iconBtn) iconBtn.textContent = isHidden ? '➖' : '+';
+                    const txtBtn = tr.querySelector('.btn-toggle-apuracao-os');
+                    if (txtBtn) txtBtn.textContent = isHidden ? `Ocultar O.S. 📂` : `Ver O.S. (${group.sales.length}) 📂`;
+                };
+
+                const iconBtn = tr.querySelector('.btn-toggle-apuracao-icon');
+                if (iconBtn) iconBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleApuracaoExpander(); });
+                
+                const txtBtn = tr.querySelector('.btn-toggle-apuracao-os');
+                if (txtBtn) txtBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleApuracaoExpander(); });
+
                 adminConsolidadoTableBody.appendChild(tr);
+                adminConsolidadoTableBody.appendChild(trSubTable);
             });
         }
 
@@ -5317,6 +5448,147 @@ document.addEventListener('DOMContentLoaded', () => {
         printWindow.document.close();
     }
 
+    function generateSellerApuracaoPDF(group) {
+        if (!group || !group.sales || group.sales.length === 0) {
+            alert('Nenhuma O.S. encontrada para este vendedor.');
+            return;
+        }
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alert('Por favor, permita pop-ups para abrir a versão de impressão!');
+            return;
+        }
+
+        const sellersList = (loadedMembersList || []).filter(m => m.tipo === 'vend');
+        const sellerInfo = getSellerInfo(group, sellersList);
+        const storeDisplay = group.loja || sellerInfo.loja_clinica || 'Não informada';
+        const cpfDisplay = sellerInfo.cpf_cnpj || group.cpf || 'Não informado';
+        const waDisplay = sellerInfo.whatsapp || 'Não informado';
+
+        let totalPts = 0;
+        let totalCash = 0;
+
+        const salesHtml = group.sales.map((sale, idx) => {
+            const ptsLente = Number(sale.pontos_lente || 0);
+            const ptsAr = Number(sale.pontos_ar || 0);
+            const pts = ptsLente + ptsAr;
+            const cash = pts * valorPontoConfig;
+            totalPts += pts;
+            totalCash += cash;
+            const dt = sale.created_at ? new Date(sale.created_at).toLocaleDateString('pt-BR') : '-';
+            const lenteInfo = escapeHtml(sale.lente_familia || 'Lente');
+            const arInfo = sale.ar_familia ? ` + ${escapeHtml(sale.ar_familia)}` : '';
+
+            return `
+                <tr>
+                    <td style="text-align: center;">${idx + 1}</td>
+                    <td style="text-align: center;"><strong>#${escapeHtml(sale.os)}</strong></td>
+                    <td>${escapeHtml(sale.cliente_nome || 'Não informado')}</td>
+                    <td style="text-align: center;">${dt}</td>
+                    <td>${lenteInfo}${arInfo}</td>
+                    <td style="text-align: center; font-weight: bold; color: #c5a85c;">${pts} Pts</td>
+                    <td style="text-align: right; font-weight: bold; color: #10b981;">R$ ${cash.toFixed(2)}</td>
+                    <td style="text-align: center;">${escapeHtml(sale.status || 'Validado')}</td>
+                </tr>
+            `;
+        }).join('');
+
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <title>Extrato de Prêmios - ${escapeHtml(group.vendedor_nome)} - Personality Lenses</title>
+                <style>
+                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 30px; color: #1a1a1a; }
+                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #c5a85c; padding-bottom: 15px; margin-bottom: 20px; }
+                    .header h1 { font-size: 20px; color: #c5a85c; margin: 0; text-transform: uppercase; font-weight: 800; }
+                    .seller-card { background: #fdfbf7; border: 1px solid #ebd9a5; border-radius: 6px; padding: 15px 20px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; font-size: 12px; }
+                    .seller-card strong { color: #8a6d2b; display: block; font-size: 11px; text-transform: uppercase; margin-bottom: 3px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                    th, td { border: 1px solid #ddd; padding: 8px 10px; font-size: 11px; }
+                    th { background-color: #f5f5f7; color: #333; font-weight: bold; text-transform: uppercase; }
+                    tr:nth-child(even) { background-color: #fafafa; }
+                    .subtotal-box { display: flex; justify-content: flex-end; gap: 25px; margin-top: 20px; padding: 15px 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; font-size: 13px; font-weight: bold; }
+                    .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; margin-top: 60px; padding-top: 20px; }
+                    .sig-line { border-top: 1px solid #333; text-align: center; padding-top: 8px; font-size: 11px; }
+                    .footer { margin-top: 35px; font-size: 10px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 12px; }
+                    @media print {
+                        body { padding: 0; }
+                        .no-print { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div>
+                        <h1>Demonstrativo de Pagamento de Prêmios</h1>
+                        <span style="font-size: 11px; color: #666;">Personality Lenses - Departamento Financeiro</span>
+                    </div>
+                    <div style="text-align: right; font-size: 11px; color: #666;">
+                        <div>Emissão: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</div>
+                    </div>
+                </div>
+
+                <div class="seller-card">
+                    <div><strong>Vendedor (Balconista)</strong><span style="font-size: 14px; font-weight: bold;">${escapeHtml(group.vendedor_nome)}</span></div>
+                    <div><strong>CPF</strong><span>${escapeHtml(cpfDisplay)}</span></div>
+                    <div><strong>Ótica / Loja</strong><span>${escapeHtml(storeDisplay)}</span></div>
+                    <div><strong>WhatsApp / Contato</strong><span>${escapeHtml(waDisplay)}</span></div>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 30px; text-align: center;">Item</th>
+                            <th style="width: 80px; text-align: center;">Nº O.S.</th>
+                            <th>Paciente / Cliente</th>
+                            <th style="width: 80px; text-align: center;">Data</th>
+                            <th>Lente / Tratamento</th>
+                            <th style="width: 80px; text-align: center;">Pontuação</th>
+                            <th style="width: 100px; text-align: right;">Valor Prêmio</th>
+                            <th style="width: 80px; text-align: center;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${salesHtml}
+                    </tbody>
+                </table>
+
+                <div class="subtotal-box">
+                    <span>Total de O.S.: ${group.sales.length}</span>
+                    <span style="color: #b45309;">Total de Pontos: ${totalPts} Pts</span>
+                    <span style="color: #15803d; font-size: 14px;">SUBTOTAL A PAGAR: R$ ${totalCash.toFixed(2)}</span>
+                </div>
+
+                <div class="signatures">
+                    <div class="sig-line">
+                        <strong>Autorização do Financeiro</strong><br>
+                        Personality Lenses
+                    </div>
+                    <div class="sig-line">
+                        <strong>Recibo de Quitação do Balconista</strong><br>
+                        ${escapeHtml(group.vendedor_nome)}
+                    </div>
+                </div>
+
+                <div class="footer">
+                    Documento comprobatório de apuração de prêmios de vendas. Personality Lenses © 2026.
+                </div>
+
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(() => { window.close(); }, 500);
+                    }
+                </script>
+            </body>
+            </html>
+        `;
+        printWindow.document.write(html);
+        printWindow.document.close();
+    }
+
     function generateApuracaoConsolidadaPDF(items, title = 'Apuração de Pagamento de Prêmios (Consolidado)') {
         const printWindow = window.open('', '_blank');
         if (!printWindow) {
@@ -5327,10 +5599,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const sellersList = (loadedMembersList || []).filter(m => m.tipo === 'vend');
         let totalGeralPts = 0;
         let totalGeralCash = 0;
+        let totalGeralOS = 0;
 
         items.forEach(row => {
-            totalGeralPts += row.total_pontos;
-            totalGeralCash += (row.total_pontos * valorPontoConfig);
+            const pts = Number(row.validados_pontos !== undefined ? row.validados_pontos : (row.total_pontos || 0));
+            const osCount = Number(row.validados_count !== undefined ? row.validados_count : (row.sales ? row.sales.length : 0));
+            totalGeralPts += pts;
+            totalGeralCash += (pts * valorPontoConfig);
+            totalGeralOS += osCount;
         });
 
         const html = `
@@ -5350,7 +5626,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     tr:nth-child(even) { background-color: #fafafa; }
                     .pts-column { font-weight: bold; color: #c5a85c; }
                     .cash-column { font-weight: bold; color: #10b981; }
-                    .summary-box { display: flex; justify-content: flex-end; gap: 20px; margin-top: 20px; padding: 12px 15px; background: #f9f9f9; border: 1px solid #eee; border-radius: 6px; font-size: 12px; font-weight: bold; }
+                    .summary-box { display: flex; justify-content: flex-end; gap: 20px; margin-top: 20px; padding: 12px 15px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; font-size: 12px; font-weight: bold; }
                     .footer { margin-top: 30px; font-size: 10px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 15px; }
                     @media print {
                         body { padding: 0; }
@@ -5375,15 +5651,18 @@ document.addEventListener('DOMContentLoaded', () => {
                             <th>CPF</th>
                             <th>Ótica / Clínica</th>
                             <th>WhatsApp</th>
-                            <th>Pontos Acumulados</th>
-                            <th>Total a Pagar (R$)</th>
-                            <th>Status</th>
+                            <th style="text-align: center;">O.S. Validadas</th>
+                            <th style="text-align: center;">Pontos Acumulados</th>
+                            <th style="text-align: right;">Subtotal a Pagar (R$)</th>
+                            <th style="text-align: center;">Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${items.map(row => {
                             const sellerInfo = getSellerInfo(row, sellersList);
-                            const cash = row.total_pontos * valorPontoConfig;
+                            const pts = Number(row.validados_pontos !== undefined ? row.validados_pontos : (row.total_pontos || 0));
+                            const cash = pts * valorPontoConfig;
+                            const osCount = Number(row.validados_count !== undefined ? row.validados_count : (row.sales ? row.sales.length : 0));
                             const storeDisplay = row.loja || sellerInfo.loja_clinica || 'Não informada';
                             const cpfDisplay = sellerInfo.cpf_cnpj || row.cpf || 'n/d';
                             const waDisplay = sellerInfo.whatsapp || 'Não informado';
@@ -5393,9 +5672,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <td><code>${escapeHtml(cpfDisplay)}</code></td>
                                     <td>${escapeHtml(storeDisplay)}</td>
                                     <td>${escapeHtml(waDisplay)}</td>
-                                    <td class="pts-column">${row.total_pontos} Pts</td>
-                                    <td class="cash-column">R$ ${cash.toFixed(2)}</td>
-                                    <td>A Pagar (Validado) ⏳</td>
+                                    <td style="text-align: center; font-weight: bold;">${osCount} O.S.</td>
+                                    <td class="pts-column" style="text-align: center;">${pts} Pts</td>
+                                    <td class="cash-column" style="text-align: right;">R$ ${cash.toFixed(2)}</td>
+                                    <td style="text-align: center;">A Pagar (Validado) ⏳</td>
                                 </tr>
                             `;
                         }).join('')}
@@ -5403,8 +5683,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 </table>
                 <div class="summary-box">
                     <span>Vendedores Listados: ${items.length}</span>
-                    <span style="color: #c5a85c;">Total de Pontos: ${totalGeralPts} Pts</span>
-                    <span style="color: #10b981;">Total a Pagar: R$ ${totalGeralCash.toFixed(2)}</span>
+                    <span>Total de O.S.: ${totalGeralOS}</span>
+                    <span style="color: #b45309;">Total de Pontos: ${totalGeralPts} Pts</span>
+                    <span style="color: #15803d; font-size: 13.5px;">TOTAL GERAL A PAGAR: R$ ${totalGeralCash.toFixed(2)}</span>
                 </div>
                 <div class="footer">
                     Documento interno de apuração financeira de prêmios por vendedor. Gerado eletronicamente por Personality Lenses.
@@ -5528,7 +5809,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function configureRelatorioActions() {
-        // Validar O.S.
+        // Validar O.S. Individual (Card 1)
         const osValidateBtns = document.querySelectorAll('.btn-os-validate');
         if (osValidateBtns) {
             osValidateBtns.forEach(btn => {
@@ -5540,7 +5821,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Pagar O.S. Individual
+        // Pagar O.S. Individual (Card 2 / Subtabela de O.S.)
         const osPayBtns = document.querySelectorAll('.btn-os-pay');
         if (osPayBtns) {
             osPayBtns.forEach(btn => {
@@ -5566,7 +5847,22 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Pagar em Lote por Vendedor (Card 2 ou Tabela Agrupada por Vendedor)
+        // Validar em Lote por Vendedor (Card 1)
+        const bulkValidateBtns = document.querySelectorAll('.btn-bulk-validate');
+        if (bulkValidateBtns) {
+            bulkValidateBtns.forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const vendedorId = btn.getAttribute('data-vendedor-id') || '';
+                    const vendedorName = btn.getAttribute('data-name') || '';
+                    if (confirm(`Validar todas as O.S. pendentes do vendedor "${vendedorName}" e encaminhar para a Apuração de Pagamentos?`)) {
+                        await validateBulkSalesForSeller(vendedorId, vendedorName);
+                    }
+                });
+            });
+        }
+
+        // Pagar em Lote por Vendedor (Card 2 - com suporte a seleção individual de O.S.)
         const bulkPayoutBtns = document.querySelectorAll('.btn-bulk-payout');
         if (bulkPayoutBtns) {
             bulkPayoutBtns.forEach(btn => {
@@ -5574,8 +5870,45 @@ document.addEventListener('DOMContentLoaded', () => {
                     e.stopPropagation();
                     const vendedorId = btn.getAttribute('data-vendedor-id') || '';
                     const vendedorName = btn.getAttribute('data-name') || '';
-                    if (confirm(`Confirmar o pagamento geral de prêmios em lote para o vendedor "${vendedorName}"? Todas as O.S. validadas dele serão marcadas como Pagas.`)) {
-                        await payBulkSalesForSeller(vendedorId, vendedorName);
+                    const vKey = btn.getAttribute('data-vendedor-key') || '';
+
+                    let specificSaleIds = null;
+                    if (vKey) {
+                        const subTable = document.querySelector(`.apuracao-subtable-row[data-vendedor-key="${vKey}"]`);
+                        if (subTable) {
+                            const checkedBoxes = subTable.querySelectorAll('.chk-apuracao-os:checked');
+                            const allBoxes = subTable.querySelectorAll('.chk-apuracao-os');
+                            if (checkedBoxes.length > 0 && checkedBoxes.length < allBoxes.length) {
+                                specificSaleIds = Array.from(checkedBoxes).map(chk => chk.getAttribute('data-id'));
+                            }
+                        }
+                    }
+
+                    if (specificSaleIds && specificSaleIds.length > 0) {
+                        if (confirm(`Confirmar o pagamento das ${specificSaleIds.length} O.S. selecionadas para o vendedor "${vendedorName}"?`)) {
+                            await payBulkSalesForSeller(vendedorId, vendedorName, specificSaleIds);
+                        }
+                    } else {
+                        if (confirm(`Confirmar o pagamento geral de todas as O.S. validadas do vendedor "${vendedorName}"?`)) {
+                            await payBulkSalesForSeller(vendedorId, vendedorName);
+                        }
+                    }
+                });
+            });
+        }
+
+        // Imprimir Demonstrativo Financeiro Individual por Vendedor (Card 2)
+        const printSellerBtns = document.querySelectorAll('.btn-print-seller-pdf');
+        if (printSellerBtns) {
+            printSellerBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const vKey = btn.getAttribute('data-vendedor-key');
+                    const group = (lastFilteredApuracaoRows || []).find(g => g.key === vKey) || (lastAllApuracaoRows || []).find(g => g.key === vKey);
+                    if (group) {
+                        generateSellerApuracaoPDF(group);
+                    } else {
+                        alert('Dados do vendedor não encontrados para emissão do extrato.');
                     }
                 });
             });
@@ -5638,6 +5971,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!response.ok) {
                     throw new Error('Erro ao deletar.');
                 }
+                deleteLocalSale(saleId);
             } catch (err) {
                 console.error(err);
                 deleteLocalSale(saleId);
@@ -5655,7 +5989,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('personality_local_premios', JSON.stringify(filtered));
     }
 
-    async function payBulkSalesForSeller(vendedorId, vendedorName) {
+    async function validateBulkSalesForSeller(vendedorId, vendedorName) {
         const url = getSupabaseUrl();
         const key = getSupabaseKey();
         const table = localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
@@ -5664,7 +5998,70 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
                 const filterQuery = vendedorId ? `vendedor_id=eq.${encodeURIComponent(vendedorId)}` : `vendedor_nome=eq.${encodeURIComponent(vendedorName)}`;
-                const response = await fetch(`${cleanUrl}/rest/v1/${table}?${filterQuery}&status=in.(Validado,validado,"A Pagar")`, {
+                const response = await fetch(`${cleanUrl}/rest/v1/${table}?${filterQuery}&status=eq.Pendente`, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': key,
+                        'Authorization': `Bearer ${key}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: 'Validado' })
+                });
+                if (!response.ok) {
+                    await fetch(`${cleanUrl}/rest/v1/${table}?${filterQuery}&status=in.(Pendente,pendente)`, {
+                        method: 'PATCH',
+                        headers: {
+                            'apikey': key,
+                            'Authorization': `Bearer ${key}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ status: 'Validado' })
+                    });
+                }
+                alert('Validação em lote concluída com sucesso! As O.S. foram encaminhadas para a Apuração de Pagamentos.');
+            } catch (err) {
+                console.error(err);
+                validateLocalBulkSales(vendedorId, vendedorName);
+                alert('Validação concluída localmente.');
+            }
+        } else {
+            validateLocalBulkSales(vendedorId, vendedorName);
+            alert('Validação concluída localmente.');
+        }
+
+        await loadPremiosManager();
+    }
+
+    function validateLocalBulkSales(vendedorId, vendedorName) {
+        const local = JSON.parse(localStorage.getItem('personality_local_premios')) || [];
+        local.forEach(s => {
+            const matchId = vendedorId && String(s.vendedor_id) === String(vendedorId);
+            const matchName = vendedorName && s.vendedor_nome && s.vendedor_nome.trim().toLowerCase() === vendedorName.trim().toLowerCase();
+            const st = (s.status || '').trim().toLowerCase();
+            if ((matchId || matchName) && st === 'pendente') {
+                s.status = 'Validado';
+            }
+        });
+        localStorage.setItem('personality_local_premios', JSON.stringify(local));
+    }
+
+    async function payBulkSalesForSeller(vendedorId, vendedorName, specificSaleIds = null) {
+        const url = getSupabaseUrl();
+        const key = getSupabaseKey();
+        const table = localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
+
+        if (url && key) {
+            try {
+                const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
+                let patchUrl = '';
+                if (specificSaleIds && Array.isArray(specificSaleIds) && specificSaleIds.length > 0) {
+                    patchUrl = `${cleanUrl}/rest/v1/${table}?id=in.(${specificSaleIds.join(',')})`;
+                } else {
+                    const filterQuery = vendedorId ? `vendedor_id=eq.${encodeURIComponent(vendedorId)}` : `vendedor_nome=eq.${encodeURIComponent(vendedorName)}`;
+                    patchUrl = `${cleanUrl}/rest/v1/${table}?${filterQuery}&status=in.(Validado,validado,"A Pagar")`;
+                }
+
+                const response = await fetch(patchUrl, {
                     method: 'PATCH',
                     headers: {
                         'apikey': key,
@@ -5673,7 +6070,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     body: JSON.stringify({ status: 'Pago' })
                 });
-                if (!response.ok) {
+                if (!response.ok && (!specificSaleIds || specificSaleIds.length === 0)) {
+                    const filterQuery = vendedorId ? `vendedor_id=eq.${encodeURIComponent(vendedorId)}` : `vendedor_nome=eq.${encodeURIComponent(vendedorName)}`;
                     await fetch(`${cleanUrl}/rest/v1/${table}?${filterQuery}&status=eq.Validado`, {
                         method: 'PATCH',
                         headers: {
@@ -5684,28 +6082,34 @@ document.addEventListener('DOMContentLoaded', () => {
                         body: JSON.stringify({ status: 'Pago' })
                     });
                 }
-                alert('Pagamento geral em lote concluído com sucesso!');
+                alert('Pagamento de prêmios concluído com sucesso!');
             } catch (err) {
                 console.error(err);
-                payLocalBulkSales(vendedorId, vendedorName);
-                alert('Pagamento geral concluído localmente.');
+                payLocalBulkSales(vendedorId, vendedorName, specificSaleIds);
+                alert('Pagamento concluído localmente.');
             }
         } else {
-            payLocalBulkSales(vendedorId, vendedorName);
-            alert('Pagamento geral concluído localmente.');
+            payLocalBulkSales(vendedorId, vendedorName, specificSaleIds);
+            alert('Pagamento concluído localmente.');
         }
 
         await loadPremiosManager();
     }
 
-    function payLocalBulkSales(vendedorId, vendedorName) {
+    function payLocalBulkSales(vendedorId, vendedorName, specificSaleIds = null) {
         const local = JSON.parse(localStorage.getItem('personality_local_premios')) || [];
         local.forEach(s => {
-            const matchId = vendedorId && String(s.vendedor_id) === String(vendedorId);
-            const matchName = vendedorName && s.vendedor_nome && s.vendedor_nome.trim().toLowerCase() === vendedorName.trim().toLowerCase();
-            const st = (s.status || '').trim().toLowerCase();
-            if ((matchId || matchName) && (st === 'validado' || st === 'a pagar')) {
-                s.status = 'Pago';
+            if (specificSaleIds && Array.isArray(specificSaleIds) && specificSaleIds.length > 0) {
+                if (specificSaleIds.includes(String(s.id))) {
+                    s.status = 'Pago';
+                }
+            } else {
+                const matchId = vendedorId && String(s.vendedor_id) === String(vendedorId);
+                const matchName = vendedorName && s.vendedor_nome && s.vendedor_nome.trim().toLowerCase() === vendedorName.trim().toLowerCase();
+                const st = (s.status || '').trim().toLowerCase();
+                if ((matchId || matchName) && (st === 'validado' || st === 'a pagar')) {
+                    s.status = 'Pago';
+                }
             }
         });
         localStorage.setItem('personality_local_premios', JSON.stringify(local));
