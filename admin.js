@@ -3623,6 +3623,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Nenhum vendedor encontrado com saldo a pagar para os filtros atuais!');
                 return;
             }
+            // Verifica se há checkboxes de O.S. marcados individualmente nas sub-tabelas
+            const checkedBoxes = adminConsolidadoTableBody ? adminConsolidadoTableBody.querySelectorAll('.chk-apuracao-os:checked') : [];
+            if (checkedBoxes.length > 0) {
+                const checkedIds = new Set(Array.from(checkedBoxes).map(c => String(c.getAttribute('data-id'))));
+                const customGroups = [];
+                lastFilteredApuracaoRows.forEach(g => {
+                    const matchedSales = (g.sales || []).filter(s => checkedIds.has(String(s.id)));
+                    if (matchedSales.length > 0) {
+                        let pts = 0;
+                        matchedSales.forEach(s => { pts += (Number(s.pontos_lente || 0) + Number(s.pontos_ar || 0)); });
+                        customGroups.push({
+                            ...g,
+                            sales: matchedSales,
+                            validados_count: matchedSales.length,
+                            validados_pontos: pts,
+                            subtotal_a_pagar: pts * valorPontoConfig
+                        });
+                    }
+                });
+                if (customGroups.length > 0) {
+                    generateApuracaoConsolidadaPDF(customGroups, 'Apuração de Pagamento de Prêmios (O.S. Selecionadas)');
+                    return;
+                }
+            }
             generateApuracaoConsolidadaPDF(lastFilteredApuracaoRows, 'Apuração de Pagamento de Prêmios (Seleção)');
         });
     }
@@ -4838,14 +4862,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 tr.innerHTML = `
                     <td style="text-align: left; padding: 10px 15px;">
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <button type="button" class="btn-toggle-apuracao-icon" style="background: rgba(212, 175, 55, 0.15); border: 1px solid rgba(212, 175, 55, 0.4); color: var(--gold-light); font-size: 13px; font-weight: bold; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;" title="Expandir/Recolher O.S. deste vendedor">+</button>
+                            <button type="button" class="btn-toggle-apuracao-icon" style="background: none; border: none; color: var(--gold-light); font-size: 16px; cursor: pointer; padding: 4px;" title="Expandir O.S. deste vendedor">+</button>
                             <div>
                                 <strong style="color: #fff; font-size: 13.5px; cursor: pointer;" class="btn-toggle-apuracao-name" title="Clique para expandir/recolher">${escapeHtml(group.vendedor_nome)}</strong>
                                 <div style="font-size: 11px; margin-top: 2px;">${waLink}</div>
                             </div>
                         </div>
                     </td>
-                    <td style="text-align: center;">
+                    <td style="text-align: left; padding-left: 12px;">
                         <div style="font-weight: 600; color: var(--gold-light); font-size: 12px;">🏬 ${escapeHtml(storeDisplay)}</div>
                         <code style="font-size: 11px; color: var(--text-muted);">${escapeHtml(cpfDisplay)}</code>
                     </td>
@@ -4857,10 +4881,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div style="font-size: 11px; color: var(--gold-light); margin-top: 2px;">${group.validados_pontos} Pts acumulados</div>
                     </td>
                     <td style="text-align: center; white-space: nowrap;">
-                        <div style="display: inline-flex; gap: 5px; align-items: center; justify-content: center; flex-wrap: wrap;">
-                            <button type="button" class="btn btn-success btn-xs btn-bulk-payout" data-vendedor-id="${escapeHtml(group.vendedor_id)}" data-name="${escapeHtml(group.vendedor_nome)}" data-vendedor-key="${escapeHtml(group.key)}" style="padding: 5px 10px; font-size: 11.5px; font-weight: 700; border-radius: 4px;" title="Pagar todas as O.S. ou as selecionadas deste vendedor">Pagar Todos 💰</button>
-                            <button type="button" class="btn btn-outline-gold btn-xs btn-print-seller-pdf" data-vendedor-key="${escapeHtml(group.key)}" style="padding: 5px 8px; font-size: 11px;" title="Exportar demonstrativo PDF deste vendedor para o Financeiro">📄 PDF Vendedor</button>
-                        </div>
+                        <button type="button" class="btn btn-success btn-xs btn-bulk-payout" data-vendedor-id="${escapeHtml(group.vendedor_id)}" data-name="${escapeHtml(group.vendedor_nome)}" data-vendedor-key="${escapeHtml(group.key)}" style="padding: 5px 12px; font-size: 11.5px; font-weight: 700; border-radius: 4px;" title="Pagar todas as O.S. ou as selecionadas deste vendedor">Pagar Todos 💰</button>
                     </td>
                 `;
 
@@ -4928,16 +4949,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 trSubTable.innerHTML = `
-                    <td colspan="5" style="background: rgba(10, 10, 14, 0.7); padding: 12px 18px; border-left: 3px solid #10b981; border-bottom: 1px solid rgba(16, 185, 129, 0.25);">
-                        <div style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                            <div style="font-size: 12px; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 0.5px;">
-                                📋 Ordens de Serviço a Pagar de ${escapeHtml(group.vendedor_nome)} (${group.sales.length} O.S.)
-                            </div>
-                            <div style="display: flex; gap: 12px; align-items: center; font-size: 11.5px; color: #fff;">
-                                <div>Subtotal a Pagar: <strong style="color: #10b981; font-size: 13px;">R$ ${group.subtotal_a_pagar.toFixed(2)}</strong> (${group.validados_pontos} Pts)</div>
-                                <button type="button" class="btn btn-outline-gold btn-xs btn-print-seller-pdf" data-vendedor-key="${escapeHtml(group.key)}" style="padding: 3px 8px; font-size: 11px;">📄 PDF deste Vendedor</button>
-                            </div>
-                        </div>
+                    <td colspan="5" style="background: rgba(10, 10, 14, 0.7); padding: 10px 15px; border-left: 3px solid #10b981; border-bottom: 1px solid rgba(16, 185, 129, 0.25);">
                         <div style="max-height: 280px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.06); border-radius: 6px;">
                             <table style="width: 100%; border-collapse: collapse; font-size: 11.5px;">
                                 <thead>
@@ -4964,11 +4976,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const isHidden = trSubTable.style.display === 'none';
                     trSubTable.style.display = isHidden ? 'table-row' : 'none';
                     const iconBtn = tr.querySelector('.btn-toggle-apuracao-icon');
-                    if (iconBtn) {
-                        iconBtn.textContent = isHidden ? '➖' : '+';
-                        iconBtn.style.background = isHidden ? 'rgba(239, 68, 68, 0.15)' : 'rgba(212, 175, 55, 0.15)';
-                        iconBtn.style.borderColor = isHidden ? 'rgba(239, 68, 68, 0.4)' : 'rgba(212, 175, 55, 0.4)';
-                    }
+                    if (iconBtn) iconBtn.textContent = isHidden ? '➖' : '+';
                 };
 
                 const iconBtn = tr.querySelector('.btn-toggle-apuracao-icon');
