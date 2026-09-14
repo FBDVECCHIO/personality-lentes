@@ -1572,12 +1572,13 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                         </div>
                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                             <button type="button" class="btn btn-outline-gold btn-xs" id="btnPrintSelectedApuracao" style="padding: 8px 12px; font-weight: 700; height: 36px;">📄 PDF Seleção</button>
-                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnPrintAllApuracao" style="padding: 8px 12px; font-weight: 700; height: 36px;">📄 PDF Todos</button>
+                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnPrintAllApuracao" style="padding: 8px 12px; font-weight: 700; height: 36px;" title="Resumo consolidado a pagar por vendedor">📄 PDF Geral</button>
+                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnPrintListApuracao" style="padding: 8px 12px; font-weight: 700; height: 36px;" title="Lista detalhada com todas as ordens agrupadas por vendedor">📄 PDF Lista</button>
                             <button type="button" class="btn btn-danger btn-xs" id="btnClearApuracaoFilters" title="Limpar Filtros" style="padding: 8px 12px; font-weight: 700; height: 36px;">🧹 Limpar</button>
                         </div>
                     </div>
 
-                    <div class="table-container" style="max-height: 520px; overflow-y: auto; overflow-x: auto;">
+                    <div class="table-container" style="max-height: 520px; overflow-y: auto; overflow-x: auto; margin-bottom: 0;">
                         <table class="leads-table" id="adminConsolidadoTable">
                             <thead id="adminConsolidadoTableHead">
                                 <tr>
@@ -1591,10 +1592,12 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                             <tbody id="adminConsolidadoTableBody">
                                 <!-- Preenchido via JS -->
                             </tbody>
-                            <tfoot id="adminConsolidadoTableFoot" style="background: rgba(0,0,0,0.4); border-top: 2px solid var(--gold-primary); font-weight: 700;">
-                                <!-- Preenchido via JS com Total Geral -->
-                            </tfoot>
                         </table>
+                    </div>
+
+                    <!-- Total Geral Fixo Fora da Área de Rolagem (v4.07) -->
+                    <div id="adminConsolidadoFixedSummary" style="background: rgba(18, 18, 24, 0.95); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 8px; padding: 14px 20px; margin-top: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+                        <!-- Preenchido via JS -->
                     </div>
                 </div>
 
@@ -1698,6 +1701,6 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
             </form>
         </div>
     </div>
-    <script src="admin.js?v=4.06"></script>
+    <script src="admin.js?v=4.07"></script>
 </body>
 </html>

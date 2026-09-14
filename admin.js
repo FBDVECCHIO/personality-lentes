@@ -3453,6 +3453,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterApuracaoStatus = document.getElementById('filterApuracaoStatus');
     const btnPrintSelectedApuracao = document.getElementById('btnPrintSelectedApuracao');
     const btnPrintAllApuracao = document.getElementById('btnPrintAllApuracao');
+    const btnPrintListApuracao = document.getElementById('btnPrintListApuracao');
     const btnClearApuracaoFilters = document.getElementById('btnClearApuracaoFilters');
 
     // Filtros e Botões do Card 3: Histórico de Pagos Consolidado (v3.86)
@@ -3643,11 +3644,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
                 if (customGroups.length > 0) {
-                    generateApuracaoConsolidadaPDF(customGroups, 'Apuração de Pagamento de Prêmios (O.S. Selecionadas)');
+                    generateApuracaoConsolidadaPDF(customGroups, 'Apuração de Pagamento de Prêmios - Resumo da Seleção');
                     return;
                 }
             }
-            generateApuracaoConsolidadaPDF(lastFilteredApuracaoRows, 'Apuração de Pagamento de Prêmios (Seleção)');
+            generateApuracaoConsolidadaPDF(lastFilteredApuracaoRows, 'Apuração de Pagamento de Prêmios - Resumo da Seleção');
         });
     }
 
@@ -3657,7 +3658,42 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Nenhum vendedor possui saldo pendente de pagamento no momento!');
                 return;
             }
-            generateApuracaoConsolidadaPDF(lastAllApuracaoRows, 'Apuração de Pagamento de Prêmios - Relatório Completo');
+            generateApuracaoConsolidadaPDF(lastAllApuracaoRows, 'Apuração de Pagamento de Prêmios - Resumo Geral Consolidado');
+        });
+    }
+
+    if (btnPrintListApuracao) {
+        btnPrintListApuracao.addEventListener('click', () => {
+            const rowsToUse = (lastFilteredApuracaoRows && lastFilteredApuracaoRows.length > 0) ? lastFilteredApuracaoRows : lastAllApuracaoRows;
+            if (!rowsToUse || rowsToUse.length === 0) {
+                alert('Nenhum lançamento ou vendedor encontrado com saldo a pagar!');
+                return;
+            }
+            // Verifica se há checkboxes de O.S. marcados individualmente nas sub-tabelas
+            const checkedBoxes = adminConsolidadoTableBody ? adminConsolidadoTableBody.querySelectorAll('.chk-apuracao-os:checked') : [];
+            if (checkedBoxes.length > 0) {
+                const checkedIds = new Set(Array.from(checkedBoxes).map(c => String(c.getAttribute('data-id'))));
+                const customGroups = [];
+                rowsToUse.forEach(g => {
+                    const matchedSales = (g.sales || []).filter(s => checkedIds.has(String(s.id)));
+                    if (matchedSales.length > 0) {
+                        let pts = 0;
+                        matchedSales.forEach(s => { pts += (Number(s.pontos_lente || 0) + Number(s.pontos_ar || 0)); });
+                        customGroups.push({
+                            ...g,
+                            sales: matchedSales,
+                            validados_count: matchedSales.length,
+                            validados_pontos: pts,
+                            subtotal_a_pagar: pts * valorPontoConfig
+                        });
+                    }
+                });
+                if (customGroups.length > 0) {
+                    generateApuracaoDetalhadaListaPDF(customGroups, 'Apuração de Pagamento de Prêmios - Lista de O.S. por Vendedor');
+                    return;
+                }
+            }
+            generateApuracaoDetalhadaListaPDF(rowsToUse, 'Apuração de Pagamento de Prêmios - Lista Completa de O.S. por Vendedor');
         });
     }
 
@@ -4825,6 +4861,28 @@ document.addEventListener('DOMContentLoaded', () => {
             totalGeralCash += g.subtotal_a_pagar;
         });
 
+        const adminConsolidadoFixedSummary = document.getElementById('adminConsolidadoFixedSummary');
+        if (adminConsolidadoFixedSummary) {
+            adminConsolidadoFixedSummary.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <span style="font-size: 13px; font-weight: 800; color: var(--gold-light); text-transform: uppercase; letter-spacing: 0.5px;">💰 TOTAL GERAL ACUMULADO (A PAGAR):</span>
+                    <span class="badge" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #10b981; font-weight: 700; padding: 4px 12px; border-radius: 12px; font-size: 12.5px;">${totalGeralOS} O.S. Validadas</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                    <div style="font-size: 12px; color: var(--text-muted);">
+                        Vendedores com Saldo: <strong style="color: #fff; font-size: 13px;">${totalGeralVendedores}</strong>
+                    </div>
+                    <div style="font-size: 12px; color: var(--gold-light);">
+                        Pontuação Acumulada: <strong style="color: var(--gold-light); font-size: 13.5px;">${totalGeralPontos} Pts</strong>
+                    </div>
+                    <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); padding: 5px 14px; border-radius: 6px;">
+                        <span style="font-size: 11px; color: #a7f3d0; text-transform: uppercase; font-weight: 600; margin-right: 4px;">Total a Pagar:</span>
+                        <strong style="color: #10b981; font-size: 16px;">R$ ${totalGeralCash.toFixed(2)}</strong>
+                    </div>
+                </div>
+            `;
+        }
+
         const adminConsolidadoTableFoot = document.getElementById('adminConsolidadoTableFoot');
         if (adminConsolidadoTableFoot) {
             adminConsolidadoTableFoot.innerHTML = `
@@ -5700,6 +5758,151 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="footer">
                     Documento interno de apuração financeira de prêmios por vendedor. Gerado eletronicamente por Personality Lenses.
+                </div>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(() => { window.close(); }, 500);
+                    }
+                </script>
+            </body>
+            </html>
+        `;
+        printWindow.document.write(html);
+        printWindow.document.close();
+    }
+
+    function generateApuracaoDetalhadaListaPDF(items, title = 'Apuração de Pagamento de Prêmios - Lista Detalhada por Vendedor') {
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alert('Por favor, permita pop-ups para abrir a versão de impressão!');
+            return;
+        }
+
+        const sellersList = (loadedMembersList || []).filter(m => m.tipo === 'vend');
+        let totalGeralPts = 0;
+        let totalGeralCash = 0;
+        let totalGeralOS = 0;
+
+        items.forEach(group => {
+            const sales = group.sales || [];
+            sales.forEach(sale => {
+                const pts = Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0);
+                totalGeralPts += pts;
+                totalGeralCash += (pts * valorPontoConfig);
+                totalGeralOS++;
+            });
+        });
+
+        const groupsHtml = items.map(group => {
+            const sellerInfo = getSellerInfo(group, sellersList);
+            const storeDisplay = group.loja || sellerInfo.loja_clinica || 'Não informada';
+            const cpfDisplay = sellerInfo.cpf_cnpj || group.cpf || 'n/d';
+            const waDisplay = sellerInfo.whatsapp || 'Não informado';
+            const sales = group.sales || [];
+
+            let groupPts = 0;
+            let groupCash = 0;
+            const salesRowsHtml = sales.map(sale => {
+                const sVal = Number(sale.valor_lente || 0) + Number(sale.valor_ar || 0);
+                const sPts = Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0);
+                const sCash = sPts * valorPontoConfig;
+                groupPts += sPts;
+                groupCash += sCash;
+                const dt = sale.created_at ? new Date(sale.created_at).toLocaleDateString('pt-BR') : '-';
+                return `
+                    <tr>
+                        <td style="text-align: center; font-weight: bold; color: #1e293b;">#${escapeHtml(sale.os)}</td>
+                        <td style="text-align: center;">${dt}</td>
+                        <td><strong>${escapeHtml(sale.cliente_nome || 'Cliente não informado')}</strong></td>
+                        <td>${escapeHtml(sale.lente_familia || 'Lente Padrão')}${sale.ar_familia ? ' + ' + escapeHtml(sale.ar_familia) : ''}</td>
+                        <td style="text-align: center; font-weight: bold; color: #b45309;">${sPts} Pts</td>
+                        <td style="text-align: right;">R$ ${sVal.toFixed(2)}</td>
+                        <td style="text-align: right; font-weight: bold; color: #15803d;">R$ ${sCash.toFixed(2)}</td>
+                        <td style="text-align: center;"><span style="background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">A Pagar</span></td>
+                    </tr>
+                `;
+            }).join('');
+
+            return `
+                <div style="margin-top: 20px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; page-break-inside: avoid;">
+                    <div style="background: #f8fafc; border-bottom: 2px solid #c5a85c; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                        <div>
+                            <span style="font-size: 13px; font-weight: 800; color: #0f172a;">👤 ${escapeHtml(group.vendedor_nome)}</span>
+                            <span style="font-size: 11px; color: #64748b; margin-left: 12px;">🏬 Ótica: <b>${escapeHtml(storeDisplay)}</b></span>
+                            <span style="font-size: 11px; color: #64748b; margin-left: 12px;">📄 CPF: <b>${escapeHtml(cpfDisplay)}</b></span>
+                            <span style="font-size: 11px; color: #64748b; margin-left: 12px;">💬 Tel: <b>${escapeHtml(waDisplay)}</b></span>
+                        </div>
+                        <div style="font-size: 12px; font-weight: bold; color: #15803d;">
+                            Subtotal do Vendedor: R$ ${groupCash.toFixed(2)} (${groupPts} Pts / ${sales.length} O.S.)
+                        </div>
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #f1f5f9; color: #475569; font-size: 10px; text-transform: uppercase;">
+                                <th style="width: 70px; text-align: center; padding: 6px 8px; border: 1px solid #e2e8f0;">O.S.</th>
+                                <th style="width: 80px; text-align: center; padding: 6px 8px; border: 1px solid #e2e8f0;">Data</th>
+                                <th style="padding: 6px 8px; border: 1px solid #e2e8f0;">Cliente</th>
+                                <th style="padding: 6px 8px; border: 1px solid #e2e8f0;">Lente / Tratamento</th>
+                                <th style="width: 70px; text-align: center; padding: 6px 8px; border: 1px solid #e2e8f0;">Pontos</th>
+                                <th style="width: 90px; text-align: right; padding: 6px 8px; border: 1px solid #e2e8f0;">Valor Venda</th>
+                                <th style="width: 95px; text-align: right; padding: 6px 8px; border: 1px solid #e2e8f0;">Prêmio a Pagar</th>
+                                <th style="width: 80px; text-align: center; padding: 6px 8px; border: 1px solid #e2e8f0;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${salesRowsHtml}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }).join('');
+
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <title>${title} - Personality Lenses</title>
+                <style>
+                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 30px; color: #1a1a1a; }
+                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #c5a85c; padding-bottom: 15px; margin-bottom: 20px; }
+                    .header h1 { font-size: 20px; color: #c5a85c; margin: 0; text-transform: uppercase; font-weight: 800; }
+                    .header span { font-size: 11px; color: #666; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th, td { padding: 7px 10px; text-align: left; font-size: 11px; border: 1px solid #e2e8f0; }
+                    tr:nth-child(even) { background-color: #fafafa; }
+                    .summary-box { display: flex; justify-content: space-between; align-items: center; margin-top: 25px; padding: 14px 20px; background: #f0fdf4; border: 2px solid #86efac; border-radius: 8px; font-size: 12.5px; page-break-inside: avoid; }
+                    .footer { margin-top: 25px; font-size: 10px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 15px; }
+                    @media print {
+                        body { padding: 0; }
+                        .no-print { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div>
+                        <h1>${title}</h1>
+                        <span>Personality Lenses - Relatório Detalhado de O.S. a Pagar por Vendedor</span>
+                    </div>
+                    <div>
+                        <span>Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</span>
+                    </div>
+                </div>
+                ${groupsHtml}
+                <div class="summary-box">
+                    <div>
+                        <span>Vendedores Listados: <b>${items.length}</b></span> &nbsp;&nbsp;|&nbsp;&nbsp;
+                        <span>Total de O.S. a Pagar: <b>${totalGeralOS}</b></span> &nbsp;&nbsp;|&nbsp;&nbsp;
+                        <span style="color: #b45309;">Pontuação Total: <b>${totalGeralPts} Pts</b></span>
+                    </div>
+                    <div style="font-size: 15px; color: #15803d; font-weight: 800;">
+                        TOTAL GERAL ACUMULADO A PAGAR: R$ ${totalGeralCash.toFixed(2)}
+                    </div>
+                </div>
+                <div class="footer">
+                    Documento analítico de apuração financeira de ordens por vendedor. Gerado eletronicamente por Personality Lenses.
                 </div>
                 <script>
                     window.onload = function() {
