@@ -3432,6 +3432,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterPremVendedor = document.getElementById('filterPremVendedor');
     const filterPremLoja = document.getElementById('filterPremLoja');
     const filterPremStatus = document.getElementById('filterPremStatus');
+    const filterPremGroupBy = document.getElementById('filterPremGroupBy');
+    const adminPremiosTableHead = document.getElementById('adminPremiosTableHead');
     const btnPrintSelectedPremios = document.getElementById('btnPrintSelectedPremios');
     const btnPrintAllPremios = document.getElementById('btnPrintAllPremios');
     const btnClearPremiosFilters = document.getElementById('btnClearPremiosFilters');
@@ -3443,6 +3445,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentPremiosPage = 1;
     const limitPremiosPerPage = 25;
     const selectedPremioIds = new Set();
+    let lastGroupedSellersCount = 0;
 
     // Filtros e Botões do Card 2: Apuração Consolidada (v3.86)
     const filterApuracaoVendedor = document.getElementById('filterApuracaoVendedor');
@@ -3468,34 +3471,68 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastAllHistPagosRows = [];
 
     function updateSelectAllPremiosCheckbox() {
-        if (!selectAllPremiosOS || !lastFilteredPremiosSales) return;
+        const selectAllEl = document.getElementById('selectAllPremiosOS');
+        if (!selectAllEl) return;
+        const groupByVal = filterPremGroupBy ? filterPremGroupBy.value : '';
+        if (groupByVal === 'vendedor') {
+            const allCheckboxes = adminPremiosTableBody ? adminPremiosTableBody.querySelectorAll('.chk-premio-os') : [];
+            if (allCheckboxes.length === 0) {
+                selectAllEl.checked = false;
+                selectAllEl.indeterminate = false;
+                return;
+            }
+            let checkedCount = 0;
+            allCheckboxes.forEach(chk => {
+                if (chk.checked) checkedCount++;
+            });
+            selectAllEl.checked = checkedCount > 0 && checkedCount === allCheckboxes.length;
+            selectAllEl.indeterminate = checkedCount > 0 && checkedCount < allCheckboxes.length;
+            return;
+        }
+
+        if (!lastFilteredPremiosSales) return;
         const startIndex = (currentPremiosPage - 1) * limitPremiosPerPage;
         const paginatedSales = lastFilteredPremiosSales.slice(startIndex, startIndex + limitPremiosPerPage);
         if (paginatedSales.length === 0) {
-            selectAllPremiosOS.checked = false;
-            selectAllPremiosOS.indeterminate = false;
+            selectAllEl.checked = false;
+            selectAllEl.indeterminate = false;
             return;
         }
         const checkedCount = paginatedSales.filter(s => selectedPremioIds.has(String(s.id))).length;
-        selectAllPremiosOS.checked = checkedCount === paginatedSales.length;
-        selectAllPremiosOS.indeterminate = checkedCount > 0 && checkedCount < paginatedSales.length;
+        selectAllEl.checked = checkedCount === paginatedSales.length;
+        selectAllEl.indeterminate = checkedCount > 0 && checkedCount < paginatedSales.length;
     }
 
     if (selectAllPremiosOS) {
         selectAllPremiosOS.addEventListener('change', () => {
-            if (!lastFilteredPremiosSales) return;
-            const startIndex = (currentPremiosPage - 1) * limitPremiosPerPage;
-            const paginatedSales = lastFilteredPremiosSales.slice(startIndex, startIndex + limitPremiosPerPage);
-            if (selectAllPremiosOS.checked) {
-                paginatedSales.forEach(s => selectedPremioIds.add(String(s.id)));
+            const groupByVal = filterPremGroupBy ? filterPremGroupBy.value : '';
+            if (groupByVal === 'vendedor') {
+                if (adminPremiosTableBody) {
+                    const checkboxes = adminPremiosTableBody.querySelectorAll('.chk-premio-os');
+                    checkboxes.forEach(chk => {
+                        chk.checked = selectAllPremiosOS.checked;
+                        const id = chk.getAttribute('data-id');
+                        if (id) {
+                            if (selectAllPremiosOS.checked) selectedPremioIds.add(String(id));
+                            else selectedPremioIds.delete(String(id));
+                        }
+                    });
+                }
             } else {
-                paginatedSales.forEach(s => selectedPremioIds.delete(String(s.id)));
-            }
-            if (adminPremiosTableBody) {
-                const checkboxes = adminPremiosTableBody.querySelectorAll('.chk-premio-os');
-                checkboxes.forEach(chk => {
-                    chk.checked = selectAllPremiosOS.checked;
-                });
+                if (!lastFilteredPremiosSales) return;
+                const startIndex = (currentPremiosPage - 1) * limitPremiosPerPage;
+                const paginatedSales = lastFilteredPremiosSales.slice(startIndex, startIndex + limitPremiosPerPage);
+                if (selectAllPremiosOS.checked) {
+                    paginatedSales.forEach(s => selectedPremioIds.add(String(s.id)));
+                } else {
+                    paginatedSales.forEach(s => selectedPremioIds.delete(String(s.id)));
+                }
+                if (adminPremiosTableBody) {
+                    const checkboxes = adminPremiosTableBody.querySelectorAll('.chk-premio-os');
+                    checkboxes.forEach(chk => {
+                        chk.checked = selectAllPremiosOS.checked;
+                    });
+                }
             }
         });
     }
@@ -3511,7 +3548,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnNextPagePremios) {
         btnNextPagePremios.addEventListener('click', () => {
-            const totalItems = lastFilteredPremiosSales ? lastFilteredPremiosSales.length : 0;
+            const groupByVal = filterPremGroupBy ? filterPremGroupBy.value : '';
+            let totalItems = 0;
+            if (groupByVal === 'vendedor') {
+                totalItems = lastGroupedSellersCount || 0;
+            } else {
+                totalItems = lastFilteredPremiosSales ? lastFilteredPremiosSales.length : 0;
+            }
             const totalPages = Math.max(1, Math.ceil(totalItems / limitPremiosPerPage));
             if (currentPremiosPage < totalPages) {
                 currentPremiosPage++;
@@ -3521,7 +3564,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Listeners de Filtros - Card 1 (Relatório de Prêmios)
-    [filterPremVendedor, filterPremLoja, filterPremStatus].forEach(el => {
+    [filterPremVendedor, filterPremLoja, filterPremStatus, filterPremGroupBy].forEach(el => {
         if (el) el.addEventListener('input', () => {
             currentPremiosPage = 1;
             renderPremiosManager();
@@ -3561,6 +3604,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (filterPremVendedor) filterPremVendedor.value = '';
             if (filterPremLoja) filterPremLoja.value = '';
             if (filterPremStatus) filterPremStatus.value = '';
+            if (filterPremGroupBy) filterPremGroupBy.value = '';
             selectedPremioIds.clear();
             currentPremiosPage = 1;
             renderPremiosManager();
@@ -4271,110 +4315,419 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('adminTotalPagoOS').textContent = `${countTotalPago} O.S. Pagas (${ptsTotalPago} Pts)`;
 
         // 2. Renderiza Tabela Detalhada (Lançamentos de Vendas Compacta com Expansão e Paginação)
-        const totalItems = filteredSales.length;
-        const totalPages = Math.max(1, Math.ceil(totalItems / limitPremiosPerPage));
-        if (currentPremiosPage > totalPages) {
-            currentPremiosPage = totalPages;
-        }
-        const startIndex = (currentPremiosPage - 1) * limitPremiosPerPage;
-        const endIndex = startIndex + limitPremiosPerPage;
-        const paginatedSales = filteredSales.slice(startIndex, endIndex);
+        const groupByVal = filterPremGroupBy ? filterPremGroupBy.value : '';
 
-        if (adminPremiosPaginationInfo) {
-            adminPremiosPaginationInfo.textContent = `Página ${currentPremiosPage} de ${totalPages} (Mostrando ${totalItems === 0 ? 0 : startIndex + 1} a ${Math.min(endIndex, totalItems)} de ${totalItems} O.S.)`;
-        }
-        if (btnPrevPagePremios) btnPrevPagePremios.disabled = currentPremiosPage === 1;
-        if (btnNextPagePremios) btnNextPagePremios.disabled = currentPremiosPage === totalPages;
-
-        if (filteredSales.length === 0) {
-            adminPremiosTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 25px 0;">Nenhum lançamento corresponde aos filtros ativos.</td></tr>`;
-        } else {
-            paginatedSales.forEach(sale => {
-                const totalVal = Number(sale.valor_lente || 0) + Number(sale.valor_ar || 0);
-                const totalPts = Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0);
-                const cashReward = totalPts * valorPontoConfig;
-                const isChecked = selectedPremioIds.has(String(sale.id));
-
-                let statusText = '';
-                let actionBtn = '';
-
-                if (sale.status === 'Pendente') {
-                    statusText = `<span class="status-vendedor-pendente">Pendente</span>`;
-                    actionBtn = `<button class="btn btn-success btn-xs btn-os-validate" data-id="${sale.id}" style="padding: 4px 8px; font-size:11px; margin-right: 5px;">Validar O.S. ✅</button>`;
-                } else if (sale.status === 'Validado') {
-                    statusText = `<span class="status-vendedor-validado">A Pagar</span>`;
-                    actionBtn = `<button class="btn btn-primary btn-xs btn-os-pay" data-id="${sale.id}" style="padding: 4px 8px; font-size:11px; margin-right: 5px; background: var(--gold-light); color:#000;">Marcar Pago 💵</button>`;
-                } else {
-                    statusText = `<span class="status-vendedor-pago">Pago</span>`;
-                }
-
-                // Botão de deletar lançamento
-                actionBtn += `<button class="btn btn-outline-gold btn-xs btn-os-delete" data-id="${sale.id}" style="border-color: rgba(255, 85, 85, 0.3); color: #fca5a5; padding: 4px 8px; font-size:11px;">🗑️ Excluir</button>`;
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td style="text-align: center;">
-                        <button type="button" class="btn-toggle-premio-details" style="background: none; border: none; color: var(--gold-light); font-size: 15px; cursor: pointer; padding: 4px;" title="Ver detalhes">+</button>
-                    </td>
-                    <td style="text-align: left; padding-left: 15px;"><strong>${escapeHtml(sale.vendedor_nome)}</strong></td>
-                    <td style="text-align: center;">
-                        <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; margin: 0; font-size: 12px;">
-                            <input type="checkbox" class="chk-premio-os" data-id="${sale.id}" ${isChecked ? 'checked' : ''} style="cursor: pointer;" />
-                            <code style="font-weight: 700; color: var(--gold-light); font-size: 12px;">${escapeHtml(sale.os)}</code>
-                        </label>
-                    </td>
-                    <td style="text-align: center;">
-                        <strong style="color: var(--gold-light); font-size: 12.5px;">${totalPts} Ptos</strong>
-                    </td>
-                    <td style="text-align: center;">${statusText}</td>
-                    <td style="text-align: center; white-space: nowrap;"><div style="display:inline-flex; gap:4px; align-items:center; justify-content:center;">${actionBtn}</div></td>
+        // Atualiza o Cabeçalho da Tabela dinamicamente conforme o agrupamento
+        if (adminPremiosTableHead) {
+            if (groupByVal === 'vendedor') {
+                adminPremiosTableHead.innerHTML = `
+                    <tr>
+                        <th style="width: 45px; text-align: center;">+</th>
+                        <th style="text-align: left; padding-left: 15px;">Vendedor / Ótica</th>
+                        <th style="text-align: center; min-width: 140px;">O.S. Vinculadas</th>
+                        <th style="text-align: center; min-width: 160px;">Pontos / A Pagar</th>
+                        <th style="text-align: center; min-width: 150px;">Status Resumo</th>
+                        <th style="text-align: center; width: 170px;">Ações</th>
+                    </tr>
                 `;
-
-                // Linha de Detalhes Adicionais (+)
-                const trDetails = document.createElement('tr');
-                trDetails.style.display = 'none';
-                trDetails.innerHTML = `
-                    <td></td>
-                    <td colspan="5" style="background: rgba(0,0,0,0.3); padding: 14px 18px; border-radius: 8px; border-left: 3px solid var(--gold-primary);">
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; font-size: 11.5px; text-align: left;">
-                            <div><strong style="color: var(--gold-light);">Loja / Ótica:</strong><br>${escapeHtml(sale.loja || 'N/A')}</div>
-                            <div><strong style="color: var(--gold-light);">Paciente / Cliente:</strong><br>${escapeHtml(sale.cliente_nome || 'N/A')}</div>
-                            <div><strong style="color: var(--gold-light);">Família da Lente:</strong><br>${escapeHtml(sale.lente_familia || 'N/A')} <span style="color:var(--text-muted);">(${Number(sale.pontos_lente || 0)} Ptos)</span></div>
-                            <div><strong style="color: var(--gold-light);">Tratamento Antirreflexo:</strong><br>${escapeHtml(sale.ar_familia || 'N/A')} <span style="color:var(--text-muted);">(${Number(sale.pontos_ar || 0)} Ptos)</span></div>
-                            <div><strong style="color: var(--gold-light);">Total Produtos:</strong><br><span style="color: #fff; font-weight: 600;">R$ ${totalVal.toFixed(2)}</span></div>
-                            <div><strong style="color: var(--gold-light);">Prêmio Calculado:</strong><br><span style="color: #10b981; font-weight: 700;">R$ ${cashReward.toFixed(2)}</span></div>
-                            <div><strong style="color: var(--gold-light);">Data do Lançamento:</strong><br>${sale.created_at ? new Date(sale.created_at).toLocaleString('pt-BR') : 'N/A'}</div>
-                            <div><strong style="color: var(--gold-light);">Registro:</strong><br>O.S. #${escapeHtml(sale.os)}</div>
-                        </div>
-                    </td>
+            } else {
+                adminPremiosTableHead.innerHTML = `
+                    <tr>
+                        <th style="width: 45px; text-align: center;">+</th>
+                        <th style="text-align: left; padding-left: 15px;">Vendedor</th>
+                        <th style="text-align: center; min-width: 130px;">
+                            <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 11px; margin: 0; text-transform: uppercase;">
+                                <input type="checkbox" id="selectAllPremiosOS" title="Selecionar Todos para PDF" style="cursor: pointer;" />
+                                <span>O.S.</span>
+                            </label>
+                        </th>
+                        <th style="text-align: center;">Pontuação Total</th>
+                        <th style="text-align: center;">Status</th>
+                        <th style="text-align: center; width: 170px;">Ações</th>
+                    </tr>
                 `;
-
-                // Toggle do botão +
-                const btnToggle = tr.querySelector('.btn-toggle-premio-details');
-                if (btnToggle) {
-                    btnToggle.addEventListener('click', () => {
-                        const isHidden = trDetails.style.display === 'none';
-                        trDetails.style.display = isHidden ? 'table-row' : 'none';
-                        btnToggle.textContent = isHidden ? '➖' : '+';
-                    });
-                }
-
-                // Checkbox individual
-                const chk = tr.querySelector('.chk-premio-os');
-                if (chk) {
-                    chk.addEventListener('change', () => {
-                        if (chk.checked) {
-                            selectedPremioIds.add(String(sale.id));
+                const newSelectAll = document.getElementById('selectAllPremiosOS');
+                if (newSelectAll) {
+                    newSelectAll.addEventListener('change', () => {
+                        const startIndex = (currentPremiosPage - 1) * limitPremiosPerPage;
+                        const paginatedSales = lastFilteredPremiosSales.slice(startIndex, startIndex + limitPremiosPerPage);
+                        if (newSelectAll.checked) {
+                            paginatedSales.forEach(s => selectedPremioIds.add(String(s.id)));
                         } else {
-                            selectedPremioIds.delete(String(sale.id));
+                            paginatedSales.forEach(s => selectedPremioIds.delete(String(s.id)));
                         }
-                        updateSelectAllPremiosCheckbox();
+                        if (adminPremiosTableBody) {
+                            const checkboxes = adminPremiosTableBody.querySelectorAll('.chk-premio-os');
+                            checkboxes.forEach(chk => {
+                                chk.checked = newSelectAll.checked;
+                            });
+                        }
                     });
                 }
+            }
+        }
 
-                adminPremiosTableBody.appendChild(tr);
-                adminPremiosTableBody.appendChild(trDetails);
+        if (groupByVal === 'vendedor') {
+            // Agrupamento por Vendedor
+            const sellerGroupsMap = {};
+            filteredSales.forEach(sale => {
+                const vKey = sale.vendedor_id 
+                    ? String(sale.vendedor_id) 
+                    : (sale.vendedor_nome ? 'nome_' + sale.vendedor_nome.trim().toLowerCase() : 'os_' + (sale.os || Math.random()));
+                
+                if (!sellerGroupsMap[vKey]) {
+                    sellerGroupsMap[vKey] = {
+                        vendedor_id: sale.vendedor_id || '',
+                        vendedor_nome: sale.vendedor_nome || 'Vendedor Desconhecido',
+                        loja: sale.loja || '',
+                        cpf: sale.cpf_vendedor || sale.cpf || '',
+                        sales: [],
+                        totalPts: 0,
+                        validadosPts: 0,
+                        pendentesPts: 0,
+                        pagosPts: 0,
+                        validadosCount: 0,
+                        pendentesCount: 0,
+                        pagosCount: 0,
+                        totalValProdutos: 0
+                    };
+                }
+                
+                const ptsLente = Number(sale.pontos_lente || 0);
+                const ptsAr = Number(sale.pontos_ar || 0);
+                const pts = ptsLente + ptsAr;
+                const valProdutos = Number(sale.valor_lente || 0) + Number(sale.valor_ar || 0);
+
+                sellerGroupsMap[vKey].sales.push(sale);
+                sellerGroupsMap[vKey].totalPts += pts;
+                sellerGroupsMap[vKey].totalValProdutos += valProdutos;
+                if (!sellerGroupsMap[vKey].loja && sale.loja) sellerGroupsMap[vKey].loja = sale.loja;
+
+                const st = (sale.status || '').trim().toLowerCase();
+                if (st === 'validado' || st === 'a pagar') {
+                    sellerGroupsMap[vKey].validadosPts += pts;
+                    sellerGroupsMap[vKey].validadosCount++;
+                } else if (st === 'pendente') {
+                    sellerGroupsMap[vKey].pendentesPts += pts;
+                    sellerGroupsMap[vKey].pendentesCount++;
+                } else if (st === 'pago' || st.startsWith('pago')) {
+                    sellerGroupsMap[vKey].pagosPts += pts;
+                    sellerGroupsMap[vKey].pagosCount++;
+                }
             });
+
+            const sellerGroups = Object.values(sellerGroupsMap).map(g => {
+                g.valorAPagar = g.validadosPts * valorPontoConfig;
+                g.valorTotalPremio = g.totalPts * valorPontoConfig;
+                return g;
+            });
+
+            sellerGroups.sort((a, b) => (b.valorAPagar - a.valorAPagar) || (b.totalPts - a.totalPts) || a.vendedor_nome.localeCompare(b.vendedor_nome));
+
+            lastGroupedSellersCount = sellerGroups.length;
+
+            const totalItems = sellerGroups.length;
+            const totalPages = Math.max(1, Math.ceil(totalItems / limitPremiosPerPage));
+            if (currentPremiosPage > totalPages) {
+                currentPremiosPage = totalPages;
+            }
+            const startIndex = (currentPremiosPage - 1) * limitPremiosPerPage;
+            const endIndex = startIndex + limitPremiosPerPage;
+            const paginatedGroups = sellerGroups.slice(startIndex, endIndex);
+
+            if (adminPremiosPaginationInfo) {
+                adminPremiosPaginationInfo.textContent = `Página ${currentPremiosPage} de ${totalPages} (Mostrando ${totalItems === 0 ? 0 : startIndex + 1} a ${Math.min(endIndex, totalItems)} de ${totalItems} Vendedores)`;
+            }
+            if (btnPrevPagePremios) btnPrevPagePremios.disabled = currentPremiosPage === 1;
+            if (btnNextPagePremios) btnNextPagePremios.disabled = currentPremiosPage === totalPages;
+
+            if (sellerGroups.length === 0) {
+                adminPremiosTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 25px 0;">Nenhum vendedor ou lançamento corresponde aos filtros ativos.</td></tr>`;
+            } else {
+                paginatedGroups.forEach(group => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'group-row-seller';
+
+                    let statusBadges = [];
+                    if (group.validadosCount > 0) {
+                        statusBadges.push(`<span class="status-vendedor-validado" style="font-size:11px; padding:2px 7px; margin:2px; display:inline-block;">${group.validadosCount} A Pagar (R$ ${(group.validadosPts * valorPontoConfig).toFixed(2)})</span>`);
+                    }
+                    if (group.pendentesCount > 0) {
+                        statusBadges.push(`<span class="status-vendedor-pendente" style="font-size:11px; padding:2px 7px; margin:2px; display:inline-block;">${group.pendentesCount} Pendente${group.pendentesCount > 1 ? 's' : ''}</span>`);
+                    }
+                    if (group.pagosCount > 0) {
+                        statusBadges.push(`<span class="status-vendedor-pago" style="font-size:11px; padding:2px 7px; margin:2px; display:inline-block;">${group.pagosCount} Pago${group.pagosCount > 1 ? 's' : ''}</span>`);
+                    }
+                    if (statusBadges.length === 0) {
+                        statusBadges.push(`<span style="color:var(--text-muted); font-size:11px;">Sem O.S.</span>`);
+                    }
+
+                    let actionButtons = `<div style="display: inline-flex; gap: 5px; align-items: center; justify-content: center; flex-wrap: wrap;">`;
+                    if (group.validadosCount > 0) {
+                        actionButtons += `<button type="button" class="btn btn-primary btn-xs btn-bulk-payout" data-vendedor-id="${escapeHtml(group.vendedor_id)}" data-name="${escapeHtml(group.vendedor_nome)}" style="padding: 4px 10px; font-size: 11px; background: var(--gold-light); color: #000; font-weight: 700; border-radius: 4px;" title="Pagar todas as O.S. validadas deste vendedor">Pagar Lote 💰</button>`;
+                    }
+                    actionButtons += `<button type="button" class="btn btn-outline-gold btn-xs btn-toggle-group-os" style="padding: 4px 8px; font-size: 11px;">Ver O.S. (${group.sales.length}) 📂</button></div>`;
+
+                    tr.innerHTML = `
+                        <td style="text-align: center;">
+                            <button type="button" class="btn-toggle-group-icon" style="background: none; border: none; color: var(--gold-light); font-size: 16px; cursor: pointer; padding: 4px;" title="Expandir O.S.">+</button>
+                        </td>
+                        <td style="text-align: left; padding-left: 15px;">
+                            <strong style="color: #fff; font-size: 13.5px;">${escapeHtml(group.vendedor_nome)}</strong>
+                            <div style="font-size: 11.5px; color: var(--gold-light); margin-top: 2px;">🏬 ${escapeHtml(group.loja || 'Ótica não informada')}</div>
+                        </td>
+                        <td style="text-align: center;">
+                            <span class="badge" style="background: rgba(212, 160, 23, 0.12); border: 1px solid rgba(212, 160, 23, 0.3); color: var(--gold-light); font-weight: 700; padding: 4px 10px; border-radius: 12px; font-size: 12px;">${group.sales.length} O.S.</span>
+                        </td>
+                        <td style="text-align: center;">
+                            <div><strong style="color: #10b981; font-size: 13.5px;">R$ ${group.valorAPagar.toFixed(2)}</strong> <span style="font-size: 11px; color: #a7f3d0; font-weight: 600;">a pagar</span></div>
+                            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">${group.totalPts} Pts totais (${(group.valorTotalPremio).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})})</div>
+                        </td>
+                        <td style="text-align: center;">
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                                ${statusBadges.join('')}
+                            </div>
+                        </td>
+                        <td style="text-align: center; white-space: nowrap;">
+                            ${actionButtons}
+                        </td>
+                    `;
+
+                    // Linha expandida com a sub-tabela de O.S.
+                    const trSubTable = document.createElement('tr');
+                    trSubTable.className = 'group-subtable-row';
+                    trSubTable.style.display = 'none';
+
+                    let subRowsHtml = '';
+                    group.sales.forEach(sale => {
+                        const sValProdutos = Number(sale.valor_lente || 0) + Number(sale.valor_ar || 0);
+                        const sPts = Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0);
+                        const sCash = sPts * valorPontoConfig;
+                        const isChecked = selectedPremioIds.has(String(sale.id));
+
+                        let sStatusBadge = '';
+                        let sActionBtns = '';
+
+                        if (sale.status === 'Pendente') {
+                            sStatusBadge = `<span class="status-vendedor-pendente" style="font-size: 10.5px; padding: 2px 6px;">Pendente</span>`;
+                            sActionBtns = `<button type="button" class="btn btn-success btn-xs btn-os-validate" data-id="${sale.id}" style="padding: 3px 6px; font-size: 10.5px; margin-right: 4px;">Validar ✅</button>`;
+                        } else if (sale.status === 'Validado') {
+                            sStatusBadge = `<span class="status-vendedor-validado" style="font-size: 10.5px; padding: 2px 6px;">A Pagar</span>`;
+                            sActionBtns = `<button type="button" class="btn btn-primary btn-xs btn-os-pay" data-id="${sale.id}" style="padding: 3px 6px; font-size: 10.5px; margin-right: 4px; background: var(--gold-light); color:#000;">Pagar 💵</button>`;
+                        } else {
+                            sStatusBadge = `<span class="status-vendedor-pago" style="font-size: 10.5px; padding: 2px 6px;">Pago</span>`;
+                        }
+
+                        sActionBtns += `<button type="button" class="btn btn-outline-gold btn-xs btn-os-delete" data-id="${sale.id}" style="border-color: rgba(255, 85, 85, 0.3); color: #fca5a5; padding: 3px 6px; font-size: 10.5px;">🗑️</button>`;
+
+                        const dtFormatada = sale.created_at ? new Date(sale.created_at).toLocaleDateString('pt-BR') : '-';
+
+                        subRowsHtml += `
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(0,0,0,0.15);">
+                                <td style="padding: 8px 10px; text-align: center;">
+                                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; margin: 0; font-size: 12px;">
+                                        <input type="checkbox" class="chk-premio-os" data-id="${sale.id}" ${isChecked ? 'checked' : ''} style="cursor: pointer;" />
+                                        <code style="font-weight: 700; color: var(--gold-light); font-size: 12px;">#${escapeHtml(sale.os)}</code>
+                                    </label>
+                                </td>
+                                <td style="padding: 8px 10px; font-size: 11.5px; color: #ddd; text-align: left;">
+                                    <div><strong>${escapeHtml(sale.cliente_nome || 'Cliente não informado')}</strong></div>
+                                    <div style="font-size: 10.5px; color: var(--text-muted);">Data: ${dtFormatada}</div>
+                                </td>
+                                <td style="padding: 8px 10px; font-size: 11.5px; text-align: left;">
+                                    <div>${escapeHtml(sale.lente_familia || 'Lente Padrão')} <small style="color:var(--gold-light);">(${Number(sale.pontos_lente || 0)} Pts)</small></div>
+                                    ${sale.ar_familia ? `<div style="color: var(--text-muted); font-size: 10.5px;">+ ${escapeHtml(sale.ar_familia)} (${Number(sale.pontos_ar || 0)} Pts)</div>` : ''}
+                                </td>
+                                <td style="padding: 8px 10px; font-size: 12px; text-align: center;">
+                                    <strong style="color: var(--gold-light);">${sPts} Pts</strong>
+                                    <div style="font-size: 10.5px; color: var(--text-muted);">R$ ${sValProdutos.toFixed(2)} venda</div>
+                                </td>
+                                <td style="padding: 8px 10px; font-size: 12px; text-align: center;">
+                                    <strong style="color: #10b981;">R$ ${sCash.toFixed(2)}</strong>
+                                </td>
+                                <td style="padding: 8px 10px; text-align: center;">
+                                    ${sStatusBadge}
+                                </td>
+                                <td style="padding: 8px 10px; text-align: center; white-space: nowrap;">
+                                    <div style="display:inline-flex; gap:3px; align-items:center; justify-content:center;">
+                                        ${sActionBtns}
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    trSubTable.innerHTML = `
+                        <td colspan="6" style="background: rgba(10, 10, 14, 0.7); padding: 12px 18px; border-left: 3px solid var(--gold-primary); border-bottom: 1px solid rgba(212, 160, 23, 0.2);">
+                            <div style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+                                <div style="font-size: 12px; font-weight: 700; color: var(--gold-light); text-transform: uppercase; letter-spacing: 0.5px;">
+                                    📋 Ordens de Serviço de ${escapeHtml(group.vendedor_nome)} (${group.sales.length} O.S.)
+                                </div>
+                                <div style="font-size: 11.5px; color: #fff;">
+                                    Total a Pagar deste vendedor: <strong style="color: #10b981; font-size: 13px;">R$ ${group.valorAPagar.toFixed(2)}</strong>
+                                </div>
+                            </div>
+                            <div style="max-height: 280px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.06); border-radius: 6px;">
+                                <table style="width: 100%; border-collapse: collapse; font-size: 11.5px;">
+                                    <thead>
+                                        <tr style="background: rgba(255,255,255,0.04); color: var(--gold-light); font-size: 10.5px; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                                            <th style="padding: 6px 10px; text-align: center;">O.S.</th>
+                                            <th style="padding: 6px 10px; text-align: left;">Cliente / Data</th>
+                                            <th style="padding: 6px 10px; text-align: left;">Lente / Tratamento</th>
+                                            <th style="padding: 6px 10px; text-align: center;">Pontuação</th>
+                                            <th style="padding: 6px 10px; text-align: center;">Prêmio (R$)</th>
+                                            <th style="padding: 6px 10px; text-align: center;">Status</th>
+                                            <th style="padding: 6px 10px; text-align: center;">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${subRowsHtml}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </td>
+                    `;
+
+                    // Toggle function
+                    const toggleExpander = () => {
+                        const isHidden = trSubTable.style.display === 'none';
+                        trSubTable.style.display = isHidden ? 'table-row' : 'none';
+                        const iconBtn = tr.querySelector('.btn-toggle-group-icon');
+                        if (iconBtn) iconBtn.textContent = isHidden ? '➖' : '+';
+                        const txtBtn = tr.querySelector('.btn-toggle-group-os');
+                        if (txtBtn) txtBtn.textContent = isHidden ? `Ocultar O.S. 📂` : `Ver O.S. (${group.sales.length}) 📂`;
+                    };
+
+                    const iconBtn = tr.querySelector('.btn-toggle-group-icon');
+                    if (iconBtn) iconBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleExpander(); });
+                    
+                    const txtBtn = tr.querySelector('.btn-toggle-group-os');
+                    if (txtBtn) txtBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleExpander(); });
+
+                    // Checkbox listeners in subtable
+                    const subCheckboxes = trSubTable.querySelectorAll('.chk-premio-os');
+                    subCheckboxes.forEach(chk => {
+                        chk.addEventListener('change', () => {
+                            const sid = chk.getAttribute('data-id');
+                            if (sid) {
+                                if (chk.checked) selectedPremioIds.add(String(sid));
+                                else selectedPremioIds.delete(String(sid));
+                            }
+                            updateSelectAllPremiosCheckbox();
+                        });
+                    });
+
+                    adminPremiosTableBody.appendChild(tr);
+                    adminPremiosTableBody.appendChild(trSubTable);
+                });
+            }
+        } else {
+            // 2. Renderiza Tabela Detalhada Individual (Lançamentos de Vendas Compacta com Expansão e Paginação)
+            const totalItems = filteredSales.length;
+            const totalPages = Math.max(1, Math.ceil(totalItems / limitPremiosPerPage));
+            if (currentPremiosPage > totalPages) {
+                currentPremiosPage = totalPages;
+            }
+            const startIndex = (currentPremiosPage - 1) * limitPremiosPerPage;
+            const endIndex = startIndex + limitPremiosPerPage;
+            const paginatedSales = filteredSales.slice(startIndex, endIndex);
+
+            if (adminPremiosPaginationInfo) {
+                adminPremiosPaginationInfo.textContent = `Página ${currentPremiosPage} de ${totalPages} (Mostrando ${totalItems === 0 ? 0 : startIndex + 1} a ${Math.min(endIndex, totalItems)} de ${totalItems} O.S.)`;
+            }
+            if (btnPrevPagePremios) btnPrevPagePremios.disabled = currentPremiosPage === 1;
+            if (btnNextPagePremios) btnNextPagePremios.disabled = currentPremiosPage === totalPages;
+
+            if (filteredSales.length === 0) {
+                adminPremiosTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 25px 0;">Nenhum lançamento corresponde aos filtros ativos.</td></tr>`;
+            } else {
+                paginatedSales.forEach(sale => {
+                    const totalVal = Number(sale.valor_lente || 0) + Number(sale.valor_ar || 0);
+                    const totalPts = Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0);
+                    const cashReward = totalPts * valorPontoConfig;
+                    const isChecked = selectedPremioIds.has(String(sale.id));
+
+                    let statusText = '';
+                    let actionBtn = '';
+
+                    if (sale.status === 'Pendente') {
+                        statusText = `<span class="status-vendedor-pendente">Pendente</span>`;
+                        actionBtn = `<button type="button" class="btn btn-success btn-xs btn-os-validate" data-id="${sale.id}" style="padding: 4px 8px; font-size:11px; margin-right: 5px;">Validar O.S. ✅</button>`;
+                    } else if (sale.status === 'Validado') {
+                        statusText = `<span class="status-vendedor-validado">A Pagar</span>`;
+                        actionBtn = `<button type="button" class="btn btn-primary btn-xs btn-os-pay" data-id="${sale.id}" style="padding: 4px 8px; font-size:11px; margin-right: 5px; background: var(--gold-light); color:#000;">Marcar Pago 💵</button>`;
+                    } else {
+                        statusText = `<span class="status-vendedor-pago">Pago</span>`;
+                    }
+
+                    // Botão de deletar lançamento
+                    actionBtn += `<button type="button" class="btn btn-outline-gold btn-xs btn-os-delete" data-id="${sale.id}" style="border-color: rgba(255, 85, 85, 0.3); color: #fca5a5; padding: 4px 8px; font-size:11px;">🗑️ Excluir</button>`;
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="text-align: center;">
+                            <button type="button" class="btn-toggle-premio-details" style="background: none; border: none; color: var(--gold-light); font-size: 15px; cursor: pointer; padding: 4px;" title="Ver detalhes">+</button>
+                        </td>
+                        <td style="text-align: left; padding-left: 15px;"><strong>${escapeHtml(sale.vendedor_nome)}</strong></td>
+                        <td style="text-align: center;">
+                            <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; margin: 0; font-size: 12px;">
+                                <input type="checkbox" class="chk-premio-os" data-id="${sale.id}" ${isChecked ? 'checked' : ''} style="cursor: pointer;" />
+                                <code style="font-weight: 700; color: var(--gold-light); font-size: 12px;">${escapeHtml(sale.os)}</code>
+                            </label>
+                        </td>
+                        <td style="text-align: center;">
+                            <strong style="color: var(--gold-light); font-size: 12.5px;">${totalPts} Ptos</strong>
+                        </td>
+                        <td style="text-align: center;">${statusText}</td>
+                        <td style="text-align: center; white-space: nowrap;"><div style="display:inline-flex; gap:4px; align-items:center; justify-content:center;">${actionBtn}</div></td>
+                    `;
+
+                    // Linha de Detalhes Adicionais (+)
+                    const trDetails = document.createElement('tr');
+                    trDetails.style.display = 'none';
+                    trDetails.innerHTML = `
+                        <td></td>
+                        <td colspan="5" style="background: rgba(0,0,0,0.3); padding: 14px 18px; border-radius: 8px; border-left: 3px solid var(--gold-primary);">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; font-size: 11.5px; text-align: left;">
+                                <div><strong style="color: var(--gold-light);">Loja / Ótica:</strong><br>${escapeHtml(sale.loja || 'N/A')}</div>
+                                <div><strong style="color: var(--gold-light);">Paciente / Cliente:</strong><br>${escapeHtml(sale.cliente_nome || 'N/A')}</div>
+                                <div><strong style="color: var(--gold-light);">Família da Lente:</strong><br>${escapeHtml(sale.lente_familia || 'N/A')} <span style="color:var(--text-muted);">(${Number(sale.pontos_lente || 0)} Ptos)</span></div>
+                                <div><strong style="color: var(--gold-light);">Tratamento Antirreflexo:</strong><br>${escapeHtml(sale.ar_familia || 'N/A')} <span style="color:var(--text-muted);">(${Number(sale.pontos_ar || 0)} Ptos)</span></div>
+                                <div><strong style="color: var(--gold-light);">Total Produtos:</strong><br><span style="color: #fff; font-weight: 600;">R$ ${totalVal.toFixed(2)}</span></div>
+                                <div><strong style="color: var(--gold-light);">Prêmio Calculado:</strong><br><span style="color: #10b981; font-weight: 700;">R$ ${cashReward.toFixed(2)}</span></div>
+                                <div><strong style="color: var(--gold-light);">Data do Lançamento:</strong><br>${sale.created_at ? new Date(sale.created_at).toLocaleString('pt-BR') : 'N/A'}</div>
+                                <div><strong style="color: var(--gold-light);">Registro:</strong><br>O.S. #${escapeHtml(sale.os)}</div>
+                            </div>
+                        </td>
+                    `;
+
+                    // Toggle do botão +
+                    const btnToggle = tr.querySelector('.btn-toggle-premio-details');
+                    if (btnToggle) {
+                        btnToggle.addEventListener('click', () => {
+                            const isHidden = trDetails.style.display === 'none';
+                            trDetails.style.display = isHidden ? 'table-row' : 'none';
+                            btnToggle.textContent = isHidden ? '➖' : '+';
+                        });
+                    }
+
+                    // Checkbox individual
+                    const chk = tr.querySelector('.chk-premio-os');
+                    if (chk) {
+                        chk.addEventListener('change', () => {
+                            if (chk.checked) {
+                                selectedPremioIds.add(String(sale.id));
+                            } else {
+                                selectedPremioIds.delete(String(sale.id));
+                            }
+                            updateSelectAllPremiosCheckbox();
+                        });
+                    }
+
+                    adminPremiosTableBody.appendChild(tr);
+                    adminPremiosTableBody.appendChild(trDetails);
+                });
+            }
         }
         updateSelectAllPremiosCheckbox();
 
@@ -5176,10 +5529,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function configureRelatorioActions() {
         // Validar O.S.
-        const osValidateBtns = adminPremiosTableBody.querySelectorAll('.btn-os-validate');
+        const osValidateBtns = document.querySelectorAll('.btn-os-validate');
         if (osValidateBtns) {
             osValidateBtns.forEach(btn => {
-                btn.addEventListener('click', async () => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
                     const id = btn.getAttribute('data-id');
                     await updateSaleStatus(id, 'Validado');
                 });
@@ -5187,10 +5541,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Pagar O.S. Individual
-        const osPayBtns = adminPremiosTableBody.querySelectorAll('.btn-os-pay');
+        const osPayBtns = document.querySelectorAll('.btn-os-pay');
         if (osPayBtns) {
             osPayBtns.forEach(btn => {
-                btn.addEventListener('click', async () => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
                     const id = btn.getAttribute('data-id');
                     await updateSaleStatus(id, 'Pago');
                 });
@@ -5198,10 +5553,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Excluir O.S.
-        const osDeleteBtns = adminPremiosTableBody.querySelectorAll('.btn-os-delete');
+        const osDeleteBtns = document.querySelectorAll('.btn-os-delete');
         if (osDeleteBtns) {
             osDeleteBtns.forEach(btn => {
-                btn.addEventListener('click', async () => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
                     const id = btn.getAttribute('data-id');
                     if (confirm('Deseja realmente deletar este lançamento de venda do sistema?')) {
                         await deleteSaleRecord(id);
@@ -5210,11 +5566,12 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Pagar em Lote por Vendedor
-        const bulkPayoutBtns = adminConsolidadoTableBody.querySelectorAll('.btn-bulk-payout');
+        // Pagar em Lote por Vendedor (Card 2 ou Tabela Agrupada por Vendedor)
+        const bulkPayoutBtns = document.querySelectorAll('.btn-bulk-payout');
         if (bulkPayoutBtns) {
             bulkPayoutBtns.forEach(btn => {
-                btn.addEventListener('click', async () => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
                     const vendedorId = btn.getAttribute('data-vendedor-id') || '';
                     const vendedorName = btn.getAttribute('data-name') || '';
                     if (confirm(`Confirmar o pagamento geral de prêmios em lote para o vendedor "${vendedorName}"? Todas as O.S. validadas dele serão marcadas como Pagas.`)) {
