@@ -5208,6 +5208,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Filtros do Card 3 (Histórico de Pagos Consolidado)
         const histStatusVal = filterHistPagosStatus ? filterHistPagosStatus.value : '';
+        const pagosPorVendedor = {};
+        allSubmittedSales.forEach(sale => {
+            const st = (sale.status || '').trim().toLowerCase();
+            if (st === 'pago' || st.startsWith('pago')) {
+                const vKey = sale.vendedor_id ? String(sale.vendedor_id) : (sale.vendedor_nome ? 'nome_' + sale.vendedor_nome.trim().toLowerCase() : 'vend_' + (sale.os || Math.random()));
+                if (!pagosPorVendedor[vKey]) {
+                    pagosPorVendedor[vKey] = {
+                        vendedor_nome: sale.vendedor_nome || 'Vendedor Desconhecido',
+                        loja: sale.loja || '',
+                        total_pontos: 0,
+                        vendedor_id: sale.vendedor_id || '',
+                        cpf: sale.cpf_vendedor || sale.cpf || '',
+                        status: 'Pago'
+                    };
+                }
+                pagosPorVendedor[vKey].total_pontos += (Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0));
+                if (!pagosPorVendedor[vKey].loja && sale.loja) pagosPorVendedor[vKey].loja = sale.loja;
+            }
+        });
+
         let allConsolidadoPagosRows = Object.values(pagosPorVendedor);
 
         if (histStatusVal === 'Todos') {
