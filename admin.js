@@ -3835,19 +3835,35 @@ document.addEventListener('DOMContentLoaded', () => {
             // 3. Recarrega configurações de produtos / prêmios
             await loadRewardsConfig();
 
-            // 4. Recarrega todos os lançamentos de vendas do Supabase (com timestamp anti-cache)
+            // 4. Recarrega todos os lançamentos de vendas do Supabase (com headers anti-cache)
             const url = getSupabaseUrl();
             const key = getSupabaseKey();
             const table = localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
 
             if (url && key) {
                 const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
-                const response = await fetch(`${cleanUrl}/rest/v1/${table}?select=*&order=created_at.desc&_t=${Date.now()}`, {
+                const response = await fetch(`${cleanUrl}/rest/v1/${table}?select=*&order=created_at.desc`, {
                     method: 'GET',
-                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                    headers: { 
+                        'apikey': key, 
+                        'Authorization': `Bearer ${key}`,
+                        'Cache-Control': 'no-cache, no-store'
+                    },
+                    cache: 'no-store'
                 });
                 if (response.ok) {
                     allSubmittedSales = await response.json();
+                } else {
+                    throw new Error('Falha ao buscar lançamentos no Supabase.');
+                }
+            } else {
+                allSubmittedSales = JSON.parse(localStorage.getItem('personality_local_premios')) || [];
+            }
+
+            if (!allSubmittedSales || allSubmittedSales.length === 0) {
+                const localSales = JSON.parse(localStorage.getItem('personality_local_premios')) || [];
+                if (localSales.length > 0) {
+                    allSubmittedSales = localSales;
                 }
             }
 
@@ -3862,6 +3878,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 1200);
         } catch (err) {
             console.error('Erro ao sincronizar dados:', err);
+            allSubmittedSales = JSON.parse(localStorage.getItem('personality_local_premios')) || [];
+            renderPremiosManager();
+            renderDashboardPremios();
+
             btn.innerHTML = '⚠️';
             setTimeout(() => {
                 btn.innerHTML = originalText;
@@ -4012,6 +4032,11 @@ document.addEventListener('DOMContentLoaded', () => {
             await loadProfessionals();
         }
 
+        // Garante que a lista de produtos/prêmios esteja carregada
+        if (!adminPremiosConfig || adminPremiosConfig.length === 0) {
+            await loadRewardsConfig();
+        }
+
         const url = getSupabaseUrl();
         const key = getSupabaseKey();
         const table = localStorage.getItem('personality_sb_premios_table') || 'premios_lancados_personality';
@@ -4022,12 +4047,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
                 const response = await fetch(`${cleanUrl}/rest/v1/${table}?select=*&order=created_at.desc`, {
                     method: 'GET',
-                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+                    headers: { 
+                        'apikey': key, 
+                        'Authorization': `Bearer ${key}`,
+                        'Cache-Control': 'no-cache, no-store'
+                    },
+                    cache: 'no-store'
                 });
                 if (response.ok) {
                     allSubmittedSales = await response.json();
                 } else {
-                    throw new Error('Falha ao buscar.');
+                    throw new Error('Falha ao buscar lançamentos no Supabase.');
                 }
             } catch (error) {
                 console.error(error);
@@ -4035,6 +4065,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             allSubmittedSales = JSON.parse(localStorage.getItem('personality_local_premios')) || [];
+        }
+
+        if (!allSubmittedSales || allSubmittedSales.length === 0) {
+            const localSales = JSON.parse(localStorage.getItem('personality_local_premios')) || [];
+            if (localSales.length > 0) {
+                allSubmittedSales = localSales;
+            }
         }
 
         renderPremiosManager();
