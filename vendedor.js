@@ -1410,8 +1410,16 @@ document.addEventListener('DOMContentLoaded', () => {
             extratoTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Nenhuma venda lançada neste portal ainda.</td></tr>`;
         } else {
             sales.forEach(sale => {
-                const totPts = Number(sale.pontos_lente) + Number(sale.pontos_ar);
-                const totVal = Number(sale.valor_lente) + Number(sale.valor_ar);
+                let ptsLente = Number(sale.pontos_lente) || 0;
+                let ptsAr = Number(sale.pontos_ar) || 0;
+                if (ptsLente > 100) {
+                    const u = (sale.lente_familia || '').toUpperCase();
+                    if (u.startsWith('LP ') || u.startsWith('VS ') || u.includes('PRONTA') || u.includes('VISAO')) ptsLente = 15;
+                    else ptsLente = 30;
+                }
+                if (ptsAr > 50) ptsAr = 0;
+                const totPts = ptsLente + ptsAr;
+                const totVal = Number(sale.valor_lente || 0) + Number(sale.valor_ar || 0);
 
                 if (sale.status === 'Pendente') {
                     ptsPendente += totPts;

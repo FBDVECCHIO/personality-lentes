@@ -1322,7 +1322,7 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                             <p>Análise de vendas, ranking de balconistas, óticas parceiras e produtos mais vendidos no período.</p>
                         </div>
                         <div>
-                            <button type="button" class="btn btn-outline-gold btn-xs" id="btnRefreshDashboardHeader" title="Recarregar e sincronizar informações com o banco de dados" style="padding: 6px 12px; font-size: 15px; font-weight: 700; height: 32px; display: inline-flex; align-items: center; justify-content: center;">🔄</button>
+                            <button type="button" class="btn btn-gold btn-sm" id="btnRefreshDashboardHeader" title="Recarregar e sincronizar informações com o banco de dados" style="padding: 8px 16px; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(197, 168, 92, 0.25);">🔄 Atualizar Dashboard</button>
                         </div>
                     </div>
 
@@ -1366,7 +1366,7 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                             <input type="date" id="dashDateEnd" style="width: 100%; padding: 6px 8px; background: #121216; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff; font-size: 11px;">
                         </div>
                         <div style="display: flex; gap: 8px; align-items: flex-end;">
-                            <button type="button" class="btn btn-gold btn-xs" id="btnRefreshDashboard" title="Recarregar e sincronizar informações com o banco de dados" style="padding: 7px 12px; font-size: 15px; font-weight: 700; height: 34px; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center;">🔄</button>
+                            <button type="button" class="btn btn-gold btn-xs" id="btnRefreshDashboard" title="Recarregar e sincronizar informações com o banco de dados" style="padding: 7px 12px; font-weight: 700; height: 34px; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;">🔄 Atualizar</button>
                             <button type="button" class="btn btn-outline-gold btn-xs" id="btnPrintSelectedDash" style="padding: 7px 14px; font-weight: 700; height: 34px; white-space: nowrap;">📄 Gerar PDF</button>
                             <button type="button" class="btn btn-danger btn-xs" id="btnClearDashFilter" title="Limpar Filtros" style="padding: 7px 12px; font-weight: 700; height: 34px; white-space: nowrap;">🧹 Limpar</button>
                         </div>
@@ -1454,6 +1454,7 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
                             <p>Valide as O.S. lançadas, realize a conciliação financeira de pagamento e gere relatórios.</p>
                         </div>
                         <div style="display: flex; gap: 10px; align-items: center;">
+                            <button class="btn btn-outline-gold btn-sm" id="btnRefreshPremios" title="Recarregar e sincronizar O.S. com o banco de dados" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 15px; font-weight: 700; height: 36px;"><span style="font-size:12px;">🔄</span> Atualizar O.S.</button>
                             <button class="btn btn-success btn-sm" id="btnExportPremios">📊 Exportar Financeiro (CSV)</button>
                         </div>
                     </div>
@@ -1707,6 +1708,6 @@ create policy "Permitir delete em config_geral_personality" on config_geral_pers
             </form>
         </div>
     </div>
-    <script src="admin.js?v=4.12"></script>
+    <script src="admin.js?v=4.14"></script>
 </body>
 </html>

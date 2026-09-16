@@ -3690,7 +3690,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const matchedSales = (g.sales || []).filter(s => checkedIds.has(String(s.id)));
                     if (matchedSales.length > 0) {
                         let pts = 0;
-                        matchedSales.forEach(s => { pts += (Number(s.pontos_lente || 0) + Number(s.pontos_ar || 0)); });
+                        matchedSales.forEach(s => { pts += getSalePoints(s).totalPts; });
                         customGroups.push({
                             ...g,
                             sales: matchedSales,
@@ -3735,7 +3735,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const matchedSales = (g.sales || []).filter(s => checkedIds.has(String(s.id)));
                     if (matchedSales.length > 0) {
                         let pts = 0;
-                        matchedSales.forEach(s => { pts += (Number(s.pontos_lente || 0) + Number(s.pontos_ar || 0)); });
+                        matchedSales.forEach(s => { pts += getSalePoints(s).totalPts; });
                         customGroups.push({
                             ...g,
                             sales: matchedSales,
@@ -3810,6 +3810,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnClearDashFilter = document.getElementById('btnClearDashFilter');
     const btnRefreshDashboard = document.getElementById('btnRefreshDashboard');
     const btnRefreshDashboardHeader = document.getElementById('btnRefreshDashboardHeader');
+    const btnRefreshPremios = document.getElementById('btnRefreshPremios');
 
     let lastFilteredDashSales = [];
 
@@ -3853,6 +3854,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 if (response.ok) {
                     allSubmittedSales = await response.json();
+                    if (Array.isArray(allSubmittedSales)) {
+                        try {
+                            localStorage.setItem('personality_local_premios', JSON.stringify(allSubmittedSales));
+                        } catch(e) {}
+                    }
                 } else {
                     throw new Error('Falha ao buscar lançamentos no Supabase.');
                 }
@@ -3895,6 +3901,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (btnRefreshDashboardHeader) {
         btnRefreshDashboardHeader.addEventListener('click', () => handleRefreshDashboard(btnRefreshDashboardHeader));
+    }
+    if (btnRefreshPremios) {
+        btnRefreshPremios.addEventListener('click', () => handleRefreshDashboard(btnRefreshPremios));
     }
 
     if (btnPrintSelectedDash) {
@@ -4078,6 +4087,54 @@ document.addEventListener('DOMContentLoaded', () => {
         renderDashboardPremios();
     }
 
+    function getSalePoints(sale) {
+        if (!sale) return { ptsLente: 0, ptsAr: 0, totalPts: 0 };
+        let ptsLente = Number(sale.pontos_lente) || 0;
+        let ptsAr = Number(sale.pontos_ar) || 0;
+
+        // Se pontos_lente veio corrompido com o valor em R$ da lente (ex: > 100), ou zerado com lente informada
+        if (ptsLente > 100 || ptsLente <= 0) {
+            let matched = false;
+            if (sale.lente_familia && typeof adminPremiosConfig !== 'undefined' && Array.isArray(adminPremiosConfig)) {
+                const conf = adminPremiosConfig.find(p => p.categoria === 'lente' && p.nome === sale.lente_familia);
+                if (conf && Number(conf.pontos) > 0 && Number(conf.pontos) <= 100) {
+                    ptsLente = Number(conf.pontos);
+                    matched = true;
+                }
+            }
+            if (!matched && ptsLente > 100) {
+                // Heurística pelo nome da família do produto
+                const u = (sale.lente_familia || '').toUpperCase();
+                if (u.startsWith('PR ') || u.startsWith('PR-') || u.startsWith('OC ') || u.includes('OFFICE') || u.includes('MULTI') || u.includes('PROGRESSIV') || u.includes('GOLD') || u.includes('TECNO') || u.includes('MAXVISION') || u.includes('DIGITAL HD') || u.includes('PREMIUM')) {
+                    ptsLente = 30;
+                } else if (u.startsWith('LP ') || u.startsWith('LP-') || u.startsWith('VS ') || u.startsWith('VS-') || u.includes('PRONTA') || u.includes('VISAO') || u.includes('VISÃO') || u.includes('ESTOQUE') || u.includes('MONOFOCAL')) {
+                    ptsLente = 15;
+                } else {
+                    ptsLente = 30;
+                }
+            }
+        }
+
+        // Se pontos_ar veio corrompido (ex: > 50)
+        if (ptsAr > 50) {
+            let matchedAr = false;
+            if (sale.ar_familia && typeof adminPremiosConfig !== 'undefined' && Array.isArray(adminPremiosConfig)) {
+                const confAr = adminPremiosConfig.find(p => p.categoria === 'antirreflexo' && p.nome === sale.ar_familia);
+                if (confAr && Number(confAr.pontos) >= 0 && Number(confAr.pontos) <= 50) {
+                    ptsAr = Number(confAr.pontos);
+                    matchedAr = true;
+                }
+            }
+            if (!matchedAr) ptsAr = 0;
+        }
+
+        return {
+            ptsLente: ptsLente,
+            ptsAr: ptsAr,
+            totalPts: ptsLente + ptsAr
+        };
+    }
+
     function getSaleRevenue(sale) {
         let valLente = Number(sale.valor_lente) || 0;
         let valAr = Number(sale.valor_ar) || 0;
@@ -4257,7 +4314,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const arsMap = {};
 
         filtered.forEach(sale => {
-            const pts = (Number(sale.pontos_lente) || 0) + (Number(sale.pontos_ar) || 0);
+            const pts = getSalePoints(sale).totalPts;
             const saleRev = getSaleRevenue(sale);
 
             totalPoints += pts;
@@ -4442,7 +4499,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let ptsTotalPago = 0, countTotalPago = 0;
 
         allSubmittedSales.forEach(sale => {
-            const salePts = Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0);
+            const salePts = getSalePoints(sale).totalPts;
             if (sale.status === 'Pendente') {
                 ptsPendente += salePts;
                 countPendente++;
@@ -4574,9 +4631,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     };
                 }
                 
-                const ptsLente = Number(sale.pontos_lente || 0);
-                const ptsAr = Number(sale.pontos_ar || 0);
-                const pts = ptsLente + ptsAr;
+                const ptsInfo = getSalePoints(sale);
+                const ptsLente = ptsInfo.ptsLente;
+                const ptsAr = ptsInfo.ptsAr;
+                const pts = ptsInfo.totalPts;
                 const valProdutos = Number(sale.valor_lente || 0) + Number(sale.valor_ar || 0);
 
                 sellerGroupsMap[vKey].sales.push(sale);
@@ -4701,7 +4759,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     let subRowsHtml = '';
                     group.sales.forEach(sale => {
                         const sValProdutos = Number(sale.valor_lente || 0) + Number(sale.valor_ar || 0);
-                        const sPts = Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0);
+                        const sPtsInfo = getSalePoints(sale);
+                        const sPts = sPtsInfo.totalPts;
                         const sCash = sPts * valorPontoConfig;
                         const isChecked = selectedPremioIds.has(String(sale.id));
 
@@ -4734,8 +4793,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <div style="font-size: 10.5px; color: var(--text-muted);">Data: ${dtFormatada}</div>
                                 </td>
                                 <td style="padding: 8px 10px; font-size: 11.5px; text-align: left;">
-                                    <div>${escapeHtml(sale.lente_familia || 'Lente Padrão')} <small style="color:var(--gold-light);">(${Number(sale.pontos_lente || 0)} Ptos)</small></div>
-                                    ${sale.ar_familia ? `<div style="color: var(--text-muted); font-size: 10.5px;">+ ${escapeHtml(sale.ar_familia)} (${Number(sale.pontos_ar || 0)} Ptos)</div>` : ''}
+                                    <div>${escapeHtml(sale.lente_familia || 'Lente Padrão')} <small style="color:var(--gold-light);">(${sPtsInfo.ptsLente} Ptos)</small></div>
+                                    ${sale.ar_familia ? `<div style="color: var(--text-muted); font-size: 10.5px;">+ ${escapeHtml(sale.ar_familia)} (${sPtsInfo.ptsAr} Ptos)</div>` : ''}
                                 </td>
                                 <td style="padding: 8px 10px; font-size: 12px; text-align: center;">
                                     <strong style="color: var(--gold-light);">${sPts} Pts</strong>
@@ -4829,8 +4888,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             } else if (premiosSortField === 'points') {
                 filteredSales.sort((a, b) => {
-                    const ptsA = Number(a.pontos_lente || 0) + Number(a.pontos_ar || 0);
-                    const ptsB = Number(b.pontos_lente || 0) + Number(b.pontos_ar || 0);
+                    const ptsA = getSalePoints(a).totalPts;
+                    const ptsB = getSalePoints(b).totalPts;
                     return premiosSortDir === 'asc' ? (ptsA - ptsB) : (ptsB - ptsA);
                 });
             } else if (premiosSortField === 'status') {
@@ -4867,7 +4926,8 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 paginatedSales.forEach(sale => {
                     const totalVal = Number(sale.valor_lente || 0) + Number(sale.valor_ar || 0);
-                    const totalPts = Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0);
+                    const ptsInfo = getSalePoints(sale);
+                    const totalPts = ptsInfo.totalPts;
                     const cashReward = totalPts * valorPontoConfig;
                     const isChecked = selectedPremioIds.has(String(sale.id));
 
@@ -4914,8 +4974,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; font-size: 11.5px; text-align: left;">
                                 <div><strong style="color: var(--gold-light);">Loja / Ótica:</strong><br>${escapeHtml(sale.loja || 'N/A')}</div>
                                 <div><strong style="color: var(--gold-light);">Paciente / Cliente:</strong><br>${escapeHtml(sale.cliente_nome || 'N/A')}</div>
-                                <div><strong style="color: var(--gold-light);">Família da Lente:</strong><br>${escapeHtml(sale.lente_familia || 'N/A')} <span style="color:var(--text-muted);">(${Number(sale.pontos_lente || 0)} Ptos)</span></div>
-                                <div><strong style="color: var(--gold-light);">Tratamento Antirreflexo:</strong><br>${escapeHtml(sale.ar_familia || 'N/A')} <span style="color:var(--text-muted);">(${Number(sale.pontos_ar || 0)} Ptos)</span></div>
+                                <div><strong style="color: var(--gold-light);">Família da Lente:</strong><br>${escapeHtml(sale.lente_familia || 'N/A')} <span style="color:var(--text-muted);">(${ptsInfo.ptsLente} Ptos)</span></div>
+                                <div><strong style="color: var(--gold-light);">Tratamento Antirreflexo:</strong><br>${escapeHtml(sale.ar_familia || 'N/A')} <span style="color:var(--text-muted);">(${ptsInfo.ptsAr} Ptos)</span></div>
                                 <div><strong style="color: var(--gold-light);">Total Produtos:</strong><br><span style="color: #fff; font-weight: 600;">R$ ${totalVal.toFixed(2)}</span></div>
                                 <div><strong style="color: var(--gold-light);">Prêmio Calculado:</strong><br><span style="color: #10b981; font-weight: 700;">R$ ${cashReward.toFixed(2)}</span></div>
                                 <div><strong style="color: var(--gold-light);">Data do Lançamento:</strong><br>${sale.created_at ? new Date(sale.created_at).toLocaleString('pt-BR') : 'N/A'}</div>
@@ -4986,7 +5046,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     };
                 }
 
-                const pts = Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0);
+                const pts = getSalePoints(sale).totalPts;
                 apuracaoGroupsMap[vKey].sales.push(sale);
                 apuracaoGroupsMap[vKey].total_pontos += pts;
                 if (!apuracaoGroupsMap[vKey].loja && sale.loja) apuracaoGroupsMap[vKey].loja = sale.loja;
@@ -5110,7 +5170,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 let subRowsHtml = '';
                 group.sales.forEach(sale => {
                     const sValProdutos = Number(sale.valor_lente || 0) + Number(sale.valor_ar || 0);
-                    const sPts = Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0);
+                    const sPtsInfo = getSalePoints(sale);
+                    const sPts = sPtsInfo.totalPts;
                     const sCash = sPts * valorPontoConfig;
                     const isChecked = true;
 
@@ -5142,8 +5203,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div style="font-size: 10.5px; color: var(--text-muted);">Data: ${dtFormatada}</div>
                             </td>
                             <td style="padding: 8px 10px; font-size: 11.5px; text-align: left;">
-                                <div>${escapeHtml(sale.lente_familia || 'Lente Padrão')} <small style="color:var(--gold-light);">(${Number(sale.pontos_lente || 0)} Pts)</small></div>
-                                ${sale.ar_familia ? `<div style="color: var(--text-muted); font-size: 10.5px;">+ ${escapeHtml(sale.ar_familia)} (${Number(sale.pontos_ar || 0)} Pts)</div>` : ''}
+                                <div>${escapeHtml(sale.lente_familia || 'Lente Padrão')} <small style="color:var(--gold-light);">(${sPtsInfo.ptsLente} Pts)</small></div>
+                                ${sale.ar_familia ? `<div style="color: var(--text-muted); font-size: 10.5px;">+ ${escapeHtml(sale.ar_familia)} (${sPtsInfo.ptsAr} Pts)</div>` : ''}
                             </td>
                             <td style="padding: 8px 10px; font-size: 12px; text-align: center;">
                                 <strong style="color: var(--gold-light);">${sPts} Pts</strong>
@@ -5223,7 +5284,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         status: 'Pago'
                     };
                 }
-                pagosPorVendedor[vKey].total_pontos += (Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0));
+                pagosPorVendedor[vKey].total_pontos += getSalePoints(sale).totalPts;
                 if (!pagosPorVendedor[vKey].loja && sale.loja) pagosPorVendedor[vKey].loja = sale.loja;
             }
         });
@@ -5244,7 +5305,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         status: sale.status || 'Pago'
                     };
                 }
-                todosHistPorVendedor[vKey].total_pontos += (Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0));
+                todosHistPorVendedor[vKey].total_pontos += getSalePoints(sale).totalPts;
                 if (!todosHistPorVendedor[vKey].loja && sale.loja) todosHistPorVendedor[vKey].loja = sale.loja;
             });
             allConsolidadoPagosRows = Object.values(todosHistPorVendedor);
@@ -5319,7 +5380,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const arsMap = {};
 
         items.forEach(sale => {
-            const pts = (Number(sale.pontos_lente) || 0) + (Number(sale.pontos_ar) || 0);
+            const pts = getSalePoints(sale).totalPts;
             const saleRev = getSaleRevenue(sale);
 
             totalPoints += pts;
@@ -5594,7 +5655,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let totalGeralCash = 0;
 
         items.forEach(sale => {
-            const pts = Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0);
+            const pts = getSalePoints(sale).totalPts;
             totalGeralPts += pts;
             totalGeralCash += (pts * valorPontoConfig);
         });
@@ -5650,7 +5711,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </thead>
                     <tbody>
                         ${items.map(sale => {
-                            const pts = Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0);
+                            const pts = getSalePoints(sale).totalPts;
                             const cash = pts * valorPontoConfig;
                             const formattedDate = (sale.created_at || sale.data_venda) ? new Date(sale.created_at || sale.data_venda).toLocaleDateString('pt-BR') : 'N/A';
                             let statusLabel = sale.status;
@@ -5716,9 +5777,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let totalCash = 0;
 
         const salesHtml = group.sales.map((sale, idx) => {
-            const ptsLente = Number(sale.pontos_lente || 0);
-            const ptsAr = Number(sale.pontos_ar || 0);
-            const pts = ptsLente + ptsAr;
+            const pts = getSalePoints(sale).totalPts;
             const cash = pts * valorPontoConfig;
             totalPts += pts;
             totalCash += cash;
@@ -5959,7 +6018,7 @@ document.addEventListener('DOMContentLoaded', () => {
         items.forEach(group => {
             const sales = group.sales || [];
             sales.forEach(sale => {
-                const pts = Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0);
+                const pts = getSalePoints(sale).totalPts;
                 totalGeralPts += pts;
                 totalGeralCash += (pts * valorPontoConfig);
                 totalGeralOS++;
@@ -5975,7 +6034,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let groupCash = 0;
             const salesRowsHtml = sales.map(sale => {
                 const sVal = Number(sale.valor_lente || 0) + Number(sale.valor_ar || 0);
-                const sPts = Number(sale.pontos_lente || 0) + Number(sale.pontos_ar || 0);
+                const sPts = getSalePoints(sale).totalPts;
                 const sCash = sPts * valorPontoConfig;
                 groupPts += sPts;
                 groupCash += sCash;
@@ -6509,7 +6568,7 @@ document.addEventListener('DOMContentLoaded', () => {
             csvContent += "Vendedor;Loja;OS;Cliente;Lente;Antirreflexo;Pontos_Total;Premio_Total_R$;Valor_Produtos_R$;Status;Data_Cadastro\n";
             
             allSubmittedSales.forEach(s => {
-                const totPts = Number(s.pontos_lente || 0) + Number(s.pontos_ar || 0);
+                const totPts = getSalePoints(s).totalPts;
                 const totVal = Number(s.valor_lente || 0) + Number(s.valor_ar || 0);
                 const cashReward = totPts * valorPontoConfig;
                 
