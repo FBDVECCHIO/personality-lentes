@@ -595,6 +595,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // -------------------------------------------------------------
+    // Toggle de visibilidade de senha (Universal)
+    // -------------------------------------------------------------
+    document.querySelectorAll('.password-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const wrapper = btn.closest('.password-wrapper');
+            if (!wrapper) return;
+            const input = wrapper.querySelector('input');
+            if (!input) return;
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = '🔒';
+            } else {
+                input.type = 'password';
+                btn.textContent = '👁️';
+            }
+        });
+    });
+
+    // Helper para formatar CPF
+    function formatCpf(val) {
+        const digits = (val || '').replace(/\D/g, '');
+        if (digits.length === 11) {
+            return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+        }
+        return val;
+    }
+
+    // -------------------------------------------------------------
     // Cadastro de Vendedor (Status pendente por padrão)
     // -------------------------------------------------------------
     if (vendedorRegisterForm) {
@@ -602,10 +630,12 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
 
             const nameVal = vendedorRegName.value.trim();
-            const cpfVal = vendedorRegCpf.value.trim();
+            const rawCpfVal = vendedorRegCpf.value.trim();
+            const cpfDigits = rawCpfVal.replace(/\D/g, '');
+            const cpfVal = cpfDigits.length === 11 ? formatCpf(cpfDigits) : rawCpfVal;
             const storeVal = vendedorRegStore.value;
             const whatsappVal = vendedorRegWhatsapp.value.trim();
-            const emailVal = vendedorRegEmail.value.trim();
+            const emailVal = vendedorRegEmail.value.trim().toLowerCase();
             const userVal = vendedorRegUser.value.trim().toLowerCase();
             const passVal = vendedorRegPass.value.trim();
 
@@ -618,7 +648,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showError(vendedorRegName, document.getElementById('vendedorRegNameError'), false);
             }
 
-            if (cpfVal.replace(/\D/g, '').length !== 11) {
+            if (cpfDigits.length !== 11) {
                 showError(vendedorRegCpf, document.getElementById('vendedorRegCpfError'), true);
                 isValid = false;
             } else {
@@ -689,8 +719,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
                     
-                    // Verifica se o usuário já existe
-                    const checkRes = await fetch(`${cleanUrl}/rest/v1/${vendTable}?usuario=eq.${encodeURIComponent(userVal)}`, {
+                    // Verifica se o usuário, email ou CPF já existe
+                    const checkOr = `or=(usuario.ilike.${encodeURIComponent(userVal)},email.ilike.${encodeURIComponent(emailVal)},cpf.eq.${encodeURIComponent(cpfVal)},cpf.eq.${encodeURIComponent(cpfDigits)})`;
+                    const checkRes = await fetch(`${cleanUrl}/rest/v1/${vendTable}?${checkOr}`, {
                         method: 'GET',
                         headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
                     });
@@ -698,7 +729,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const existing = await checkRes.json();
                         if (existing && existing.length > 0) {
                             showError(vendedorRegUser, document.getElementById('vendedorRegUserError'), true);
-                            throw new Error('Usuário já cadastrado.');
+                            throw new Error('Usuário, CPF ou E-mail já cadastrado.');
                         }
                     }
 
@@ -725,7 +756,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 } catch (error) {
                     console.error(error);
-                    if (error.message !== 'Usuário já cadastrado.') {
+                    if (error.message.includes('já cadastrado')) {
+                        alert(error.message);
+                    } else {
                         saveVendedorLocally(vendedorData);
                         alert('Cadastro salvo localmente. Aguarde a liberação do administrador no painel master.');
                         vendedorRegisterForm.reset();
@@ -740,12 +773,13 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 setTimeout(() => {
                     const localVends = JSON.parse(localStorage.getItem('personality_local_vendedores')) || [];
-                    const duplicate = localVends.find(v => v.usuario === userVal);
+                    const duplicate = localVends.find(v => (v.usuario || '').toLowerCase() === userVal || (v.email || '').toLowerCase() === emailVal || (v.cpf || '').replace(/\D/g, '') === cpfDigits);
                     if (duplicate) {
                         showError(vendedorRegUser, document.getElementById('vendedorRegUserError'), true);
                         btn.disabled = false;
                         if (spinner) spinner.style.display = 'none';
                         btn.querySelector('.btn-text').textContent = 'Realizar Cadastro';
+                        alert('Usuário, CPF ou E-mail já cadastrado localmente.');
                         return;
                     }
                     saveVendedorLocally(vendedorData);
@@ -756,7 +790,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     btn.disabled = false;
                     if (spinner) spinner.style.display = 'none';
                     btn.querySelector('.btn-text').textContent = 'Realizar Cadastro';
-                }, 1000);
+                }, 800);
             }
         });
     }
@@ -772,25 +806,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // -------------------------------------------------------------
-    // Login do Vendedor com Verificação de Aprovação
+    // Login do Vendedor com Múltiplos Identificadores & Verificação de Aprovação
     // -------------------------------------------------------------
     if (vendedorLoginForm) {
         vendedorLoginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const userVal = document.getElementById('vendedorUsername').value.trim().toLowerCase();
+            const rawUserVal = document.getElementById('vendedorUsername').value.trim();
             const passVal = document.getElementById('vendedorPassword').value.trim();
 
             const spinner = document.getElementById('vendedorLoginSpinner');
             const btn = document.getElementById('btnVendedorLogin');
             const errorMsg = document.getElementById('vendedorLoginError');
 
-            if (!userVal || !passVal) return;
+            if (!rawUserVal || !passVal) {
+                if (errorMsg) {
+                    errorMsg.textContent = 'Por favor, preencha o usuário/CPF/e-mail e a senha.';
+                    errorMsg.style.display = 'block';
+                }
+                return;
+            }
 
             btn.disabled = true;
             if (spinner) spinner.style.display = 'inline-block';
-            errorMsg.style.display = 'none';
-            approvalWarningBox.style.display = 'none';
+            if (errorMsg) errorMsg.style.display = 'none';
+            if (approvalWarningBox) approvalWarningBox.style.display = 'none';
 
             const url = getSupabaseUrl();
             const key = getSupabaseKey();
@@ -799,39 +839,98 @@ document.addEventListener('DOMContentLoaded', () => {
             if (url && key) {
                 try {
                     const cleanUrl = url.replace(/\/$/, "").replace(/\/rest\/v1$/, "");
-                    const endpoint = `${cleanUrl}/rest/v1/${vendTable}?usuario=eq.${encodeURIComponent(userVal)}&senha=eq.${encodeURIComponent(passVal)}&limit=1`;
+                    const cleanDigits = rawUserVal.replace(/\D/g, '');
+                    const isCpfLike = cleanDigits.length >= 9 && cleanDigits.length <= 11 && !rawUserVal.includes('@');
+                    const formattedCpf = cleanDigits.length === 11 ? formatCpf(cleanDigits) : '';
+
+                    const orFilters = [];
+                    if (rawUserVal.includes('@')) {
+                        orFilters.push(`email.ilike.${encodeURIComponent(rawUserVal)}`);
+                        orFilters.push(`usuario.ilike.${encodeURIComponent(rawUserVal)}`);
+                    } else if (isCpfLike) {
+                        if (formattedCpf) orFilters.push(`cpf.eq.${encodeURIComponent(formattedCpf)}`);
+                        orFilters.push(`cpf.eq.${encodeURIComponent(cleanDigits)}`);
+                        orFilters.push(`usuario.ilike.${encodeURIComponent(rawUserVal)}`);
+                    } else {
+                        orFilters.push(`usuario.ilike.${encodeURIComponent(rawUserVal)}`);
+                        orFilters.push(`email.ilike.${encodeURIComponent(rawUserVal)}`);
+                    }
+
+                    const endpoint = `${cleanUrl}/rest/v1/${vendTable}?or=(${orFilters.join(',')})&limit=10`;
                     
                     const response = await fetch(endpoint, {
                         method: 'GET',
                         headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
                     });
 
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data && data.length > 0) {
-                            const v = data[0];
-                            if (v.aprovado === true || v.aprovado === "true") {
-                                loginVendedorSuccess(v);
-                            } else {
-                                approvalWarningBox.style.display = 'block';
-                            }
-                        } else {
-                            throw new Error('Credenciais incorretas.');
-                        }
-                    } else {
-                        throw new Error('Erro na API.');
+                    if (!response.ok) {
+                        throw new Error('Falha na resposta do servidor.');
                     }
+
+                    const matches = await response.json();
+                    if (!matches || matches.length === 0) {
+                        const matchedLocal = checkLocalVendedorAuth(rawUserVal, passVal);
+                        if (matchedLocal) {
+                            const isApp = matchedLocal.aprovado === true || matchedLocal.aprovado === "true" || matchedLocal.status === 'ativo' || matchedLocal.status === 'aprovado';
+                            if (isApp) {
+                                loginVendedorSuccess(matchedLocal);
+                            } else {
+                                if (approvalWarningBox) approvalWarningBox.style.display = 'block';
+                            }
+                            return;
+                        }
+                        if (errorMsg) {
+                            errorMsg.textContent = 'Usuário, CPF ou E-mail não encontrado.';
+                            errorMsg.style.display = 'block';
+                        }
+                        return;
+                    }
+
+                    // Encontra o registro que melhor corresponde ao login
+                    const user = matches.find(u => {
+                        const uUser = (u.usuario || '').toLowerCase().trim();
+                        const uEmail = (u.email || '').toLowerCase().trim();
+                        const uCpfDigits = (u.cpf || '').replace(/\D/g, '');
+                        const uCpfFormatted = (u.cpf || '').trim();
+                        const inputLower = rawUserVal.toLowerCase();
+
+                        return uUser === inputLower ||
+                               uEmail === inputLower ||
+                               uCpfFormatted === rawUserVal ||
+                               (cleanDigits.length >= 9 && uCpfDigits === cleanDigits);
+                    }) || matches[0];
+
+                    const passMatched = (user.senha || '').trim() === passVal;
+                    if (!passMatched) {
+                        if (errorMsg) {
+                            errorMsg.textContent = 'Senha incorreta para esta conta. Verifique sua senha e tente novamente.';
+                            errorMsg.style.display = 'block';
+                        }
+                        return;
+                    }
+
+                    const isApproved = user.aprovado === true || user.aprovado === "true" || user.status === 'ativo' || user.status === 'aprovado';
+                    if (isApproved) {
+                        loginVendedorSuccess(user);
+                    } else {
+                        if (approvalWarningBox) approvalWarningBox.style.display = 'block';
+                    }
+
                 } catch (error) {
-                    console.error(error);
-                    const matchedLocal = checkLocalVendedorAuth(userVal, passVal);
+                    console.error('[VENDEDOR-LOGIN]:', error);
+                    const matchedLocal = checkLocalVendedorAuth(rawUserVal, passVal);
                     if (matchedLocal) {
-                        if (matchedLocal.aprovado === true || matchedLocal.aprovado === "true") {
+                        const isApp = matchedLocal.aprovado === true || matchedLocal.aprovado === "true" || matchedLocal.status === 'ativo' || matchedLocal.status === 'aprovado';
+                        if (isApp) {
                             loginVendedorSuccess(matchedLocal);
                         } else {
-                            approvalWarningBox.style.display = 'block';
+                            if (approvalWarningBox) approvalWarningBox.style.display = 'block';
                         }
                     } else {
-                        errorMsg.style.display = 'block';
+                        if (errorMsg) {
+                            errorMsg.textContent = 'Erro ao validar login ou credenciais incorretas.';
+                            errorMsg.style.display = 'block';
+                        }
                     }
                 } finally {
                     btn.disabled = false;
@@ -839,26 +938,46 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else {
                 setTimeout(() => {
-                    const matchedLocal = checkLocalVendedorAuth(userVal, passVal);
+                    const matchedLocal = checkLocalVendedorAuth(rawUserVal, passVal);
                     if (matchedLocal) {
-                        if (matchedLocal.aprovado === true || matchedLocal.aprovado === "true") {
+                        const isApp = matchedLocal.aprovado === true || matchedLocal.aprovado === "true" || matchedLocal.status === 'ativo' || matchedLocal.status === 'aprovado';
+                        if (isApp) {
                             loginVendedorSuccess(matchedLocal);
                         } else {
-                            approvalWarningBox.style.display = 'block';
+                            if (approvalWarningBox) approvalWarningBox.style.display = 'block';
                         }
                     } else {
-                        errorMsg.style.display = 'block';
+                        if (errorMsg) {
+                            errorMsg.textContent = 'Usuário ou senha incorretos.';
+                            errorMsg.style.display = 'block';
+                        }
                     }
                     btn.disabled = false;
                     if (spinner) spinner.style.display = 'none';
-                }, 800);
+                }, 400);
             }
         });
     }
 
-    function checkLocalVendedorAuth(user, pass) {
+    function checkLocalVendedorAuth(userInput, pass) {
         const local = JSON.parse(localStorage.getItem('personality_local_vendedores')) || [];
-        return local.find(v => v.usuario === user && v.senha === pass) || null;
+        const rawInput = (userInput || '').trim().toLowerCase();
+        const cleanDigits = rawInput.replace(/\D/g, '');
+
+        return local.find(v => {
+            const vUser = (v.usuario || '').toLowerCase().trim();
+            const vEmail = (v.email || '').toLowerCase().trim();
+            const vCpfDigits = (v.cpf || '').replace(/\D/g, '');
+            const vCpf = (v.cpf || '').trim();
+            const vPass = (v.senha || '').trim();
+
+            const identifierMatch = vUser === rawInput || 
+                                   vEmail === rawInput || 
+                                   vCpf === userInput || 
+                                   (cleanDigits.length >= 9 && vCpfDigits === cleanDigits);
+
+            return identifierMatch && vPass === (pass || '').trim();
+        }) || null;
     }
 
     function loginVendedorSuccess(vendedor) {
@@ -971,6 +1090,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sessionStorage.removeItem('active_vendedor_id');
         sessionStorage.removeItem('active_vendedor_nome');
         sessionStorage.removeItem('active_vendedor_loja');
+        sessionStorage.removeItem('active_vendedor_cpf');
         
         alert('Sessão encerrada automaticamente por inatividade de 2 minutos.');
         checkVendedorSession();
@@ -984,6 +1104,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sessionStorage.removeItem('active_vendedor_id');
             sessionStorage.removeItem('active_vendedor_nome');
             sessionStorage.removeItem('active_vendedor_loja');
+            sessionStorage.removeItem('active_vendedor_cpf');
             checkVendedorSession();
         });
     }

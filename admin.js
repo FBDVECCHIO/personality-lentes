@@ -1446,9 +1446,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             body: JSON.stringify({ senha: cleanPass })
                         });
                         if (response.ok) {
-                            alert('Senha de acesso do vendedor alterada com sucesso!');
+                            member.senha = cleanPass;
+                            updateVendedorPasswordLocally(id, cleanPass);
+                            alert(`Senha de acesso do vendedor ${member.nome} alterada com sucesso!`);
                         } else {
-                            throw new Error('Falha no Supabase.');
+                            const errTxt = await response.text();
+                            throw new Error(errTxt || 'Falha no Supabase.');
                         }
                     } catch (err) {
                         console.error(err);
