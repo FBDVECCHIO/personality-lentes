@@ -2586,19 +2586,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 <meta charset="utf-8">
                 <title>Tabela de Prêmios - Personality Lenses</title>
                 <style>
-                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 30px; color: #1a1a1a; }
-                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #c5a85c; padding-bottom: 15px; margin-bottom: 30px; }
-                    .header h1 { font-size: 24px; color: #c5a85c; margin: 0; text-transform: uppercase; font-weight: 800; }
+                    @page { size: A4 portrait; margin: 12mm 12mm 15mm 12mm; }
+                    * { box-sizing: border-box; }
+                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 0; color: #1a1a1a; margin: 0; background: #fff; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #c5a85c; padding-bottom: 12px; margin-bottom: 20px; break-inside: avoid; page-break-inside: avoid; }
+                    .header h1 { font-size: 22px; color: #c5a85c; margin: 0; text-transform: uppercase; font-weight: 800; }
                     .header span { font-size: 11px; color: #666; }
                     table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-                    th, td { border: 1px solid #ddd; padding: 10px 12px; text-align: left; font-size: 11px; }
+                    thead { display: table-header-group; }
+                    tbody { display: table-row-group; }
+                    tr { break-inside: avoid !important; page-break-inside: avoid !important; }
+                    th, td { border: 1px solid #ddd; padding: 9px 12px; text-align: left; font-size: 11px; }
                     th { background-color: #f5f5f7; color: #333; font-weight: bold; text-transform: uppercase; }
                     tr:nth-child(even) { background-color: #fafafa; }
                     .pts-column { font-weight: bold; color: #c5a85c; }
-                    .footer { margin-top: 40px; font-size: 10px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 15px; }
+                    .footer { margin-top: 30px; font-size: 10px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 12px; break-inside: avoid; page-break-inside: avoid; }
                     @media print {
                         body { padding: 0; }
                         .no-print { display: none; }
+                        .header, .footer, tr { break-inside: avoid !important; page-break-inside: avoid !important; }
                     }
                 </style>
             </head>
@@ -5495,7 +5501,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (type === 'currency') {
                     valFormatted = `R$ ${rawVal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                     if (item.extraInfo) {
-                        detailText = ` <span style="color: #64748b; font-size: 10px; font-weight: normal;">(${escapeHtml(item.extraInfo)})</span>`;
+                        detailText = ` <span style="color: #64748b; font-size: 9.5px; font-weight: normal;">(${escapeHtml(item.extraInfo)})</span>`;
                     }
                 }
 
@@ -5505,13 +5511,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     : 'linear-gradient(90deg, #c5a85c, #e5c060)';
 
                 return `
-                    <div style="margin-bottom: 12px;">
-                        <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; margin-bottom: 4px;">
-                            <span style="font-weight: 600; color: #1e293b;">#${idx + 1} ${escapeHtml(item.name)}${detailText}</span>
-                            <strong style="color: ${valColor}; white-space: nowrap; margin-left: 8px;">${valFormatted}</strong>
+                    <div class="ranking-item">
+                        <div class="ranking-item-header">
+                            <span class="ranking-item-name">#${idx + 1} ${escapeHtml(item.name)}${detailText}</span>
+                            <strong class="ranking-item-val" style="color: ${valColor};">${valFormatted}</strong>
                         </div>
-                        <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
-                            <div style="width: ${pct}%; height: 100%; background: ${barGradient}; border-radius: 3px; -webkit-print-color-adjust: exact; print-color-adjust: exact;"></div>
+                        <div class="ranking-bar-track">
+                            <div class="ranking-bar-fill" style="width: ${pct}%; background: ${barGradient};"></div>
                         </div>
                     </div>
                 `;
@@ -5525,28 +5531,171 @@ document.addEventListener('DOMContentLoaded', () => {
                 <meta charset="utf-8">
                 <title>${title} - Personality Lenses</title>
                 <style>
-                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 30px; color: #1e293b; margin: 0; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #c5a85c; padding-bottom: 14px; margin-bottom: 20px; }
-                    .header h1 { font-size: 22px; color: #c5a85c; margin: 0; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
-                    .header span { font-size: 11px; color: #64748b; font-weight: 500; }
-                    .filters-info { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 18px; margin-bottom: 25px; font-size: 11px; display: flex; gap: 25px; flex-wrap: wrap; }
-                    .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 30px; }
-                    .kpi-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 10px; text-align: center; }
+                    @page {
+                        size: A4 portrait;
+                        margin: 10mm 12mm 12mm 12mm;
+                    }
+                    * {
+                        box-sizing: border-box;
+                    }
+                    body {
+                        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                        padding: 0;
+                        color: #1e293b;
+                        margin: 0;
+                        background: #fff;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
+                    .header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        border-bottom: 3px solid #c5a85c;
+                        padding-bottom: 10px;
+                        margin-bottom: 14px;
+                        break-inside: avoid;
+                        page-break-inside: avoid;
+                    }
+                    .header h1 {
+                        font-size: 20px;
+                        color: #c5a85c;
+                        margin: 0;
+                        text-transform: uppercase;
+                        font-weight: 800;
+                        letter-spacing: 0.5px;
+                    }
+                    .header span {
+                        font-size: 10.5px;
+                        color: #64748b;
+                        font-weight: 500;
+                    }
+                    .filters-info {
+                        background: #f8fafc;
+                        border: 1px solid #e2e8f0;
+                        border-radius: 8px;
+                        padding: 10px 14px;
+                        margin-bottom: 16px;
+                        font-size: 10.5px;
+                        display: flex;
+                        gap: 20px;
+                        flex-wrap: wrap;
+                        break-inside: avoid;
+                        page-break-inside: avoid;
+                    }
+                    .kpi-grid {
+                        display: grid;
+                        grid-template-columns: repeat(6, 1fr);
+                        gap: 10px;
+                        margin-bottom: 18px;
+                        break-inside: avoid !important;
+                        page-break-inside: avoid !important;
+                    }
+                    .kpi-card {
+                        background: #f8fafc;
+                        border: 1px solid #e2e8f0;
+                        border-radius: 8px;
+                        padding: 10px 6px;
+                        text-align: center;
+                        break-inside: avoid !important;
+                        page-break-inside: avoid !important;
+                    }
                     .kpi-card.emerald { background: #f0fdf4; border-color: #bbf7d0; }
                     .kpi-card.gold-card { background: #fefce8; border-color: #fef08a; }
-                    .kpi-title { font-size: 9.5px; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.5px; }
-                    .kpi-value { font-size: 19px; font-weight: 800; color: #0f172a; }
+                    .kpi-title { font-size: 8.5px; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 4px; letter-spacing: 0.5px; }
+                    .kpi-value { font-size: 17px; font-weight: 800; color: #0f172a; }
                     .kpi-value.gold { color: #b48c36; }
                     .kpi-value.emerald-text { color: #059669; }
-                    .rankings-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px; }
-                    .ranking-box { border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+
+                    .rankings-row {
+                        display: grid;
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: 14px;
+                        margin-bottom: 14px;
+                        break-inside: avoid !important;
+                        page-break-inside: avoid !important;
+                        -webkit-column-break-inside: avoid !important;
+                    }
+                    .ranking-box {
+                        border: 1px solid #e2e8f0;
+                        border-radius: 8px;
+                        padding: 12px 14px;
+                        background: #fff;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+                        break-inside: avoid !important;
+                        page-break-inside: avoid !important;
+                        -webkit-column-break-inside: avoid !important;
+                    }
                     .ranking-box.emerald-border { border-left: 3px solid #10b981; }
-                    .ranking-box h3 { margin: 0 0 14px 0; font-size: 12px; text-transform: uppercase; color: #b48c36; font-weight: 800; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+                    .ranking-box h3 {
+                        margin: 0 0 10px 0;
+                        font-size: 11px;
+                        text-transform: uppercase;
+                        color: #b48c36;
+                        font-weight: 800;
+                        border-bottom: 1px solid #f1f5f9;
+                        padding-bottom: 5px;
+                    }
                     .ranking-box.emerald-border h3 { color: #059669; }
-                    .footer { margin-top: 35px; font-size: 10px; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 15px; }
+                    .ranking-item {
+                        margin-bottom: 9px;
+                        break-inside: avoid;
+                        page-break-inside: avoid;
+                    }
+                    .ranking-item:last-child {
+                        margin-bottom: 0;
+                    }
+                    .ranking-item-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: baseline;
+                        font-size: 10.5px;
+                        margin-bottom: 3px;
+                    }
+                    .ranking-item-name {
+                        font-weight: 600;
+                        color: #1e293b;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                        padding-right: 6px;
+                    }
+                    .ranking-item-val {
+                        white-space: nowrap;
+                        margin-left: 6px;
+                        font-size: 10.5px;
+                    }
+                    .ranking-bar-track {
+                        width: 100%;
+                        height: 5px;
+                        background: #e2e8f0;
+                        border-radius: 3px;
+                        overflow: hidden;
+                    }
+                    .ranking-bar-fill {
+                        height: 100%;
+                        border-radius: 3px;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    .footer {
+                        margin-top: 20px;
+                        font-size: 9px;
+                        color: #94a3b8;
+                        text-align: center;
+                        border-top: 1px solid #e2e8f0;
+                        padding-top: 10px;
+                        break-inside: avoid;
+                        page-break-inside: avoid;
+                    }
                     @media print {
-                        body { padding: 15px; }
+                        body { padding: 0; }
                         .no-print { display: none; }
+                        .header, .filters-info, .kpi-grid, .kpi-card, .rankings-row, .ranking-box, .ranking-item, .footer {
+                            break-inside: avoid !important;
+                            page-break-inside: avoid !important;
+                            -webkit-column-break-inside: avoid !important;
+                        }
                     }
                 </style>
             </head>
@@ -5597,36 +5746,42 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
 
-                <!-- Os 6 Rankings com Gráficos / Barras de Desempenho -->
-                <div class="rankings-grid">
-                    <div class="ranking-box">
-                        <h3>🏆 Ranking de Vendedores (Pontos)</h3>
-                        ${renderRankingHtml(sellersList, 'points')}
+                <!-- Os 6 Rankings com Gráficos / Barras de Desempenho agrupados em Linhas sem quebra -->
+                <div class="rankings-container">
+                    <!-- Linha 1: Ranking Vendedores & Lojas -->
+                    <div class="rankings-row">
+                        <div class="ranking-box">
+                            <h3>🏆 Ranking de Vendedores (Pontos)</h3>
+                            ${renderRankingHtml(sellersList, 'points')}
+                        </div>
+                        <div class="ranking-box">
+                            <h3>🏪 Ranking de Lojas (Pontos)</h3>
+                            ${renderRankingHtml(storesList, 'points')}
+                        </div>
                     </div>
 
-                    <div class="ranking-box">
-                        <h3>🏪 Ranking de Lojas (Pontos)</h3>
-                        ${renderRankingHtml(storesList, 'points')}
+                    <!-- Linha 2: Lentes Mais Vendidas & Antirreflexo -->
+                    <div class="rankings-row">
+                        <div class="ranking-box">
+                            <h3>👓 Lentes Mais Vendidas</h3>
+                            ${renderRankingHtml(lensesList, 'sales')}
+                        </div>
+                        <div class="ranking-box">
+                            <h3>✨ Tratamentos Antirreflexo</h3>
+                            ${renderRankingHtml(arsList, 'sales')}
+                        </div>
                     </div>
 
-                    <div class="ranking-box">
-                        <h3>👓 Lentes Mais Vendidas</h3>
-                        ${renderRankingHtml(lensesList, 'sales')}
-                    </div>
-
-                    <div class="ranking-box">
-                        <h3>✨ Tratamentos Antirreflexo</h3>
-                        ${renderRankingHtml(arsList, 'sales')}
-                    </div>
-
-                    <div class="ranking-box emerald-border">
-                        <h3>💰 Ticket Médio por Vendedor</h3>
-                        ${renderRankingHtml(sellersTicketList, 'currency')}
-                    </div>
-
-                    <div class="ranking-box emerald-border">
-                        <h3>🏬 Ticket Médio por Loja (Ótica)</h3>
-                        ${renderRankingHtml(storesTicketList, 'currency')}
+                    <!-- Linha 3: Ticket Médio por Vendedor & Loja -->
+                    <div class="rankings-row">
+                        <div class="ranking-box emerald-border">
+                            <h3>💰 Ticket Médio por Vendedor</h3>
+                            ${renderRankingHtml(sellersTicketList, 'currency')}
+                        </div>
+                        <div class="ranking-box emerald-border">
+                            <h3>🏬 Ticket Médio por Loja (Ótica)</h3>
+                            ${renderRankingHtml(storesTicketList, 'currency')}
+                        </div>
                     </div>
                 </div>
 
@@ -5670,21 +5825,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 <meta charset="utf-8">
                 <title>${title} - Personality Lenses</title>
                 <style>
-                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 30px; color: #1a1a1a; }
-                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #c5a85c; padding-bottom: 15px; margin-bottom: 25px; }
-                    .header h1 { font-size: 22px; color: #c5a85c; margin: 0; text-transform: uppercase; font-weight: 800; }
+                    @page { size: A4 portrait; margin: 12mm 12mm 15mm 12mm; }
+                    * { box-sizing: border-box; }
+                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 0; color: #1a1a1a; margin: 0; background: #fff; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #c5a85c; padding-bottom: 12px; margin-bottom: 20px; break-inside: avoid; page-break-inside: avoid; }
+                    .header h1 { font-size: 20px; color: #c5a85c; margin: 0; text-transform: uppercase; font-weight: 800; }
                     .header span { font-size: 11px; color: #666; }
                     table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    thead { display: table-header-group; }
+                    tbody { display: table-row-group; }
+                    tr { break-inside: avoid !important; page-break-inside: avoid !important; }
                     th, td { border: 1px solid #ddd; padding: 8px 10px; text-align: left; font-size: 11px; }
                     th { background-color: #f5f5f7; color: #333; font-weight: bold; text-transform: uppercase; }
                     tr:nth-child(even) { background-color: #fafafa; }
                     .pts-column { font-weight: bold; color: #c5a85c; }
                     .cash-column { font-weight: bold; color: #10b981; }
-                    .summary-box { display: flex; justify-content: flex-end; gap: 20px; margin-top: 20px; padding: 12px 15px; background: #f9f9f9; border: 1px solid #eee; border-radius: 6px; font-size: 12px; font-weight: bold; }
-                    .footer { margin-top: 30px; font-size: 10px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 15px; }
+                    .summary-box { display: flex; justify-content: flex-end; gap: 20px; margin-top: 20px; padding: 12px 15px; background: #f9f9f9; border: 1px solid #eee; border-radius: 6px; font-size: 12px; font-weight: bold; break-inside: avoid !important; page-break-inside: avoid !important; }
+                    .footer { margin-top: 25px; font-size: 10px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 12px; break-inside: avoid; page-break-inside: avoid; }
                     @media print {
                         body { padding: 0; }
                         .no-print { display: none; }
+                        .header, .footer, .summary-box, tr { break-inside: avoid !important; page-break-inside: avoid !important; }
                     }
                 </style>
             </head>
@@ -5809,22 +5970,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 <meta charset="utf-8">
                 <title>Extrato de Prêmios - ${escapeHtml(group.vendedor_nome)} - Personality Lenses</title>
                 <style>
-                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 30px; color: #1a1a1a; }
-                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #c5a85c; padding-bottom: 15px; margin-bottom: 20px; }
+                    @page { size: A4 portrait; margin: 12mm 12mm 15mm 12mm; }
+                    * { box-sizing: border-box; }
+                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 0; color: #1a1a1a; margin: 0; background: #fff; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #c5a85c; padding-bottom: 12px; margin-bottom: 20px; break-inside: avoid; page-break-inside: avoid; }
                     .header h1 { font-size: 20px; color: #c5a85c; margin: 0; text-transform: uppercase; font-weight: 800; }
-                    .seller-card { background: #fdfbf7; border: 1px solid #ebd9a5; border-radius: 6px; padding: 15px 20px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; font-size: 12px; }
+                    .seller-card { background: #fdfbf7; border: 1px solid #ebd9a5; border-radius: 6px; padding: 14px 18px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; font-size: 12px; break-inside: avoid !important; page-break-inside: avoid !important; }
                     .seller-card strong { color: #8a6d2b; display: block; font-size: 11px; text-transform: uppercase; margin-bottom: 3px; }
                     table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                    thead { display: table-header-group; }
+                    tbody { display: table-row-group; }
+                    tr { break-inside: avoid !important; page-break-inside: avoid !important; }
                     th, td { border: 1px solid #ddd; padding: 8px 10px; font-size: 11px; }
                     th { background-color: #f5f5f7; color: #333; font-weight: bold; text-transform: uppercase; }
                     tr:nth-child(even) { background-color: #fafafa; }
-                    .subtotal-box { display: flex; justify-content: flex-end; gap: 25px; margin-top: 20px; padding: 15px 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; font-size: 13px; font-weight: bold; }
-                    .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; margin-top: 60px; padding-top: 20px; }
+                    .subtotal-box { display: flex; justify-content: flex-end; gap: 25px; margin-top: 20px; padding: 14px 18px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; font-size: 13px; font-weight: bold; break-inside: avoid !important; page-break-inside: avoid !important; }
+                    .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; margin-top: 45px; padding-top: 20px; break-inside: avoid !important; page-break-inside: avoid !important; }
                     .sig-line { border-top: 1px solid #333; text-align: center; padding-top: 8px; font-size: 11px; }
-                    .footer { margin-top: 35px; font-size: 10px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 12px; }
+                    .footer { margin-top: 25px; font-size: 10px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 12px; break-inside: avoid; page-break-inside: avoid; }
                     @media print {
                         body { padding: 0; }
                         .no-print { display: none; }
+                        .header, .footer, .seller-card, .subtotal-box, .signatures, tr { break-inside: avoid !important; page-break-inside: avoid !important; }
                     }
                 </style>
             </head>
@@ -5925,21 +6092,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 <meta charset="utf-8">
                 <title>${title} - Personality Lenses</title>
                 <style>
-                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 30px; color: #1a1a1a; }
-                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #c5a85c; padding-bottom: 15px; margin-bottom: 25px; }
-                    .header h1 { font-size: 22px; color: #c5a85c; margin: 0; text-transform: uppercase; font-weight: 800; }
+                    @page { size: A4 portrait; margin: 12mm 12mm 15mm 12mm; }
+                    * { box-sizing: border-box; }
+                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 0; color: #1a1a1a; margin: 0; background: #fff; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #c5a85c; padding-bottom: 12px; margin-bottom: 20px; break-inside: avoid; page-break-inside: avoid; }
+                    .header h1 { font-size: 20px; color: #c5a85c; margin: 0; text-transform: uppercase; font-weight: 800; }
                     .header span { font-size: 11px; color: #666; }
                     table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    thead { display: table-header-group; }
+                    tbody { display: table-row-group; }
+                    tr { break-inside: avoid !important; page-break-inside: avoid !important; }
                     th, td { border: 1px solid #ddd; padding: 9px 12px; text-align: left; font-size: 11px; }
                     th { background-color: #f5f5f7; color: #333; font-weight: bold; text-transform: uppercase; }
                     tr:nth-child(even) { background-color: #fafafa; }
                     .pts-column { font-weight: bold; color: #c5a85c; }
                     .cash-column { font-weight: bold; color: #10b981; }
-                    .summary-box { display: flex; justify-content: flex-end; gap: 20px; margin-top: 20px; padding: 12px 15px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; font-size: 12px; font-weight: bold; }
-                    .footer { margin-top: 30px; font-size: 10px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 15px; }
+                    .summary-box { display: flex; justify-content: flex-end; gap: 20px; margin-top: 20px; padding: 12px 15px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; font-size: 12px; font-weight: bold; break-inside: avoid !important; page-break-inside: avoid !important; }
+                    .footer { margin-top: 25px; font-size: 10px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 12px; break-inside: avoid; page-break-inside: avoid; }
                     @media print {
                         body { padding: 0; }
                         .no-print { display: none; }
+                        .header, .footer, .summary-box, tr { break-inside: avoid !important; page-break-inside: avoid !important; }
                     }
                 </style>
             </head>
@@ -6057,7 +6230,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }).join('');
 
             return `
-                <div style="margin-top: 20px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; page-break-inside: avoid;">
+                <div class="seller-group-card" style="margin-top: 20px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; break-inside: avoid !important; page-break-inside: avoid !important; -webkit-column-break-inside: avoid !important;">
                     <div style="background: #f8fafc; border-bottom: 2px solid #c5a85c; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                         <div>
                             <span style="font-size: 13.5px; font-weight: 800; color: #0f172a;">👤 ${escapeHtml(group.vendedor_nome)}</span>
@@ -6095,18 +6268,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 <meta charset="utf-8">
                 <title>${title} - Personality Lenses</title>
                 <style>
-                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 30px; color: #1a1a1a; }
-                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #c5a85c; padding-bottom: 15px; margin-bottom: 20px; }
+                    @page { size: A4 portrait; margin: 12mm 12mm 15mm 12mm; }
+                    * { box-sizing: border-box; }
+                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 0; color: #1a1a1a; margin: 0; background: #fff; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #c5a85c; padding-bottom: 12px; margin-bottom: 20px; break-inside: avoid; page-break-inside: avoid; }
                     .header h1 { font-size: 20px; color: #c5a85c; margin: 0; text-transform: uppercase; font-weight: 800; }
                     .header span { font-size: 11px; color: #666; }
                     table { width: 100%; border-collapse: collapse; }
+                    thead { display: table-header-group; }
+                    tbody { display: table-row-group; }
+                    tr { break-inside: avoid !important; page-break-inside: avoid !important; }
                     th, td { padding: 7px 10px; text-align: left; font-size: 11px; border: 1px solid #e2e8f0; }
                     tr:nth-child(even) { background-color: #fafafa; }
-                    .summary-box { display: flex; justify-content: space-between; align-items: center; margin-top: 25px; padding: 14px 20px; background: #f0fdf4; border: 2px solid #86efac; border-radius: 8px; font-size: 12.5px; page-break-inside: avoid; }
-                    .footer { margin-top: 25px; font-size: 10px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 15px; }
+                    .seller-group-card { break-inside: avoid !important; page-break-inside: avoid !important; -webkit-column-break-inside: avoid !important; }
+                    .summary-box { display: flex; justify-content: space-between; align-items: center; margin-top: 25px; padding: 14px 20px; background: #f0fdf4; border: 2px solid #86efac; border-radius: 8px; font-size: 12.5px; break-inside: avoid !important; page-break-inside: avoid !important; }
+                    .footer { margin-top: 25px; font-size: 10px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 12px; break-inside: avoid; page-break-inside: avoid; }
                     @media print {
                         body { padding: 0; }
                         .no-print { display: none; }
+                        .header, .footer, .summary-box, .seller-group-card, tr { break-inside: avoid !important; page-break-inside: avoid !important; }
                     }
                 </style>
             </head>
@@ -6170,21 +6350,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 <meta charset="utf-8">
                 <title>${title} - Personality Lenses</title>
                 <style>
-                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 30px; color: #1a1a1a; }
-                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #c5a85c; padding-bottom: 15px; margin-bottom: 25px; }
-                    .header h1 { font-size: 22px; color: #c5a85c; margin: 0; text-transform: uppercase; font-weight: 800; }
+                    @page { size: A4 portrait; margin: 12mm 12mm 15mm 12mm; }
+                    * { box-sizing: border-box; }
+                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 0; color: #1a1a1a; margin: 0; background: #fff; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #c5a85c; padding-bottom: 12px; margin-bottom: 20px; break-inside: avoid; page-break-inside: avoid; }
+                    .header h1 { font-size: 20px; color: #c5a85c; margin: 0; text-transform: uppercase; font-weight: 800; }
                     .header span { font-size: 11px; color: #666; }
                     table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    thead { display: table-header-group; }
+                    tbody { display: table-row-group; }
+                    tr { break-inside: avoid !important; page-break-inside: avoid !important; }
                     th, td { border: 1px solid #ddd; padding: 9px 12px; text-align: left; font-size: 11px; }
                     th { background-color: #f5f5f7; color: #333; font-weight: bold; text-transform: uppercase; }
                     tr:nth-child(even) { background-color: #fafafa; }
                     .pts-column { font-weight: bold; color: #c5a85c; }
-                    .cash-column { font-weight: bold; color: #3b82f6; }
-                    .summary-box { display: flex; justify-content: flex-end; gap: 20px; margin-top: 20px; padding: 12px 15px; background: #f9f9f9; border: 1px solid #eee; border-radius: 6px; font-size: 12px; font-weight: bold; }
-                    .footer { margin-top: 30px; font-size: 10px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 15px; }
+                    .cash-column { font-weight: bold; color: #10b981; }
+                    .summary-box { display: flex; justify-content: flex-end; gap: 20px; margin-top: 20px; padding: 12px 15px; background: #f9f9f9; border: 1px solid #eee; border-radius: 6px; font-size: 12px; font-weight: bold; break-inside: avoid !important; page-break-inside: avoid !important; }
+                    .footer { margin-top: 25px; font-size: 10px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 12px; break-inside: avoid; page-break-inside: avoid; }
                     @media print {
                         body { padding: 0; }
                         .no-print { display: none; }
+                        .header, .footer, .summary-box, tr { break-inside: avoid !important; page-break-inside: avoid !important; }
                     }
                 </style>
             </head>
@@ -6234,7 +6420,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="summary-box">
                     <span>Vendedores Listados: ${items.length}</span>
                     <span style="color: #c5a85c;">Total de Pontos Pagos: ${totalGeralPts} Pts</span>
-                    <span style="color: #3b82f6;">Total Pago: R$ ${totalGeralCash.toFixed(2)}</span>
+                    <span style="color: #10b981;">Total Pago: R$ ${totalGeralCash.toFixed(2)}</span>
                 </div>
                 <div class="footer">
                     Documento interno de histórico de pagamentos de prêmios. Gerado eletronicamente por Personality Lenses.
@@ -7947,19 +8133,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 <meta charset="utf-8">
                 <title>${title} - Personality Lenses</title>
                 <style>
-                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 30px; color: #1a1a1a; }
-                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #c5a85c; padding-bottom: 15px; margin-bottom: 30px; }
-                    .header h1 { font-size: 24px; color: #c5a85c; margin: 0; text-transform: uppercase; font-weight: 800; }
+                    @page { size: A4 portrait; margin: 12mm 12mm 15mm 12mm; }
+                    * { box-sizing: border-box; }
+                    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 0; color: #1a1a1a; margin: 0; background: #fff; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #c5a85c; padding-bottom: 12px; margin-bottom: 20px; break-inside: avoid; page-break-inside: avoid; }
+                    .header h1 { font-size: 20px; color: #c5a85c; margin: 0; text-transform: uppercase; font-weight: 800; }
                     .header span { font-size: 11px; color: #666; }
                     table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-                    th, td { border: 1px solid #ddd; padding: 10px 12px; text-align: left; font-size: 11px; }
+                    thead { display: table-header-group; }
+                    tbody { display: table-row-group; }
+                    tr { break-inside: avoid !important; page-break-inside: avoid !important; }
+                    th, td { border: 1px solid #ddd; padding: 8px 10px; text-align: left; font-size: 11px; }
                     th { background-color: #f5f5f7; color: #333; font-weight: bold; text-transform: uppercase; }
                     tr:nth-child(even) { background-color: #fafafa; }
                     .pts-column { font-weight: bold; color: #c5a85c; }
-                    .footer { margin-top: 40px; font-size: 10px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 15px; }
+                    .footer { margin-top: 25px; font-size: 10px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 12px; break-inside: avoid; page-break-inside: avoid; }
                     @media print {
                         body { padding: 0; }
                         .no-print { display: none; }
+                        .header, .footer, tr { break-inside: avoid !important; page-break-inside: avoid !important; }
                     }
                 </style>
             </head>

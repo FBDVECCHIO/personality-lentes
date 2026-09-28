@@ -2138,6 +2138,8 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
                         border-bottom: 2px solid #c5a85c;
                         padding-bottom: 10px;
                         margin-bottom: 14px;
+                        break-inside: avoid;
+                        page-break-inside: avoid;
                     }
                     .header-left h1 {
                         font-size: 20px;
@@ -2170,6 +2172,8 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
                         border-radius: 6px;
                         padding: 14px 18px;
                         margin-bottom: 14px;
+                        break-inside: avoid !important;
+                        page-break-inside: avoid !important;
                     }
                     .product-hero h2 {
                         font-size: 20px;
@@ -2208,12 +2212,16 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
                         padding-bottom: 4px;
                         margin: 12px 0 8px 0;
                         letter-spacing: 0.5px;
+                        break-inside: avoid;
+                        page-break-inside: avoid;
                     }
                     .tech-tags-grid {
                         display: flex;
                         flex-wrap: wrap;
                         gap: 6px;
                         margin-bottom: 12px;
+                        break-inside: avoid !important;
+                        page-break-inside: avoid !important;
                     }
                     .tech-tag-badge {
                         background: #f1f5f9;
@@ -2228,9 +2236,13 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
                         width: 100%;
                         border-collapse: collapse;
                         margin-bottom: 14px;
+                        break-inside: avoid !important;
+                        page-break-inside: avoid !important;
                     }
                     .benefits-table tr {
                         border-bottom: 1px solid #f1f5f9;
+                        break-inside: avoid !important;
+                        page-break-inside: avoid !important;
                     }
                     .benefits-table td {
                         padding: 5px 4px;
@@ -2259,6 +2271,8 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
                         color: #44403c;
                         line-height: 1.4;
                         margin-top: 8px;
+                        break-inside: avoid !important;
+                        page-break-inside: avoid !important;
                     }
                     .footer {
                         margin-top: 14px;
@@ -2267,10 +2281,16 @@ Apresente esse cupom na loja para garantir o seu benefício!`;
                         text-align: center;
                         border-top: 1px solid #e2e8f0;
                         padding-top: 8px;
+                        break-inside: avoid;
+                        page-break-inside: avoid;
                     }
                     @media print {
                         body { padding: 0; }
                         .no-print { display: none; }
+                        .header, .footer, .product-hero, .tech-tags-grid, .benefits-table, .instruction-card, .section-title {
+                            break-inside: avoid !important;
+                            page-break-inside: avoid !important;
+                        }
                     }
                 </style>
             </head>
