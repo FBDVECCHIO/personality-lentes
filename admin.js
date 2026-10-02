@@ -32,7 +32,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const getMasterPassword = () => {
-        return localStorage.getItem('personality_master_password') || 'admin123';
+        const stored = localStorage.getItem('personality_master_password');
+        if (stored === 'admin123') {
+            localStorage.setItem('personality_master_password', 'admin1202');
+            return 'admin1202';
+        }
+        return stored || 'admin1202';
     };
 
     const checkMasterAuth = () => {
@@ -1716,7 +1721,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!confirmAction) return;
 
             const typedPass = prompt('Por favor, digite a senha master para confirmar a limpeza geral do banco de cadastros:');
-            const masterPass = localStorage.getItem('personality_master_password') || 'admin123';
+            const masterPass = getMasterPassword();
             if (typedPass !== masterPass) {
                 alert('Senha incorreta! Operação cancelada.');
                 return;
