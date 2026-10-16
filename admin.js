@@ -3540,6 +3540,27 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastFilteredHistPagosRows = [];
     let lastAllHistPagosRows = [];
 
+    // Novos controles (filtro por período e paginação do Histórico)
+    const filterPremDateStart = document.getElementById('filterPremDateStart');
+    const filterPremDateEnd = document.getElementById('filterPremDateEnd');
+    const filterApuracaoDateStart = document.getElementById('filterApuracaoDateStart');
+    const filterApuracaoDateEnd = document.getElementById('filterApuracaoDateEnd');
+    const btnPrevPageHistPagos = document.getElementById('btnPrevPageHistPagos');
+    const btnNextPageHistPagos = document.getElementById('btnNextPageHistPagos');
+    let currentHistPagosPage = 1;
+    const limitHistPagosPerPage = 25;
+
+    // Compara a data da venda (YYYY-MM-DD) com o período escolhido; mesma convenção do Dashboard
+    function saleMatchesDateRange(sale, startVal, endVal) {
+        if (!startVal && !endVal) return true;
+        const dateSource = sale.data_venda || sale.created_at;
+        if (!dateSource) return false;
+        const saleDate = String(dateSource).substring(0, 10);
+        if (startVal && saleDate < startVal) return false;
+        if (endVal && saleDate > endVal) return false;
+        return true;
+    }
+
     function updateSelectAllPremiosCheckbox() {
         const selectAllEl = document.getElementById('selectAllPremiosOS');
         if (!selectAllEl) return;
@@ -3634,7 +3655,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Listeners de Filtros - Card 1 (Relatório de Prêmios)
-    [filterPremVendedor, filterPremLoja, filterPremStatus, filterPremGroupBy].forEach(el => {
+    [filterPremVendedor, filterPremLoja, filterPremStatus, filterPremGroupBy, filterPremDateStart, filterPremDateEnd].forEach(el => {
         if (el) el.addEventListener('input', () => {
             currentPremiosPage = 1;
             renderPremiosManager();
@@ -3675,6 +3696,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (filterPremLoja) filterPremLoja.value = '';
             if (filterPremStatus) filterPremStatus.value = '';
             if (filterPremGroupBy) filterPremGroupBy.value = '';
+            if (filterPremDateStart) filterPremDateStart.value = '';
+            if (filterPremDateEnd) filterPremDateEnd.value = '';
             selectedPremioIds.clear();
             premiosSortField = null;
             premiosSortDir = 'asc';
@@ -3684,7 +3707,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Listeners de Filtros - Card 2 (Apuração Consolidada)
-    [filterApuracaoVendedor, filterApuracaoLoja, filterApuracaoStatus].forEach(el => {
+    [filterApuracaoVendedor, filterApuracaoLoja, filterApuracaoStatus, filterApuracaoDateStart, filterApuracaoDateEnd].forEach(el => {
         if (el) el.addEventListener('input', () => renderPremiosManager());
         if (el && el.tagName === 'SELECT') el.addEventListener('change', () => renderPremiosManager());
     });
@@ -3773,14 +3796,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (filterApuracaoVendedor) filterApuracaoVendedor.value = '';
             if (filterApuracaoLoja) filterApuracaoLoja.value = '';
             if (filterApuracaoStatus) filterApuracaoStatus.value = '';
+            if (filterApuracaoDateStart) filterApuracaoDateStart.value = '';
+            if (filterApuracaoDateEnd) filterApuracaoDateEnd.value = '';
             renderPremiosManager();
         });
     }
 
     // Listeners de Filtros - Card 3 (Histórico de Pagos Consolidado)
     [filterHistPagosVendedor, filterHistPagosLoja, filterHistPagosStatus].forEach(el => {
-        if (el) el.addEventListener('input', () => renderPremiosManager());
-        if (el && el.tagName === 'SELECT') el.addEventListener('change', () => renderPremiosManager());
+        if (el) el.addEventListener('input', () => { currentHistPagosPage = 1; renderPremiosManager(); });
+        if (el && el.tagName === 'SELECT') el.addEventListener('change', () => { currentHistPagosPage = 1; renderPremiosManager(); });
     });
 
     if (btnPrintSelectedHistPagos) {
@@ -3808,7 +3833,28 @@ document.addEventListener('DOMContentLoaded', () => {
             if (filterHistPagosVendedor) filterHistPagosVendedor.value = '';
             if (filterHistPagosLoja) filterHistPagosLoja.value = '';
             if (filterHistPagosStatus) filterHistPagosStatus.value = '';
+            currentHistPagosPage = 1;
             renderPremiosManager();
+        });
+    }
+
+    if (btnPrevPageHistPagos) {
+        btnPrevPageHistPagos.addEventListener('click', () => {
+            if (currentHistPagosPage > 1) {
+                currentHistPagosPage--;
+                renderPremiosManager();
+            }
+        });
+    }
+
+    if (btnNextPageHistPagos) {
+        btnNextPageHistPagos.addEventListener('click', () => {
+            const totalItems = lastFilteredHistPagosRows ? lastFilteredHistPagosRows.length : 0;
+            const totalPages = Math.max(1, Math.ceil(totalItems / limitHistPagosPerPage));
+            if (currentHistPagosPage < totalPages) {
+                currentHistPagosPage++;
+                renderPremiosManager();
+            }
         });
     }
 
@@ -4497,12 +4543,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const vendedorVal = filterPremVendedor ? filterPremVendedor.value.trim().toLowerCase() : '';
         const lojaVal = filterPremLoja ? filterPremLoja.value.trim().toLowerCase() : '';
         const statusVal = filterPremStatus ? filterPremStatus.value : '';
+        const premDateStartVal = filterPremDateStart ? filterPremDateStart.value : '';
+        const premDateEndVal = filterPremDateEnd ? filterPremDateEnd.value : '';
 
         const filteredSales = allSubmittedSales.filter(sale => {
             const vendMatch = !vendedorVal || (sale.vendedor_nome || '').toLowerCase().includes(vendedorVal);
             const lojaMatch = !lojaVal || (sale.loja || '').toLowerCase().includes(lojaVal);
             const statusMatch = !statusVal || sale.status === statusVal;
-            return vendMatch && lojaMatch && statusMatch;
+            const dateMatch = saleMatchesDateRange(sale, premDateStartVal, premDateEndVal);
+            return vendMatch && lojaMatch && statusMatch && dateMatch;
         });
 
         lastFilteredPremiosSales = filteredSales;
@@ -5033,51 +5082,62 @@ document.addEventListener('DOMContentLoaded', () => {
         const apuracaoStatusVal = filterApuracaoStatus ? filterApuracaoStatus.value : '';
         const apuracaoVendVal = filterApuracaoVendedor ? filterApuracaoVendedor.value.trim().toLowerCase() : '';
         const apuracaoLojaVal = filterApuracaoLoja ? filterApuracaoLoja.value.trim().toLowerCase() : '';
+        const apuracaoDateStartVal = filterApuracaoDateStart ? filterApuracaoDateStart.value : '';
+        const apuracaoDateEndVal = filterApuracaoDateEnd ? filterApuracaoDateEnd.value : '';
 
-        const apuracaoGroupsMap = {};
+        const buildApuracaoGroups = (salesList) => {
+            const groupsMap = {};
 
-        allSubmittedSales.forEach(sale => {
-            const st = (sale.status || '').trim().toLowerCase();
-            const isValidado = (st === 'validado' || st === 'a pagar');
-            const isMatchStatus = apuracaoStatusVal === 'Todos' ? true : isValidado;
+            salesList.forEach(sale => {
+                const st = (sale.status || '').trim().toLowerCase();
+                const isValidado = (st === 'validado' || st === 'a pagar');
+                const isMatchStatus = apuracaoStatusVal === 'Todos' ? true : isValidado;
 
-            if (isMatchStatus) {
-                const vKey = sale.vendedor_id 
-                    ? String(sale.vendedor_id) 
-                    : (sale.vendedor_nome ? 'nome_' + sale.vendedor_nome.trim().toLowerCase() : 'vend_' + (sale.os || Math.random()));
+                if (isMatchStatus) {
+                    const vKey = sale.vendedor_id 
+                        ? String(sale.vendedor_id) 
+                        : (sale.vendedor_nome ? 'nome_' + sale.vendedor_nome.trim().toLowerCase() : 'vend_' + (sale.os || Math.random()));
 
-                if (!apuracaoGroupsMap[vKey]) {
-                    apuracaoGroupsMap[vKey] = {
-                        key: vKey,
-                        vendedor_id: sale.vendedor_id || '',
-                        vendedor_nome: sale.vendedor_nome || 'Vendedor Desconhecido',
-                        loja: sale.loja || '',
-                        cpf: sale.cpf_vendedor || sale.cpf || '',
-                        sales: [],
-                        total_pontos: 0,
-                        validados_pontos: 0,
-                        validados_count: 0
-                    };
+                    if (!groupsMap[vKey]) {
+                        groupsMap[vKey] = {
+                            key: vKey,
+                            vendedor_id: sale.vendedor_id || '',
+                            vendedor_nome: sale.vendedor_nome || 'Vendedor Desconhecido',
+                            loja: sale.loja || '',
+                            cpf: sale.cpf_vendedor || sale.cpf || '',
+                            sales: [],
+                            total_pontos: 0,
+                            validados_pontos: 0,
+                            validados_count: 0
+                        };
+                    }
+
+                    const pts = getSalePoints(sale).totalPts;
+                    groupsMap[vKey].sales.push(sale);
+                    groupsMap[vKey].total_pontos += pts;
+                    if (!groupsMap[vKey].loja && sale.loja) groupsMap[vKey].loja = sale.loja;
+
+                    if (isValidado) {
+                        groupsMap[vKey].validados_pontos += pts;
+                        groupsMap[vKey].validados_count++;
+                    }
                 }
+            });
 
-                const pts = getSalePoints(sale).totalPts;
-                apuracaoGroupsMap[vKey].sales.push(sale);
-                apuracaoGroupsMap[vKey].total_pontos += pts;
-                if (!apuracaoGroupsMap[vKey].loja && sale.loja) apuracaoGroupsMap[vKey].loja = sale.loja;
+            return Object.values(groupsMap).map(g => {
+                g.subtotal_a_pagar = g.validados_pontos * valorPontoConfig;
+                return g;
+            });
+        };
 
-                if (isValidado) {
-                    apuracaoGroupsMap[vKey].validados_pontos += pts;
-                    apuracaoGroupsMap[vKey].validados_count++;
-                }
-            }
-        });
+        // "Geral" = todas as O.S. sem filtros; visão filtrada = O.S. dentro do período escolhido
+        const allApuracaoGroups = buildApuracaoGroups(allSubmittedSales);
+        const hasApuracaoPeriod = !!(apuracaoDateStartVal || apuracaoDateEndVal);
+        const periodApuracaoGroups = hasApuracaoPeriod
+            ? buildApuracaoGroups(allSubmittedSales.filter(s => saleMatchesDateRange(s, apuracaoDateStartVal, apuracaoDateEndVal)))
+            : allApuracaoGroups;
 
-        const allApuracaoGroups = Object.values(apuracaoGroupsMap).map(g => {
-            g.subtotal_a_pagar = g.validados_pontos * valorPontoConfig;
-            return g;
-        });
-
-        const filteredApuracaoGroups = allApuracaoGroups.filter(g => {
+        const filteredApuracaoGroups = periodApuracaoGroups.filter(g => {
             const vendMatch = !apuracaoVendVal || (g.vendedor_nome || '').toLowerCase().includes(apuracaoVendVal);
             const lojaMatch = !apuracaoLojaVal || (g.loja || '').toLowerCase().includes(apuracaoLojaVal);
             return vendMatch && lojaMatch;
@@ -5337,27 +5397,39 @@ document.addEventListener('DOMContentLoaded', () => {
         lastFilteredHistPagosRows = filteredConsolidadoPagosRows;
         lastAllHistPagosRows = allConsolidadoPagosRows;
 
+        // Paginação do Histórico (25 vendedores por página)
+        const histTotalItems = filteredConsolidadoPagosRows.length;
+        const histTotalPages = Math.max(1, Math.ceil(histTotalItems / limitHistPagosPerPage));
+        if (currentHistPagosPage > histTotalPages) currentHistPagosPage = histTotalPages;
+        if (currentHistPagosPage < 1) currentHistPagosPage = 1;
+        const histStartIndex = (currentHistPagosPage - 1) * limitHistPagosPerPage;
+        const histEndIndex = histStartIndex + limitHistPagosPerPage;
+        const histPageRows = filteredConsolidadoPagosRows.slice(histStartIndex, histEndIndex);
+
+        const histPaginationInfo = document.getElementById('adminHistPagosPaginationInfo');
+        if (histPaginationInfo) {
+            histPaginationInfo.textContent = `Página ${currentHistPagosPage} de ${histTotalPages} (Mostrando ${histTotalItems === 0 ? 0 : histStartIndex + 1} a ${Math.min(histEndIndex, histTotalItems)} de ${histTotalItems} vendedores)`;
+        }
+        if (btnPrevPageHistPagos) btnPrevPageHistPagos.disabled = currentHistPagosPage === 1;
+        if (btnNextPageHistPagos) btnNextPageHistPagos.disabled = currentHistPagosPage >= histTotalPages;
+
         const adminConsolidadoPagosTableBody = document.getElementById('adminConsolidadoPagosTableBody');
         if (adminConsolidadoPagosTableBody) {
             adminConsolidadoPagosTableBody.innerHTML = '';
             if (filteredConsolidadoPagosRows.length === 0) {
-                adminConsolidadoPagosTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Nenhum pagamento correspondente aos filtros ativos.</td></tr>`;
+                adminConsolidadoPagosTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Nenhum pagamento correspondente aos filtros ativos.</td></tr>`;
             } else {
-                filteredConsolidadoPagosRows.forEach(row => {
+                histPageRows.forEach(row => {
                     const sellerInfo = getSellerInfo(row, sellersList);
                     const totalCashPaid = row.total_pontos * valorPontoConfig;
                     const storeDisplay = row.loja || sellerInfo.loja_clinica || 'Não informada';
                     const cpfDisplay = sellerInfo.cpf_cnpj || row.cpf || 'n/d';
-                    
-                    const rawPhone = (sellerInfo.whatsapp || '').replace(/\D/g, '');
-                    const waLink = rawPhone ? `<a href="https://wa.me/55${rawPhone}" target="_blank" class="wa-link">💬 ${escapeHtml(sellerInfo.whatsapp)}</a>` : '<span style="color:var(--text-muted);">Não informado</span>';
 
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td><strong>${escapeHtml(row.vendedor_nome)}</strong></td>
                         <td><code>${escapeHtml(cpfDisplay)}</code></td>
                         <td>${escapeHtml(storeDisplay)}</td>
-                        <td>${waLink}</td>
                         <td>
                             <strong style="color: #60a5fa; font-size:16px;">R$ ${totalCashPaid.toFixed(2)}</strong>
                             <br><small style="color:var(--text-muted);">${row.total_pontos} Pts pagos</small>
@@ -5367,6 +5439,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     adminConsolidadoPagosTableBody.appendChild(tr);
                 });
             }
+        }
+
+        // Resumo final (fora do card): Total Geral x Selecionados pelos filtros ativos
+        const histSummaryEl = document.getElementById('adminHistPagosSummary');
+        if (histSummaryEl) {
+            const sumHist = (rows) => {
+                const pts = rows.reduce((acc, r) => acc + (Number(r.total_pontos) || 0), 0);
+                return { count: rows.length, pts, cash: pts * valorPontoConfig };
+            };
+            const histTotal = sumHist(allConsolidadoPagosRows);
+            const histSel = sumHist(filteredConsolidadoPagosRows);
+            const histBlock = (label, color, borderColor, bg, data) => `
+                <div style="display: inline-flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                    <span style="font-size: 12px; font-weight: 800; color: ${color}; text-transform: uppercase; letter-spacing: 0.5px;">${label}</span>
+                    <span style="font-size: 12px; color: var(--text-muted);">Vendedores: <strong style="color: #fff;">${data.count}</strong></span>
+                    <span style="font-size: 12px; color: var(--gold-light);">Pontos Pagos: <strong>${data.pts} Pts</strong></span>
+                    <span style="background: ${bg}; border: 1px solid ${borderColor}; padding: 3px 12px; border-radius: 6px; font-size: 12px; color: ${color};">Total Pago: <strong style="font-size: 14px;">R$ ${data.cash.toFixed(2)}</strong></span>
+                </div>
+            `;
+            histSummaryEl.innerHTML =
+                histBlock('📊 Total Geral', '#60a5fa', 'rgba(96, 165, 250, 0.35)', 'rgba(96, 165, 250, 0.10)', histTotal) +
+                histBlock('🎯 Selecionados (filtros)', '#10b981', 'rgba(16, 185, 129, 0.35)', 'rgba(16, 185, 129, 0.12)', histSel);
         }
 
         // Configura os Listeners dos botões de ação do relatório
@@ -6507,13 +6601,29 @@ document.addEventListener('DOMContentLoaded', () => {
                     const vendedorName = btn.getAttribute('data-name') || '';
                     const vKey = btn.getAttribute('data-vendedor-key') || '';
 
+                    // Com filtro de período ativo, o pagamento deve se limitar às O.S. exibidas/marcadas
+                    const apuracaoPeriodActive = !!((filterApuracaoDateStart && filterApuracaoDateStart.value) || (filterApuracaoDateEnd && filterApuracaoDateEnd.value));
+
                     let specificSaleIds = null;
                     if (vKey) {
                         const subTable = document.querySelector(`.apuracao-subtable-row[data-vendedor-key="${vKey}"]`);
                         if (subTable) {
                             const checkedBoxes = subTable.querySelectorAll('.chk-apuracao-os:checked');
                             const allBoxes = subTable.querySelectorAll('.chk-apuracao-os');
-                            if (checkedBoxes.length > 0 && checkedBoxes.length < allBoxes.length) {
+                            if (apuracaoPeriodActive) {
+                                const payableIds = Array.from(checkedBoxes)
+                                    .map(chk => chk.getAttribute('data-id'))
+                                    .filter(id => {
+                                        const s = allSubmittedSales.find(x => String(x.id) === String(id));
+                                        const st = s ? (s.status || '').trim().toLowerCase() : '';
+                                        return st === 'validado' || st === 'a pagar';
+                                    });
+                                if (payableIds.length === 0) {
+                                    alert('Nenhuma O.S. validada (a pagar) marcada no período filtrado para este vendedor.');
+                                    return;
+                                }
+                                specificSaleIds = payableIds;
+                            } else if (checkedBoxes.length > 0 && checkedBoxes.length < allBoxes.length) {
                                 specificSaleIds = Array.from(checkedBoxes).map(chk => chk.getAttribute('data-id'));
                             }
                         }
